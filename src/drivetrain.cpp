@@ -1,9 +1,9 @@
 
 #include <frc/RobotController.h>
 
-#include "CommandSwerveDrivetrain.h"
+#include "drivetrain.hpp"
 
-using namespace subsystems;
+namespace subsystems {
 
 void CommandSwerveDrivetrain::Periodic()
 {
@@ -39,4 +39,6 @@ void CommandSwerveDrivetrain::StartSimThread()
         UpdateSimState(deltaTime, frc::RobotController::GetBatteryVoltage());
     });
     m_simNotifier->StartPeriodic(kSimLoopPeriod);
+}
+
 }

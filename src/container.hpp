@@ -6,8 +6,8 @@
 
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/button/CommandXboxController.h>
-#include "CommandSwerveDrivetrain.h"
-#include "Telemetry.h"
+#include "drivetrain.hpp"
+#include "telemetry.hpp"
 
 class RobotContainer {
 private:

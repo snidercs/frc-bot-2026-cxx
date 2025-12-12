@@ -10,7 +10,7 @@
 #include <networktables/StructArrayTopic.h>
 #include <networktables/StructTopic.h>
 
-#include "subsystems/CommandSwerveDrivetrain.h"
+#include "CommandSwerveDrivetrain.h"
 
 class Telemetry {
 private:

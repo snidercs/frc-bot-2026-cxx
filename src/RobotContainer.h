@@ -6,7 +6,7 @@
 
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/button/CommandXboxController.h>
-#include "subsystems/CommandSwerveDrivetrain.h"
+#include "CommandSwerveDrivetrain.h"
 #include "Telemetry.h"
 
 class RobotContainer {

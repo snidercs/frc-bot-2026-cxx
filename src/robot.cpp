@@ -4,15 +4,22 @@
 
 #include <frc2/command/CommandScheduler.h>
 #include <frc/DriverStation.h>
+#include <frc/smartdashboard/SmartDashboard.h>
 
+#include "config.hpp"
 #include "robot.hpp"
 
-using DS = frc::DriverStation;
+using frc::DriverStation;
+using frc::SmartDashboard;
 
 Robot::Robot()
 {
-    DS::SilenceJoystickConnectionWarning (true);
+    DriverStation::SilenceJoystickConnectionWarning (true);
     _container = Container::create();
+}
+
+void Robot::RobotInit() {
+    SmartDashboard::PutString ("Controller", config::USE_GAMEPAD ? "Gamepad" : "Flightsticks");
 }
 
 void Robot::RobotPeriodic()
@@ -41,7 +48,7 @@ void Robot::AutonomousExit() {}
 
 void Robot::TeleopInit()
 {
-    DS::SilenceJoystickConnectionWarning (false);
+    DriverStation::SilenceJoystickConnectionWarning (false);
     if (m_autonomousCommand) {
         m_autonomousCommand->Cancel();
     }
@@ -51,7 +58,7 @@ void Robot::TeleopPeriodic() {}
 
 void Robot::TeleopExit()
 {
-    DS::SilenceJoystickConnectionWarning (true);
+    DriverStation::SilenceJoystickConnectionWarning (true);
 }
 
 void Robot::TestInit()

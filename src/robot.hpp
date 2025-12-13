@@ -27,8 +27,10 @@ public:
     void TestInit() override;
     void TestPeriodic() override;
     void TestExit() override;
+    void SimulationInit() override;
+    void SimulationPeriodic() override;
 
 private:
     std::optional<frc2::CommandPtr> m_autonomousCommand;
-    std::unique_ptr<RobotContainer> _container;
+    std::unique_ptr<Container> _container;
 };

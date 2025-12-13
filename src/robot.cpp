@@ -3,12 +3,16 @@
 // the WPILib BSD license file in the root directory of this project.
 
 #include <frc2/command/CommandScheduler.h>
+#include <frc/DriverStation.h>
 
 #include "robot.hpp"
 
+using DS = frc::DriverStation;
+
 Robot::Robot()
 {
-    _container = RobotContainer::create();
+    DS::SilenceJoystickConnectionWarning (true);
+    _container = Container::create();
 }
 
 void Robot::RobotPeriodic()
@@ -37,6 +41,7 @@ void Robot::AutonomousExit() {}
 
 void Robot::TeleopInit()
 {
+    DS::SilenceJoystickConnectionWarning (false);
     if (m_autonomousCommand) {
         m_autonomousCommand->Cancel();
     }
@@ -44,7 +49,10 @@ void Robot::TeleopInit()
 
 void Robot::TeleopPeriodic() {}
 
-void Robot::TeleopExit() {}
+void Robot::TeleopExit()
+{
+    DS::SilenceJoystickConnectionWarning (true);
+}
 
 void Robot::TestInit()
 {
@@ -54,6 +62,9 @@ void Robot::TestInit()
 void Robot::TestPeriodic() {}
 
 void Robot::TestExit() {}
+
+void Robot::SimulationInit() {}
+void Robot::SimulationPeriodic() {}
 
 #ifndef RUNNING_FRC_TESTS
 int main()

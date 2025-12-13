@@ -11,7 +11,7 @@
 #include "config.hpp"
 #include "container.hpp"
 
-class JoystickContainer : public RobotContainer {
+class JoystickContainer : public Container {
 public:
     JoystickContainer() = default;
     ~JoystickContainer() override {}
@@ -43,7 +43,7 @@ private:
     };
 };
 
-class GamepadContainer : public RobotContainer {
+class GamepadContainer : public Container {
 public:
     GamepadContainer() = default;
     ~GamepadContainer() override {}
@@ -84,7 +84,7 @@ private:
     frc2::CommandXboxController joystick { 0 };
 };
 
-RobotContainer::RobotContainer()
+Container::Container()
 {
     _drivetrain = std::make_unique<subsystems::CommandSwerveDrivetrain> (
         TunerConstants::DrivetrainConstants,
@@ -94,14 +94,14 @@ RobotContainer::RobotContainer()
         TunerConstants::BackRight);
 }
 
-RobotContainer::~RobotContainer()
+Container::~Container()
 {
     _drivetrain.reset();
 }
 
-std::unique_ptr<RobotContainer> RobotContainer::create()
+std::unique_ptr<Container> Container::create()
 {
-    std::unique_ptr<RobotContainer> rc;
+    std::unique_ptr<Container> rc;
     if (config::USE_GAMEPAD)
         rc.reset (new GamepadContainer());
     else
@@ -111,7 +111,7 @@ std::unique_ptr<RobotContainer> RobotContainer::create()
     return rc;
 }
 
-void RobotContainer::configureBindingsInternal()
+void Container::configureBindingsInternal()
 {
     // Configure subclass bindings.
     configureBindings();
@@ -127,7 +127,7 @@ void RobotContainer::configureBindingsInternal()
     drivetrain().RegisterTelemetry ([this] (auto const& state) { logger.Telemeterize (state); });
 }
 
-frc2::CommandPtr RobotContainer::GetAutonomousCommand()
+frc2::CommandPtr Container::GetAutonomousCommand()
 {
     return frc2::cmd::Print ("No autonomous command configured");
 }

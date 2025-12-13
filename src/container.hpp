@@ -9,12 +9,12 @@
 #include "drivetrain.hpp"
 #include "telemetry.hpp"
 
-class RobotContainer {
+class Container {
 public:
-    RobotContainer();
-    virtual ~RobotContainer();
+    Container();
+    virtual ~Container();
 
-    static std::unique_ptr<RobotContainer> create();
+    static std::unique_ptr<Container> create();
 
     auto& drivetrain() noexcept { return *_drivetrain; }
     frc2::CommandPtr GetAutonomousCommand();

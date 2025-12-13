@@ -3,5 +3,5 @@
 
 subsystems::CommandSwerveDrivetrain TunerConstants::CreateDrivetrain()
 {
-    return {DrivetrainConstants, FrontLeft, FrontRight, BackLeft, BackRight};
+    return { DrivetrainConstants, FrontLeft, FrontRight, BackLeft, BackRight };
 }

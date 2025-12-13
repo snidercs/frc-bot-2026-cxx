@@ -14,14 +14,13 @@ void CommandSwerveDrivetrain::Periodic()
      * Otherwise, only check and apply the operator perspective if the DS is disabled.
      * This ensures driving behavior doesn't change until an explicit disable event occurs during testing.
      */
-    if (!m_hasAppliedOperatorPerspective || frc::DriverStation::IsDisabled()) {
+    if (! m_hasAppliedOperatorPerspective || frc::DriverStation::IsDisabled()) {
         auto const allianceColor = frc::DriverStation::GetAlliance();
         if (allianceColor) {
-            SetOperatorPerspectiveForward(
+            SetOperatorPerspectiveForward (
                 *allianceColor == frc::DriverStation::Alliance::kRed
                     ? kRedAlliancePerspectiveRotation
-                    : kBlueAlliancePerspectiveRotation
-            );
+                    : kBlueAlliancePerspectiveRotation);
             m_hasAppliedOperatorPerspective = true;
         }
     }
@@ -30,15 +29,15 @@ void CommandSwerveDrivetrain::Periodic()
 void CommandSwerveDrivetrain::StartSimThread()
 {
     m_lastSimTime = utils::GetCurrentTime();
-    m_simNotifier = std::make_unique<frc::Notifier>([this] {
+    m_simNotifier = std::make_unique<frc::Notifier> ([this] {
         units::second_t const currentTime = utils::GetCurrentTime();
         auto const deltaTime = currentTime - m_lastSimTime;
         m_lastSimTime = currentTime;
 
         /* use the measured time delta, get battery voltage from WPILib */
-        UpdateSimState(deltaTime, frc::RobotController::GetBatteryVoltage());
+        UpdateSimState (deltaTime, frc::RobotController::GetBatteryVoltage());
     });
-    m_simNotifier->StartPeriodic(kSimLoopPeriod);
+    m_simNotifier->StartPeriodic (kSimLoopPeriod);
 }
 
-}
+} // namespace subsystems

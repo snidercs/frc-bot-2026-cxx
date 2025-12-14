@@ -14,6 +14,7 @@
 class Robot : public frc::TimedRobot {
 public:
     Robot();
+    void RobotInit() override;
     void RobotPeriodic() override;
     void DisabledInit() override;
     void DisabledPeriodic() override;
@@ -27,9 +28,10 @@ public:
     void TestInit() override;
     void TestPeriodic() override;
     void TestExit() override;
+    void SimulationInit() override;
+    void SimulationPeriodic() override;
 
 private:
     std::optional<frc2::CommandPtr> m_autonomousCommand;
-
-    RobotContainer m_container;
+    std::unique_ptr<Container> _container;
 };

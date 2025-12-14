@@ -9,8 +9,20 @@
 #include "drivetrain.hpp"
 #include "telemetry.hpp"
 
-class RobotContainer {
-private:
+class Container {
+public:
+    Container();
+    virtual ~Container();
+
+    static std::unique_ptr<Container> create();
+
+    auto& drivetrain() noexcept { return *_drivetrain; }
+    frc2::CommandPtr GetAutonomousCommand();
+
+protected:
+    /** Override to configure controller bindings. */
+    virtual void configureBindings() = 0;
+
     units::meters_per_second_t MaxSpeed = TunerConstants::kSpeedAt12Volts; // kSpeedAt12Volts desired top speed
     units::radians_per_second_t MaxAngularRate = 0.75_tps;                 // 3/4 of a rotation per second max angular velocity
 
@@ -26,15 +38,7 @@ private:
      *       define a destructor to un-register the telemetry from the drivetrain */
     Telemetry logger { MaxSpeed };
 
-    frc2::CommandXboxController joystick { 0 };
-
-public:
-    subsystems::CommandSwerveDrivetrain drivetrain { TunerConstants::CreateDrivetrain() };
-
-    RobotContainer();
-
-    frc2::CommandPtr GetAutonomousCommand();
-
 private:
-    void ConfigureBindings();
+    void configureBindingsInternal();
+    std::unique_ptr<subsystems::CommandSwerveDrivetrain> _drivetrain;
 };

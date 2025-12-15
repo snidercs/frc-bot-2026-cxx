@@ -30,7 +30,7 @@ protected:
                     .WithRotationalRate (-_sticks[0].GetHID().GetRawAxis(0) * MaxAngularRate);
             }));
 
-        _sticks[1].Button(config::HEADING_BUTTON_INDEX).OnTrue (
+        _sticks[0].Button(config::HEADING_BUTTON_INDEX).OnTrue (
             drivetrain().RunOnce ([this] { drivetrain().SeedFieldCentric(); })
         );
         // clang-format on

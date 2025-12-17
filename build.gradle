@@ -48,6 +48,32 @@ wpi.sim.addGui().defaultEnabled = true
 // Enable DS but not by default
 wpi.sim.addDriverstation()
 
+// Define platform-specific configuration closure
+def configurePlatformDependencies = { binary ->
+    if (binary.targetPlatform.name == 'linuxathena') {
+        // RoboRIO
+        if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+            binary.linker.args << '-LC:/Program Files/LuaBot/linuxathena/lib' << '-l' << 'luajit-5.1'
+            binary.cppCompiler.args << '-IC:/Program Files/LuaBot/linuxathena/include/luajit-2.1'
+        } else {
+            binary.linker.args << '-L/opt/luabot/linuxathena/lib' << '-l' << 'luajit-5.1'
+            binary.cppCompiler.args << '-I/opt/luabot/linuxathena/include/luajit-2.1'
+        }
+    } else if (binary.targetPlatform.name == 'osxuniversal') {
+        // macOS simulation
+        binary.linker.args << '-L/opt/luabot/lib' << '-l' << 'luajit-5.1'
+        binary.cppCompiler.args << '-I/opt/luabot/include/luajit-2.1'
+    } else if (binary.targetPlatform.name == 'linuxx86-64') {
+        // Linux simulation
+        binary.cppCompiler.args << '-I/opt/luabot/include/luajit-2.1'
+        binary.linker.args << '-L/opt/luabot/lib' << '-l' << 'luajit-5.1'
+    } else if (binary.targetPlatform.name == 'windowsx86-64') {
+        // Windows simulation
+        binary.cppCompiler.args << '/IC:/Program Files/LuaBot/include/luajit-2.1'
+        binary.linker.args << 'C:/Program Files/LuaBot/lib/lua51.lib'
+    }
+}
+
 model {
     components {
         frcUserProgram(NativeExecutableSpec) {
@@ -64,6 +90,10 @@ model {
                 exportedHeaders {
                     srcDir 'src'
                 }
+            }
+
+            binaries.all {
+                configurePlatformDependencies(it)
             }
 
             // Set deploy task to deploy this component
@@ -88,6 +118,10 @@ model {
                     srcDir 'test'
                     include '**/*.cpp'
                 }
+            }
+
+            binaries.all {
+                configurePlatformDependencies(it)
             }
 
             // Enable run tasks for this component

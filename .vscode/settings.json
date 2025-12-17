@@ -14,7 +14,7 @@
     "**/.factorypath": true,
     "**/*~": true
   },
-  "C_Cpp.default.configurationProvider": "vscode-wpilib",
+  // "C_Cpp.default.configurationProvider": "vscode-wpilib",
   "files.associations": {
     "__bit_reference": "cpp",
     "__hash_table": "cpp",
@@ -59,6 +59,8 @@
     "variant": "cpp",
     "vector": "cpp",
     "algorithm": "cpp",
-    "iostream": "cpp"
+    "iostream": "cpp",
+    "ios": "cpp",
+    "*.tcc": "cpp"
   }
 }

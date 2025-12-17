@@ -6,6 +6,8 @@
 #include <frc/DriverStation.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 
+#include <lua.hpp>
+
 #include "config.hpp"
 #include "robot.hpp"
 

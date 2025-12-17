@@ -53,7 +53,8 @@ def configurePlatformDependencies = { binary ->
     if (binary.targetPlatform.name == 'linuxathena') {
         // RoboRIO
         if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
-            // TODO
+            binary.linker.args << '-LC:/Program Files/LuaBot/linuxathena/lib' << '-l' << 'luajit-5.1'
+            binary.cppCompiler.args << '-IC:/Program Files/LuaBot/linuxathena/include/luajit-2.1'
         } else {
             binary.linker.args << '-L/opt/luabot/linuxathena/lib' << '-l' << 'luajit-5.1'
             binary.cppCompiler.args << '-I/opt/luabot/linuxathena/include/luajit-2.1'
@@ -68,6 +69,8 @@ def configurePlatformDependencies = { binary ->
         binary.linker.args << '-L/opt/luabot/lib' << '-l' << 'luajit-5.1'
     } else if (binary.targetPlatform.name == 'windowsx86-64') {
         // Windows simulation
+        binary.cppCompiler.args << '/IC:/Program Files/LuaBot/include/luajit-2.1'
+        binary.linker.args << 'C:/Program Files/LuaBot/lib/lua51.lib'
     }
 }
 

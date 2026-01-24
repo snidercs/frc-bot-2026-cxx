@@ -7,6 +7,7 @@
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/button/CommandXboxController.h>
 #include "drivetrain.hpp"
+#include "intake.hpp"
 #include "telemetry.hpp"
 
 class Container {
@@ -17,6 +18,7 @@ public:
     static std::unique_ptr<Container> create();
 
     auto& drivetrain() noexcept { return *_drivetrain; }
+    auto& intake() noexcept { return *_intake; }
     frc2::CommandPtr GetAutonomousCommand();
 
 protected:
@@ -41,4 +43,5 @@ protected:
 private:
     void configureBindingsInternal();
     std::unique_ptr<subsystems::CommandSwerveDrivetrain> _drivetrain;
+    std::unique_ptr<subsystems::Intake> _intake;
 };

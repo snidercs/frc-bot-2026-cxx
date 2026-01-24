@@ -77,6 +77,10 @@ public:
 
         // reset the field-centric heading on left bumper press
         joystick.LeftBumper().OnTrue (drivetrain().RunOnce ([this] { drivetrain().SeedFieldCentric(); }));
+
+        // Intake controls
+        joystick.RightTrigger().WhileTrue (intake().intakeCommand());
+        joystick.LeftTrigger().WhileTrue (intake().ejectCommand());
         // clang-format on
     }
 
@@ -92,10 +96,13 @@ Container::Container()
         TunerConstants::FrontRight,
         TunerConstants::BackLeft,
         TunerConstants::BackRight);
+    
+    _intake = std::make_unique<subsystems::Intake>();
 }
 
 Container::~Container()
 {
+    _intake.reset();
     _drivetrain.reset();
 }
 

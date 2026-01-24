@@ -33,6 +33,9 @@ protected:
         _sticks[0].Button(config::HEADING_BUTTON_INDEX).OnTrue (
             drivetrain().RunOnce ([this] { drivetrain().SeedFieldCentric(); })
         );
+
+        // Intake control
+        _sticks[1].Button(config::INTAKE_TRIGGER_INDEX).WhileTrue (intake().intakeCommand());
         // clang-format on
     }
 

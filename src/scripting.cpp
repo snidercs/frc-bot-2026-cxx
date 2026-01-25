@@ -12,6 +12,9 @@ extern "C" {
 #include "luajit.h"
 }
 
+// enable to log details about config queries
+#define GS_TRACE_CONFIG 0
+
 namespace fs = std::filesystem;
 
 namespace lua {
@@ -168,20 +171,31 @@ bool bootstrap() {
 
 namespace config {
 
-#if 0
-// todo, implement this
-template<typename T>
-T get_or (std::string_view cat, std::string_view sym, T fallback) {
-    if (cat.empty() || sym.empty())
-        return fallback;
-    sol::table tbl = state()["config"][cat];
-    return (T) tbl.get_or (sym, fallback);
+static void log (std::string_view key, const sol::object& val) {
+    if (val.valid()) {
+        std::string strVal = val.as<std::string>();
+        if (val.is<bool>())
+            strVal = val.as<bool>() ? "true" : "false";
+        if (val.is<std::string>())
+            strVal = "\"" + strVal + "\"";
+        std::cout << "[config] " << key << " = " << strVal << std::endl;
+    } else {
+        std::cout << "[config] unknown key: " << key << std::endl;
+    }
 }
-#endif
 
-sol::object get (std::string_view symbol) {
+void log (std::string_view key) {
     auto& L { state() };
-    sol::object obj = L["config"][symbol];
+    sol::object val = L["config"][key];
+    log (key, val);
+}
+
+sol::object get (std::string_view key) {
+    auto& L { state() };
+    sol::object obj = L["config"][key];
+#if GS_TRACE_CONFIG
+    log (key, obj);
+#endif
     return obj;
 }
 

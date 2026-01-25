@@ -19,7 +19,7 @@ public:
 protected:
     void configureBindings() override
     {
-        std::cout << "JoystickContainer::configureBindings()" << std::endl;
+        // std::cout << "JoystickContainer::configureBindings()" << std::endl;
 
         // clang-format off
         drivetrain().SetDefaultCommand (
@@ -53,7 +53,7 @@ public:
 
     void configureBindings() override
     {
-        std::cout << "GamepadContainer::configureBindings()" << std::endl;
+        // std::cout << "GamepadContainer::configureBindings()" << std::endl;
 
         // clang-format off
         // Note that X is defined as forward according to WPILib convention,

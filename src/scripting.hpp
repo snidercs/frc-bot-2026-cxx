@@ -63,6 +63,8 @@ sol::object get (std::string_view symbol);
  */
 sol::object get (std::string_view category, std::string_view symbol);
 
+void log (std::string_view key);
+
 } // namespace config
 
 } // namespace lua

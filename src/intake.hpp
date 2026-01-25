@@ -25,8 +25,12 @@ public:
 
 private:
     // Two Kraken x44 motors
-    ctre::phoenix6::hardware::TalonFX m_topMotor{config::INTAKE_TOP_MOTOR_ID, "rio"};
-    ctre::phoenix6::hardware::TalonFX m_bottomMotor{config::INTAKE_BOTTOM_MOTOR_ID, "rio"};
+    ctre::phoenix6::hardware::TalonFX m_topMotor{
+        config::integer("intake_top_device_id"),
+        config::str("intake_top_can_bus")};
+    ctre::phoenix6::hardware::TalonFX m_bottomMotor{
+        config::integer("intake_bottom_device_id"),
+        config::str("intake_bottom_can_bus")};
 
     // Control requests (reusable)
     ctre::phoenix6::controls::VoltageOut m_voltageRequest{0_V};

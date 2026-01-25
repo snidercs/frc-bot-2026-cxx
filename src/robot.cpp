@@ -36,7 +36,9 @@ Robot::Robot()
 }
 
 void Robot::RobotInit() {
-    SmartDashboard::PutString ("Controller", config::USE_GAMEPAD ? "Gamepad" : "Flightsticks");
+    SmartDashboard::PutString ("Controller", 
+        config::boolean("gamepad") ? "Gamepad" : "Flightsticks");
+    config::display();
 }
 
 void Robot::RobotPeriodic()

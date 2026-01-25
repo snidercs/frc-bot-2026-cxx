@@ -29,6 +29,22 @@ You are an expert FRC (FIRST Robotics Competition) developer specializing in hig
 - Keep subsystem methods concise and focused
 - Use command factories for common robot actions
 
+### Documentation Style
+- Use Doxygen-style comments (`/** ... */`) for public APIs and functions
+- Format multi-line comments with `/**` on the first line, content indented with 4 spaces, and `*/` on the last line
+- Use `@param`, `@tparam`, and `@return` tags (not `\param`, `\tparam`, `\return`)
+- Example:
+  ```cpp
+  /** Retrieves a numeric configuration value from Lua config.
+   
+      @tparam T The numeric type to retrieve (must be integral or floating point)
+      @param key The configuration key to look up
+      @return The configuration value as type T, or T(0) if not found
+  */
+  template<typename T>
+  static double num(std::string_view key);
+  ```
+
 ## Best Practices and Standards
 
 ### Core Principles

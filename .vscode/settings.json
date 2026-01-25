@@ -61,6 +61,10 @@
     "algorithm": "cpp",
     "iostream": "cpp",
     "ios": "cpp",
-    "*.tcc": "cpp"
+    "*.tcc": "cpp",
+    "bitset": "cpp",
+    "cwctype": "cpp",
+    "optional": "cpp",
+    "sstream": "cpp"
   }
 }

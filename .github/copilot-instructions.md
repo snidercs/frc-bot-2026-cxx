@@ -20,8 +20,8 @@ You are an expert FRC (FIRST Robotics Competition) developer specializing in hig
   - Example: `kIntakeVoltage`, `kMaxSpeed`
   - Use `UPPER_SNAKE_CASE` for config namespace constants
   - Example: `config::INTAKE_TOP_MOTOR_ID`, `config::HEADING_BUTTON_INDEX`
-- **Member Variables**: Prefix with `m_` when using camelCase
-  - Example: `m_topMotor`, `m_intakeSpeed`
+- **Private Member Variables**: Prefix with `_` when using camelCase
+  - Example: `_topMotor`, `_intakeSpeed`
 
 ### General Style
 - Follow WPILib and CTRE Phoenix 6 API conventions

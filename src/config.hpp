@@ -44,4 +44,8 @@ static double number (std::string_view key) { return num<double> (key); }
 */
 static int integer (std::string_view key) { return num<int> (key); }
 
+static bool boolean (std::string_view key, bool fallback = false) {
+    auto val = lua::config::get (key);
+    return val.is<bool>() ? val.as<bool>() : fallback;
+}
 } // namespace config

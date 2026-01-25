@@ -82,8 +82,8 @@ public:
         joystick.LeftBumper().OnTrue (drivetrain().RunOnce ([this] { drivetrain().SeedFieldCentric(); }));
 
         // Intake controls
-        joystick.RightTrigger().WhileTrue (intake().intakeCommand());
-        joystick.LeftTrigger().WhileTrue (intake().ejectCommand());
+        joystick.Button(1).WhileTrue (intake().intakeCommand());
+        joystick.Button(2).WhileTrue (intake().ejectCommand());
         // clang-format on
     }
 
@@ -112,7 +112,7 @@ Container::~Container()
 std::unique_ptr<Container> Container::create()
 {
     std::unique_ptr<Container> rc;
-    if (config::USE_GAMEPAD)
+    if (config::boolean ("gamepad"))
         rc.reset (new GamepadContainer());
     else
         rc.reset (new JoystickContainer());

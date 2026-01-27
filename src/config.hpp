@@ -8,7 +8,7 @@
 namespace config {
 
 // The button index to use for resetting the heading direction.
-static constexpr int HEADING_BUTTON_INDEX = 19;
+static constexpr int HEADING_BUTTON_INDEX = 18;
 // The button index to engage the intake.
 static constexpr int INTAKE_TRIGGER_INDEX = 18;
 

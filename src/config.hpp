@@ -7,6 +7,21 @@
 
 namespace config {
 
+/** Get a value from the 'general' settings. See `robot/config.lua` 
+    @param symbol The symbol key to lookup.
+    @returns the value or an invalid object.
+*/
+sol::object get (std::string_view symbol);
+
+/** Get a value from any category
+    @param category The category to check
+    @param symbol The value key to get.
+    @returns The value or an invalid object.
+ */
+sol::object get (std::string_view category, std::string_view symbol);
+
+void log (std::string_view key);
+
 /** Retrieves a numeric configuration value from Lua config.
  
     @tparam T The numeric type to retrieve (must be an integral or floating point type)
@@ -17,7 +32,7 @@ template<typename T>
 static double num (std::string_view key) {
     static_assert (std::is_integral_v<T> || std::is_floating_point_v<T>, 
         "T must be an integer or floating point type");
-    auto val = lua::config::get (key);
+    auto val = config::get (key);
     return val.is<T>() ? val.as<T>() : T(0);
 }
 
@@ -36,7 +51,7 @@ static double number (std::string_view key) { return num<double> (key); }
 static int integer (std::string_view key) { return num<int> (key); }
 
 static bool boolean (std::string_view key, bool fallback = false) {
-    auto val = lua::config::get (key);
+    auto val = config::get (key);
     return val.is<bool>() ? val.as<bool>() : fallback;
 }
 
@@ -47,14 +62,14 @@ static bool boolean (std::string_view key, bool fallback = false) {
     @return The configuration value as a string, or an empty string if not found or has the wrong type
 */
 static std::string str (std::string_view key) {
-    auto val = lua::config::get (key);
+    auto val = config::get (key);
     return val.is<std::string>() ? val.as<std::string>() : std::string();
 }
 
 /** Displays all configuration settings from the Lua config table.
  
     Iterates through all string keys in the config table and logs each one
-    using lua::config::log(). Output is bracketed with begin/end markers.
+    using config::log(). Output is bracketed with begin/end markers.
 */
 static void display() {
     auto& L { lua::state() };
@@ -63,7 +78,7 @@ static void display() {
     std::cout << "[config] begin settings\n";
     for (const auto& [key, value] : config) {
         if (key.is<std::string>()) {
-            lua::config::log(key.as<std::string>());
+            config::log(key.as<std::string>());
         }
     }
     std::cout << "[config] end settings\n";

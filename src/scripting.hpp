@@ -43,28 +43,4 @@ const std::string& searchDirectory();
 */
 bool bootstrap();
 
-/** Lua to C++ config bindings.
-    
-    Functions in this namespace call in to Lua to retrieve values
-    from the config module.
- */
-namespace config {
-
-/** Get a value from the 'general' settings. See `robot/config.lua` 
-    @param symbol The symbol key to lookup.
-    @returns the value or an invalid object.
-*/
-sol::object get (std::string_view symbol);
-
-/** Get a value from any category
-    @param category The category to check
-    @param symbol The value key to get.
-    @returns The value or an invalid object.
- */
-sol::object get (std::string_view category, std::string_view symbol);
-
-void log (std::string_view key);
-
-} // namespace config
-
 } // namespace lua

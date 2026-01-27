@@ -69,6 +69,21 @@ void Intake::configureMotors() {
     m_topMotor.GetConfigurator().Apply(topConfig);
     m_bottomMotor.GetConfigurator().Apply(bottomConfig);
     
+    // Configure status signal update frequencies to prevent CAN stale errors
+    // Set to 50 Hz for telemetry signals (velocity, current)
+    BaseStatusSignal::SetUpdateFrequencyForAll(
+        50_Hz,
+        m_topMotor.GetVelocity(),
+        m_topMotor.GetSupplyCurrent(),
+        m_bottomMotor.GetVelocity(),
+        m_bottomMotor.GetSupplyCurrent()
+    );
+    
+    // Optimize CAN bus utilization after setting update frequencies
+    // This reduces the default update rates for unused signals
+    m_topMotor.OptimizeBusUtilization();
+    m_bottomMotor.OptimizeBusUtilization();
+    
     // Optional: Make bottom motor follow top motor
     // m_bottomMotor.SetControl(controls::Follower{14, true}); // Follow ID 14, opposite direction
 }

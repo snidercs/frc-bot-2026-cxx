@@ -37,8 +37,8 @@ private:
     ctre::phoenix6::controls::VelocityVoltage m_velocityRequest{0_tps};
 
     // Constants
-    static constexpr units::volt_t kIntakeVoltage = 8_V;
-    static constexpr units::volt_t kEjectVoltage = -6_V;
+    static constexpr units::volt_t kIntakeVoltage = -3_V;
+    static constexpr units::volt_t kEjectVoltage = 2_V;
     static constexpr units::turns_per_second_t kIntakeVelocity = 50_tps;
 
     void configureMotors();

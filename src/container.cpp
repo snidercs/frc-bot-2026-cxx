@@ -93,12 +93,15 @@ private:
 
 Container::Container()
 {
-    _drivetrain = std::make_unique<subsystems::CommandSwerveDrivetrain> (
+    // Construct drivetrain with 250 Hz odometry update frequency to prevent CAN stale errors
+    _drivetrain = std::make_unique<subsystems::CommandSwerveDrivetrain>(
         TunerConstants::DrivetrainConstants,
+        250_Hz,
         TunerConstants::FrontLeft,
         TunerConstants::FrontRight,
         TunerConstants::BackLeft,
-        TunerConstants::BackRight);
+        TunerConstants::BackRight
+    );
     
     _intake = std::make_unique<subsystems::Intake>();
 }

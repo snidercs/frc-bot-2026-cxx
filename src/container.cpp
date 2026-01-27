@@ -30,12 +30,12 @@ protected:
                     .WithRotationalRate (-_sticks[0].GetHID().GetRawAxis(0) * MaxAngularRate);
             }));
 
-        _sticks[0].Button(config::HEADING_BUTTON_INDEX).OnTrue (
-            drivetrain().RunOnce ([this] { drivetrain().SeedFieldCentric(); })
-        );
+        _sticks[0].Button(config::integer("heading_button_index")).OnTrue (
+            drivetrain().RunOnce ([this] { drivetrain().SeedFieldCentric(); }));
 
         // Intake control
-        _sticks[1].Button(config::INTAKE_TRIGGER_INDEX).WhileTrue (intake().intakeCommand());
+        _sticks[1].Button(config::integer("intake_trigger_index")).WhileTrue (
+            intake().intakeCommand());
         // clang-format on
     }
 

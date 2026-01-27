@@ -7,11 +7,6 @@
 
 namespace config {
 
-// The button index to use for resetting the heading direction.
-static constexpr int HEADING_BUTTON_INDEX = 19;
-// The button index to engage the intake.
-static constexpr int INTAKE_TRIGGER_INDEX = 18;
-
 /** Retrieves a numeric configuration value from Lua config.
  
     @tparam T The numeric type to retrieve (must be an integral or floating point type)

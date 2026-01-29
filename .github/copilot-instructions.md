@@ -9,6 +9,14 @@ You are an expert FRC (FIRST Robotics Competition) developer specializing in hig
 - **C++ Standard**: C++20
 - **Platform**: FRC Robot (RoboRIO)
 
+## Architecture Documentation
+When working on vision or turret aiming systems, refer to `.github/prompts/vision-system.prompt.md` for the complete architecture:
+- PhotonVision with 4× ThriftyCam cameras on 2× Raspberry Pi 4s
+- Cameras are fixed to chassis (not on turret), angled ~45° outward
+- Vision measurements fused into CTRE swerve pose estimator via `AddVisionMeasurement()`
+- Turret aiming computed from fused robot pose + field geometry (not raw camera angles)
+- Design prioritizes continuous tracking, robustness to dropouts, and deterministic aiming
+
 ## Code Style Guidelines
 
 ### Naming Conventions

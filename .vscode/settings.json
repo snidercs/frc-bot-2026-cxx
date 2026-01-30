@@ -103,6 +103,11 @@
     "thread": "cpp",
     "cinttypes": "cpp",
     "typeindex": "cpp",
-    "valarray": "cpp"
-  }
+    "valarray": "cpp",
+    "*.gradle": "groovy"
+  },
+  "groovy.classpath": [
+      "${workspaceFolder}/.gradle",
+      "${workspaceFolder}/buildSrc"
+  ]
 }

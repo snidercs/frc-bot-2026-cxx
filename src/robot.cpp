@@ -4,9 +4,10 @@
 
 #include <iostream>
 
-#include <frc2/command/CommandScheduler.h>
 #include <frc/DriverStation.h>
+#include <frc/Filesystem.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc2/command/CommandScheduler.h>
 
 #include "config.hpp"
 #include "robot.hpp"
@@ -20,7 +21,6 @@ using frc::SmartDashboard;
 namespace detail {
     /** Display engine and bot information banner. */
     static void displayBanner() {
-   
     lua::printVersion();
     std::cout << "Engine running at "
               << config::num<int> ("period")
@@ -29,6 +29,11 @@ namespace detail {
     std::cout.flush();
     std::cerr.flush();
 }
+
+    static void displayPaths() {
+        std::cout << "launch dir:    " << frc::filesystem::GetLaunchDirectory() << std::endl
+                  << "operating dir: " << frc::filesystem::GetOperatingDirectory() << std::endl;
+    }
 }
 
 Robot::Robot()
@@ -38,8 +43,9 @@ Robot::Robot()
 }
 
 void Robot::RobotInit() {
-    // SmartDashboard::PutString ("Controller", 
-    //     config::boolean("gamepad") ? "Gamepad" : "Flightsticks");
+    SmartDashboard::PutString ("Controller", 
+        config::boolean("gamepad") ? "Gamepad" : "Flightsticks");
+    detail::displayPaths();
     config::display();
 }
 

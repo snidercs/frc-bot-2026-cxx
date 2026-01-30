@@ -149,11 +149,8 @@ import groovy.json.JsonSlurper
 task extractLuaModules {
     doLast {
         def vendordepsDir = file('vendordeps')
-        def luabotDir = file('build/lua')
-        
-        // Ensure luabot directory exists
-        luabotDir.mkdirs()
-        
+        def luabotDir = file('build/luabot')
+
         // Parse all vendordeps JSON files
         vendordepsDir.eachFileMatch(~/.*\.json/) { vendordepFile ->
             def json = new JsonSlurper().parse(vendordepFile)
@@ -167,7 +164,12 @@ task extractLuaModules {
                     def artifactId = dep.artifactId
                     def version = dep.version
                     def classifier = dep.moduleClassifier ?: 'modules'
-                    
+                    def ffiEnabled = dep.ffiEnabled ?: false
+
+                    def luaDir = ffiEnabled ? new File(luabotDir, 'share/luajit-2.1')
+                                            : new File(luabotDir, 'share/lua/5.1')
+                    luaDir.mkdirs()
+
                     // Convert groupId to path (e.g., "org.luabot" -> "org/luabot")
                     def groupPath = groupId.replace('.', '/')
                     
@@ -192,7 +194,7 @@ task extractLuaModules {
                         for (mavenUrl in mavenUrls) {
                             try {
                                 def url = new URL("${mavenUrl}${fullPath}")
-                                def zipFile = new File(luabotDir, "${artifactId}-${version}.zip")
+                                def zipFile = new File(luaDir, "${artifactId}-${version}.zip")
                                 
                                 println "  Downloading from: ${url}"
                                 
@@ -215,10 +217,10 @@ task extractLuaModules {
                         throw new GradleException("Failed to find or download Lua dependency: ${groupId}:${artifactId}:${version}:${classifier}")
                     }
                     
-                    println "  Extracting to: ${luabotDir.absolutePath}"
+                    println "  Extracting to: ${luaDir.absolutePath}"
                     
                     // Extract the zip file
-                    ant.unzip(src: zipToExtract.absolutePath, dest: luabotDir.absolutePath, overwrite: true)
+                    ant.unzip(src: zipToExtract.absolutePath, dest: luaDir.absolutePath, overwrite: true)
                     
                     // Delete the downloaded zip file if we downloaded it (not from local maven)
                     if (zipToExtract != localZip && zipToExtract.exists()) {

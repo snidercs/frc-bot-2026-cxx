@@ -12,6 +12,8 @@
 #include "robot.hpp"
 #include "scripting.hpp"
 
+#include <luabot/luabot.hpp>
+
 using frc::DriverStation;
 using frc::SmartDashboard;
 
@@ -108,3 +110,7 @@ int main()
     return frc::StartRobot<Robot>();
 }
 #endif
+
+#include <luabot/apriltag.ipp>
+#include <luabot/frc.ipp>
+#include <luabot/math.ipp>

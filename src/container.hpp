@@ -6,8 +6,8 @@
 
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/button/CommandXboxController.h>
-#include "drivetrain.hpp"
-#include "intake.hpp"
+#include "subsystems/drivetrain.hpp"
+#include "subsystems/intake.hpp"
 #include "telemetry.hpp"
 
 class Container {

@@ -13,6 +13,7 @@ local config = {
     intake_top_can_bus = "rio",
     intake_bottom_device_id = 15,
     intake_bottom_can_bus = "rio",
+    intake_voltage = -4.2,  -- Voltage for intake motor (negative = intake direction)
 
     climber_device_id = 60,
     climber_can_bus = "rio",

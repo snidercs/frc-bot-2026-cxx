@@ -5,7 +5,9 @@
 using namespace subsystems;
 using namespace ctre::phoenix6;
 
-Intake::Intake() {
+Intake::Intake()
+    : kIntakeVoltage {config::number("intake_voltage") * 1.0_V}
+{
     SetName("Intake");
     configureMotors();
 }

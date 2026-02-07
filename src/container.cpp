@@ -36,6 +36,12 @@ protected:
         // Intake control
         _sticks[1].Button(config::integer("intake_trigger_index")).WhileTrue (
             intake().intakeCommand());
+        
+        // Climber control
+        _sticks[0].Button(config::integer("climber_climb_button_index")).WhileTrue (
+            climber().climbCommand());
+        _sticks[0].Button(config::integer("climber_lower_button_index")).WhileTrue (
+            climber().lowerCommand());
         // clang-format on
     }
 
@@ -84,6 +90,10 @@ public:
         // Intake controls
         joystick.Button(1).WhileTrue (intake().intakeCommand());
         joystick.Button(2).WhileTrue (intake().ejectCommand());
+        
+        // Climber controls
+        joystick.Button(config::integer("climber_climb_button_index")).WhileTrue (climber().climbCommand());
+        joystick.Button(config::integer("climber_lower_button_index")).WhileTrue (climber().lowerCommand());
         // clang-format on
     }
 
@@ -104,10 +114,12 @@ Container::Container()
     );
     
     _intake = std::make_unique<subsystems::Intake>();
+    _climber = std::make_unique<subsystems::Climber>();
 }
 
 Container::~Container()
 {
+    _climber.reset();
     _intake.reset();
     _drivetrain.reset();
 }

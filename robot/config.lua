@@ -12,7 +12,12 @@ local config = {
     intake_top_device_id = 14,
     intake_top_can_bus = "rio",
     intake_bottom_device_id = 15,
-    intake_bottom_can_bus = "rio"
+    intake_bottom_can_bus = "rio",
+
+    climber_device_id = 60,
+    climber_can_bus = "rio",
+    climber_climb_button_index = 5,  -- Button to climb (move down)
+    climber_lower_button_index = 6   -- Button to lower (move up)
 }
 
 return config

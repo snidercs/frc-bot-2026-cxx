@@ -154,5 +154,29 @@ void Container::configureBindingsInternal()
 
 frc2::CommandPtr Container::GetAutonomousCommand()
 {
-    return frc2::cmd::Print ("No autonomous command configured");
+    // Store the starting X position (will be set when command starts)
+    auto startX = std::make_shared<units::meter_t>(0_m);
+    
+    // Drive forward 3 meters from starting position, then brake
+    return drivetrain().RunOnce([this, startX]() {
+            // Capture the starting X position when autonomous begins
+            *startX = drivetrain().GetState().Pose.X();
+        })
+        .AndThen(
+            drivetrain().ApplyRequest([this]() -> auto&& {
+                return autoForward; 
+            })
+            .Until([this, startX]() {
+                // Stop when we've traveled 3 meters from start position
+                auto currentX = drivetrain().GetState().Pose.X();
+                auto distanceTraveled = units::math::abs(currentX - *startX);
+                return distanceTraveled >= 1_m;
+            })
+        )
+        .AndThen(
+            drivetrain().ApplyRequest([this]() -> auto&& {
+                return brake;
+            })
+        )
+        .WithName("DriveForward3Meters");
 }

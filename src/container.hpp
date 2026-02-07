@@ -37,6 +37,12 @@ protected:
                                                .WithDriveRequestType (swerve::DriveRequestType::OpenLoopVoltage); // Use open-loop control for drive motors
     swerve::requests::SwerveDriveBrake brake {};
     swerve::requests::PointWheelsAt point {};
+    
+    /* Autonomous drive forward request */
+    swerve::requests::FieldCentric autoForward = swerve::requests::FieldCentric{}
+                                                    .WithVelocityX(1.5_mps)
+                                                    .WithVelocityY(0_mps)
+                                                    .WithRotationalRate(0_rad_per_s);
 
     /* Note: This must be constructed before the drivetrain, otherwise we need to
      *       define a destructor to un-register the telemetry from the drivetrain */

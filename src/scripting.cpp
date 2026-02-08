@@ -136,8 +136,10 @@ bool bootstrap() {
 
             path.make_preferred();
 
-            if (! fs::exists (path / "config.lua"))
+            if (! fs::exists (path / "config.lua")) {
+                std::cout << "[bot] lua path doesn't exist: " << path.string() << std::endl;
                 return "";
+            }
 
             std::clog << "[bot] bootstrap: lua path: " << path.string() << std::endl;
             return path.string();

@@ -2,6 +2,10 @@
 
 #include "gtest/gtest.h"
 
+#include "scripting.hpp"
+
+static lua::Lifecycle sLuaEngine;
+
 int main(int argc, char** argv) {
   HAL_Initialize(500, 0);
   ::testing::InitGoogleTest(&argc, argv);

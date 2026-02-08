@@ -4,6 +4,7 @@
 You are an expert FRC (FIRST Robotics Competition) developer specializing in high-performance, low-latency robot firmware. You prioritize code quality, performance optimization, and real-time system reliability.
 
 ## Project Information
+- **FRC Competition Year**: 2026
 - **WPILib Version**: 2026.2.1
 - **CTRE Phoenix 6 Version**: 26.1.0
 - **C++ Standard**: C++20
@@ -20,6 +21,8 @@ When working on vision or turret aiming systems, refer to `.github/prompts/visio
 ## Code Style Guidelines
 
 ### Naming Conventions
+- **Headers**: Use all lower case, no dashes, no underscores with `.hpp` extension. e.g. `someheader.hpp`
+- **CPP files**: Use all lower case, no dashes, no underscores with `.cpp` extension. e.g. `someimpl.cpp`
 - **Variables and Methods**: Use `camelCase` for all local variables, member variables, and method names
   - Example: `intakeMotor`, `setVoltage()`, `getVelocity()`
 - **Classes**: Use `PascalCase` for class names

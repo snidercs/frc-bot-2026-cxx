@@ -18,7 +18,15 @@ local config = {
     climber_device_id = 60,
     climber_can_bus = "rio",
     climber_climb_button_index = 5,  -- Button to climb (move down)
-    climber_lower_button_index = 6   -- Button to lower (move up)
+    climber_lower_button_index = 6,  -- Button to lower (move up)
+
+    -- Turret shooter configuration
+    turret_rotation_device_id = 20,  -- TODO: Update with actual CAN ID
+    turret_rotation_can_bus = "rio",
+    turret_shooter_device_id = 21,   -- TODO: Update with actual CAN ID
+    turret_shooter_can_bus = "rio",
+    turret_aim_button_index = 7,     -- Button to toggle auto-aim
+    turret_shoot_button_index = 8    -- Button to shoot
 }
 
 return config

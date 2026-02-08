@@ -41,16 +41,16 @@ static double num (std::string_view key) {
     @param key The configuration key to look up
     @return The configuration value as a double, or 0.0 if not found or has the wrong type
 */
-static double number (std::string_view key) { return num<double> (key); }
+inline static double number (std::string_view key) { return num<double> (key); }
 
 /** Retrieves an integer configuration value from Lua config.
  
     @param key The configuration key to look up
     @return The configuration value as an int, or 0 if not found or has the wrong type
 */
-static int integer (std::string_view key) { return num<int> (key); }
+inline static int integer (std::string_view key) { return num<int> (key); }
 
-static bool boolean (std::string_view key, bool fallback = false) {
+inline static bool boolean (std::string_view key, bool fallback = false) {
     auto val = config::get (key);
     return val.is<bool>() ? val.as<bool>() : fallback;
 }
@@ -61,7 +61,7 @@ static bool boolean (std::string_view key, bool fallback = false) {
     @param key The configuration key to look up
     @return The configuration value as a string, or an empty string if not found or has the wrong type
 */
-static std::string str (std::string_view key) {
+inline static std::string str (std::string_view key) {
     auto val = config::get (key);
     return val.is<std::string>() ? val.as<std::string>() : std::string();
 }
@@ -71,7 +71,7 @@ static std::string str (std::string_view key) {
     Iterates through all string keys in the config table and logs each one
     using config::log(). Output is bracketed with begin/end markers.
 */
-static void display() {
+inline static void display() {
     auto& L { lua::state() };
     sol::table config = L["config"];
 

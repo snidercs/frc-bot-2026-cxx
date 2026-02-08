@@ -119,8 +119,8 @@ namespace vision {
         Returns empty layout if load fails (caller should handle).
     */
     inline frc::AprilTagFieldLayout getFieldLayout() {
-        // Load 2025 Reefscape field layout (update year as needed)
-        return frc::LoadAprilTagLayoutField (frc::AprilTagField::k2026RebuiltAndyMark);
+        // Load 2026 field layout
+        return frc::AprilTagFieldLayout::LoadField(frc::AprilTagField::k2026RebuiltAndyMark);
     }
     
     /** Valid goal tag IDs that we're allowed to aim at.

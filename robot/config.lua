@@ -21,7 +21,7 @@ local config = {
     climber_lower_button_index = 6,  -- Button to lower (move up)
 
     -- Turret shooter configuration
-    turret_rotation_device_id = 20,  -- TODO: Update with actual CAN ID
+    turret_rotation_device_id = 16,  -- TODO: Update with actual CAN ID
     turret_rotation_can_bus = "rio",
     turret_shooter_device_id = 21,   -- TODO: Update with actual CAN ID
     turret_shooter_can_bus = "rio",

@@ -9,6 +9,8 @@
 #include "drivetrain.hpp"
 #include "intake.hpp"
 #include "climber.hpp"
+#include "turret.hpp"
+#include "visionsingle.hpp"
 #include "telemetry.hpp"
 
 class Container {
@@ -21,6 +23,8 @@ public:
     auto& drivetrain() noexcept { return *_drivetrain; }
     auto& intake() noexcept { return *_intake; }
     auto& climber() noexcept { return *_climber; }
+    auto& turret() noexcept { return *_turret; }
+    auto& vision() noexcept { return *_vision; }
     frc2::CommandPtr GetAutonomousCommand();
 
 protected:
@@ -53,4 +57,6 @@ private:
     std::unique_ptr<subsystems::CommandSwerveDrivetrain> _drivetrain;
     std::unique_ptr<subsystems::Intake> _intake;
     std::unique_ptr<subsystems::Climber> _climber;
+    std::unique_ptr<subsystems::Turret> _turret;
+    std::unique_ptr<VisionIOSingle> _vision;
 };

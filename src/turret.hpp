@@ -31,6 +31,7 @@ public:
 
     // Manual control
     void setRotationVelocity(units::turns_per_second_t velocity);
+    void setRotationDutyCycle(double dutyCycle);  // For testing: -0.1 to 0.1
     void setShooterVelocity(units::turns_per_second_t velocity);
     void stopRotation();
     void stopShooter();
@@ -54,16 +55,17 @@ private:
         config::integer("turret_rotation_device_id"),
         config::str("turret_rotation_can_bus")};
     
-    // Shooter flywheel motor(s) - TODO: add second motor if needed
-    ctre::phoenix6::hardware::TalonFX _shooterMotor{
-        config::integer("turret_shooter_device_id"),
-        config::str("turret_shooter_can_bus")};
+    // // Shooter flywheel motor(s) - TODO: add second motor if needed
+    // ctre::phoenix6::hardware::TalonFX _shooterMotor{
+    //     config::integer("turret_shooter_device_id"),
+    //     config::str("turret_shooter_can_bus")};
 
     // Control requests (reusable)
     ctre::phoenix6::controls::PositionVoltage _positionRequest{0_tr};
     ctre::phoenix6::controls::VelocityVoltage _rotationVelocityRequest{0_tps};
     ctre::phoenix6::controls::VelocityVoltage _shooterVelocityRequest{0_tps};
     ctre::phoenix6::controls::VoltageOut _voltageRequest{0_V};
+    ctre::phoenix6::controls::DutyCycleOut _dutyCycleRequest{0.0};
 
     // State
     bool _autoAimEnabled = false;

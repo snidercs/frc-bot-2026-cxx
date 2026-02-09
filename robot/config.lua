@@ -26,7 +26,10 @@ local config = {
     turret_shooter_device_id = 21,   -- TODO: Update with actual CAN ID
     turret_shooter_can_bus = "rio",
     turret_aim_button_index = 7,     -- Button to toggle auto-aim
-    turret_shoot_button_index = 8    -- Button to shoot
+    turret_shoot_button_index = 8,   -- Button to shoot
+    
+    -- Vision test configuration
+    vision_test_camera = "TestCam"   -- PhotonVision camera name for single-camera testing
 }
 
 return config

@@ -74,21 +74,21 @@ void Turret::configureMotors() {
     
     // Apply configs
     _rotationMotor.GetConfigurator().Apply(rotationConfig);
-    _shooterMotor.GetConfigurator().Apply(shooterConfig);
+    // _shooterMotor.GetConfigurator().Apply(shooterConfig);
     
-    // Configure status signal update frequencies
-    BaseStatusSignal::SetUpdateFrequencyForAll(
-        50_Hz,
-        _rotationMotor.GetPosition(),
-        _rotationMotor.GetVelocity(),
-        _rotationMotor.GetSupplyCurrent(),
-        _shooterMotor.GetVelocity(),
-        _shooterMotor.GetSupplyCurrent()
-    );
+    // // Configure status signal update frequencies
+    // BaseStatusSignal::SetUpdateFrequencyForAll(
+    //     50_Hz,
+    //     _rotationMotor.GetPosition(),
+    //     _rotationMotor.GetVelocity(),
+    //     _rotationMotor.GetSupplyCurrent(),
+    //     _shooterMotor.GetVelocity(),
+    //     _shooterMotor.GetSupplyCurrent()
+    // );
     
     // Optimize CAN bus utilization
     _rotationMotor.OptimizeBusUtilization();
-    _shooterMotor.OptimizeBusUtilization();
+    // _shooterMotor.OptimizeBusUtilization();
 }
 
 void Turret::Periodic() {
@@ -100,16 +100,29 @@ void Turret::Periodic() {
     frc::SmartDashboard::PutNumber("Turret/Shooter Velocity (rps)", getShooterVelocity().value());
     frc::SmartDashboard::PutBoolean("Turret/At Target", isAtTarget());
     frc::SmartDashboard::PutBoolean("Turret/Shooter Ready", isShooterReady());
-    frc::SmartDashboard::PutNumber("Turret/Rotation Current (A)", _rotationMotor.GetSupplyCurrent().GetValue().value());
-    frc::SmartDashboard::PutNumber("Turret/Shooter Current (A)", _shooterMotor.GetSupplyCurrent().GetValue().value());
+    
+    // Debug: Motor status
+    frc::SmartDashboard::PutNumber("Turret/Motor Voltage", _rotationMotor.GetMotorVoltage().GetValue().value());
+    frc::SmartDashboard::PutNumber("Turret/Motor Current", _rotationMotor.GetSupplyCurrent().GetValue().value());
+    frc::SmartDashboard::PutNumber("Turret/Motor Position", _rotationMotor.GetPosition().GetValue().value());
 }
 
 void Turret::setRotationVelocity(units::turns_per_second_t velocity) {
     _rotationMotor.SetControl(_rotationVelocityRequest.WithVelocity(velocity));
 }
 
+void Turret::setRotationDutyCycle(double dutyCycle) {
+    // Clamp to safe range for testing
+    dutyCycle = std::clamp(dutyCycle, -0.1, 0.1);
+    
+    // Debug output
+    frc::SmartDashboard::PutNumber("Turret/Commanded Duty Cycle", dutyCycle);
+    
+    _rotationMotor.SetControl(_dutyCycleRequest.WithOutput(dutyCycle));
+}
+
 void Turret::setShooterVelocity(units::turns_per_second_t velocity) {
-    _shooterMotor.SetControl(_shooterVelocityRequest.WithVelocity(velocity));
+    // _shooterMotor.SetControl(_shooterVelocityRequest.WithVelocity(velocity));
 }
 
 void Turret::stopRotation() {
@@ -117,7 +130,7 @@ void Turret::stopRotation() {
 }
 
 void Turret::stopShooter() {
-    _shooterMotor.SetControl(_voltageRequest.WithOutput(0_V));
+    // _shooterMotor.SetControl(_voltageRequest.WithOutput(0_V));
 }
 
 void Turret::stop() {
@@ -149,7 +162,7 @@ units::degree_t Turret::getCurrentAngle() const {
 
 units::turns_per_second_t Turret::getShooterVelocity() const {
     // Need to cast away const to call GetVelocity() - Phoenix 6 API limitation
-    return const_cast<ctre::phoenix6::hardware::TalonFX&>(_shooterMotor).GetVelocity().GetValue();
+    return 0_rad_per_s; //const_cast<ctre::phoenix6::hardware::TalonFX&>(_shooterMotor).GetVelocity().GetValue();
 }
 
 bool Turret::isAtTarget() const {

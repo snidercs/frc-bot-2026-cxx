@@ -10,6 +10,7 @@
 
 #include "config.hpp"
 #include "container.hpp"
+#include "visiontest.hpp"
 
 class JoystickContainer : public Container {
 public:
@@ -42,6 +43,10 @@ protected:
             climber().climbCommand());
         _sticks[0].Button(config::integer("climber_lower_button_index")).WhileTrue (
             climber().lowerCommand());
+        
+        // Vision tracking test - button 7
+        _sticks[0].Button(7).WhileTrue (
+            test::createVisionTrackingTest(&turret(), &vision()));
         // clang-format on
     }
 
@@ -94,6 +99,10 @@ public:
         // Climber controls
         joystick.Button(config::integer("climber_climb_button_index")).WhileTrue (climber().climbCommand());
         joystick.Button(config::integer("climber_lower_button_index")).WhileTrue (climber().lowerCommand());
+        
+        // Vision tracking test - left trigger
+        joystick.LeftTrigger().WhileTrue (
+            test::createVisionTrackingTest(&turret(), &vision()));
         // clang-format on
     }
 
@@ -115,10 +124,14 @@ Container::Container()
     
     _intake = std::make_unique<subsystems::Intake>();
     _climber = std::make_unique<subsystems::Climber>();
+    _turret = std::make_unique<subsystems::Turret>();
+    _vision = std::make_unique<VisionIOSingle>(config::str("vision_test_camera"));
 }
 
 Container::~Container()
 {
+    _vision.reset();
+    _turret.reset();
     _climber.reset();
     _intake.reset();
     _drivetrain.reset();

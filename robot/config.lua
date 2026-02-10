@@ -15,7 +15,7 @@ local config = {
     intake_bottom_can_bus = "rio",
     intake_voltage = -4.2,  -- Voltage for intake motor (negative = intake direction)
 
-    climber_device_id = 60,
+    climber_device_id = 1,  -- TODO: Update with actual CAN ID for climber motor
     climber_can_bus = "rio",
     climber_climb_button_index = 5,  -- Button to climb (move down)
     climber_lower_button_index = 6,  -- Button to lower (move up)

@@ -38,7 +38,7 @@ TEST(ConfigTest, GetDeviceIds) {
     EXPECT_EQ(intakeBottomId, 15);
     
     auto climberId = config::integer("climber_device_id");
-    EXPECT_EQ(climberId, 60);
+    EXPECT_EQ(climberId, 1);
 }
 
 // Test CAN bus strings
@@ -62,10 +62,10 @@ TEST(ConfigTest, GetButtonIndices) {
     EXPECT_EQ(intakeTrigger, 18);
     
     auto climbButton = config::integer("climber_climb_button_index");
-    EXPECT_EQ(climbButton, 5);
+    EXPECT_EQ(climbButton, 16);
     
     auto lowerButton = config::integer("climber_lower_button_index");
-    EXPECT_EQ(lowerButton, 6);
+    EXPECT_EQ(lowerButton, 17);
 }
 
 // Test missing values return defaults

@@ -11,7 +11,7 @@ frc2::CommandPtr createVisionTrackingTest(subsystems::Turret* turret,
     std::cout << "[bot] creating vision test command\n";
     return frc2::cmd::Run([turret, vision] {        
         // Get vision measurements (for validation and telemetry)
-        auto measurements = vision->getMeasurements();
+        // auto measurements = vision->getMeasurements();
         
         // Update telemetry
         frc::SmartDashboard::PutString("VisionTest/Status", vision->getStatus());
@@ -48,7 +48,7 @@ frc2::CommandPtr createVisionTrackingTest(subsystems::Turret* turret,
         frc::SmartDashboard::PutBoolean("VisionTest/Tracking", true);
         frc::SmartDashboard::PutNumber("VisionTest/TargetYaw", targetYaw);
         frc::SmartDashboard::PutNumber("VisionTest/DutyCycle", dutyCycle);
-        frc::SmartDashboard::PutNumber("VisionTest/MeasurementCount", measurements.size());
+        // frc::SmartDashboard::PutNumber("VisionTest/MeasurementCount", measurements.size());
     })
     .WithName("VisionTrackingTest")
     .FinallyDo([turret] { turret->stopRotation(); });

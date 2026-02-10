@@ -8,7 +8,8 @@ namespace test {
 
 frc2::CommandPtr createVisionTrackingTest(subsystems::Turret* turret, 
                                            VisionIOSingle* vision) {
-    return frc2::cmd::Run([turret, vision] {
+    std::cout << "[bot] creating vision test command\n";
+    return frc2::cmd::Run([turret, vision] {        
         // Get vision measurements (for validation and telemetry)
         auto measurements = vision->getMeasurements();
         

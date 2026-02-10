@@ -15,13 +15,13 @@ local config = {
     intake_bottom_can_bus = "rio",
     intake_voltage = -4.2,  -- Voltage for intake motor (negative = intake direction)
 
-    climber_device_id = 1,  -- TODO: Update with actual CAN ID for climber motor
+    climber_device_id = 1,
     climber_can_bus = "rio",
-    climber_climb_button_index = 5,  -- Button to climb (move down)
-    climber_lower_button_index = 6,  -- Button to lower (move up)
+    climber_climb_button_index = 16,  -- Button to climb (move down)
+    climber_lower_button_index = 17,  -- Button to lower (move up)
 
     -- Turret shooter configuration
-    turret_rotation_device_id = 16,  -- TODO: Update with actual CAN ID
+    turret_rotation_device_id = 16,
     turret_rotation_can_bus = "rio",
     turret_shooter_device_id = 21,   -- TODO: Update with actual CAN ID
     turret_shooter_can_bus = "rio",

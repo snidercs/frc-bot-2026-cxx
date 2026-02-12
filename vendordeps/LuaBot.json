@@ -5,9 +5,9 @@
     "uuid": "54bbb5ab-d271-4f09-93f7-b0fe752672c5",
     "frcYear": "2026",
     "mavenUrls": [
-        "https://github.com/snidercs/luabot/releases/latest/download/"
+        "https://maven.luabot.org/"
     ],
-    "jsonUrl": "https://github.com/snidercs/luabot/releases/latest/download/LuaBot.json",
+    "jsonUrl": "https://maven.luabot.org/LuaBot.json",
     "jniDependencies": [],
     "javaDependencies": [],
     "luaDependencies": [

@@ -47,6 +47,9 @@ deploy {
 def deployArtifact = deploy.targets.roborio.artifacts.frcCpp
 
 // Set this to true to enable desktop support.
+// NOTE: Linux x86-64 simulation currently fails with fmt assertion in WPILib 2026.2.1
+// when system libstdc++6 is version 13.x. This is a WPILib bug in HAL extension loading.
+// Workaround for Linux: Set this to false. Windows/macOS should work fine.
 def includeDesktopSupport = true
 
 // Set to true to run simulation in debug mode

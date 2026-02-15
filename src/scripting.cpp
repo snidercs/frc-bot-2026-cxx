@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include <frc/Filesystem.h>
+#include <frc/RobotBase.h>
 
 #include "scripting.hpp"
 
@@ -54,6 +55,44 @@ std::string withSearchQualifiers (std::string_view input) {
     out << input << detail::separator() << "?.lua;"
         << detail::separator() << "?" << detail::separator() << "init.lua";
     return out.str();
+}
+
+static std::string luabotDir() {
+    if constexpr (!frc::RobotBase::IsSimulation()) {
+        return "/home/lvuser";
+    }
+    
+    fs::path path (frc::filesystem::GetLaunchDirectory());
+    path /= "build/luabot/share/luajit-2.1";
+    path.make_preferred();
+    return path.string();
+}
+
+static std::string robotDir() {
+
+    fs::path path;
+
+    path = frc::filesystem::GetDeployDirectory();
+
+    if (! fs::exists (path / "config.lua")) {
+        path = frc::filesystem::GetOperatingDirectory();
+        path /= "robot";
+    }
+
+    if (! fs::exists (path / "config.lua")) {
+        path = frc::filesystem::GetLaunchDirectory();
+        path /= "robot";
+    }
+
+    path.make_preferred();
+
+    if (! fs::exists (path / "config.lua")) {
+        std::cout << "[bot] lua path doesn't exist: " << path.string() << std::endl;
+        return "";
+    }
+
+    std::cout << "[bot] bootstrap: lua path: " << path.string() << std::endl;
+    return path.string();
 }
 
 } // namespace detail
@@ -106,8 +145,37 @@ void setPath (std::string_view path) {
     detail::search_dir.shrink_to_fit();
     detail::path = detail::withSearchQualifiers (path);
     detail::path.shrink_to_fit();
+    std::cout << "PATH=" << path << std::endl;
     sol::table package = L["package"];
     package.set ("path", detail::path);
+}
+
+void setPath (const std::vector<std::string>& paths) {
+    std::stringstream strm;
+    
+    bool first = true;
+    for (const auto& entry : paths) {
+        if (!first) {
+            strm << (char) ';';
+        }
+        // Convert to fs::path to get correct directory separators
+        strm << detail::withSearchQualifiers (fs::path(entry).string());
+        first = false;
+    }
+    
+    const std::string path { strm.str() };
+    if (path.empty())
+        return;
+    auto& L            = lua::state();
+    detail::search_dir = path;
+    detail::search_dir.shrink_to_fit();
+    detail::path = path;
+    detail::path.shrink_to_fit();
+    std::cout << "PATH=" << path << std::endl;
+    sol::table package = L["package"];
+    package.set ("path", detail::path);
+
+    setPath(strm.str());
 }
 
 const std::string& searchDirectory() {
@@ -119,31 +187,14 @@ bool bootstrap() {
         return true;
 
     if (! detail::hasCustomPath()) {
-        setPath ([]() -> std::string {
-            fs::path path;
+        std::vector<std::string> path;
 
-            path = frc::filesystem::GetDeployDirectory();
+        path.insert (path.begin(), {
+            detail::luabotDir(),
+            detail::robotDir()
+        });
 
-            if (! fs::exists (path / "config.lua")) {
-                path = frc::filesystem::GetOperatingDirectory();
-                path /= "robot";
-            }
-
-            if (! fs::exists (path / "config.lua")) {
-                path = frc::filesystem::GetLaunchDirectory();
-                path /= "robot";
-            }
-
-            path.make_preferred();
-
-            if (! fs::exists (path / "config.lua")) {
-                std::cout << "[bot] lua path doesn't exist: " << path.string() << std::endl;
-                return "";
-            }
-
-            std::clog << "[bot] bootstrap: lua path: " << path.string() << std::endl;
-            return path.string();
-        }());
+        setPath (path);
     }
 
     auto& ls = state();

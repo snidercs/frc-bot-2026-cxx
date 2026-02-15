@@ -35,9 +35,17 @@ deploy {
                 // Static files artifact
                 frcStaticFileDeploy(getArtifactTypeClass('FileTreeArtifact')) {
                     files = project.fileTree('robot')
-                    directory = '/home/lvuser/deploy'
+                    directory = '/home/lvuser/robot'
                     deleteOldFiles = false // Change to true to delete files on roboRIO that no
                                            // longer exist in deploy directory of this project
+                }
+
+                // Static files artifact
+                frcStaticFileDeploy(getArtifactTypeClass('FileTreeArtifact')) {
+                    files = project.fileTree('build/luabot/share/luajit-2.1')
+                    directory = '/home/lvuser/luabot/*'
+                    deleteOldFiles = true // Change to true to delete files on roboRIO that no
+                                          // longer exist in deploy directory of this project
                 }
             }
         }
@@ -60,32 +68,6 @@ wpi.sim.addGui().defaultEnabled = true
 // Enable DS but not by default
 wpi.sim.addDriverstation()
 
-// Define platform-specific configuration closure
-def configurePlatformDependencies = { binary ->
-    // if (binary.targetPlatform.name == 'linuxathena') {
-    //     // RoboRIO
-    //     if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
-    //         binary.linker.args << '-LC:/Program Files/LuaBot/linuxathena/lib' << '-l' << 'luajit-5.1'
-    //         binary.cppCompiler.args << '-IC:/Program Files/LuaBot/linuxathena/include/luajit-2.1'
-    //     } else {
-    //         binary.linker.args << '-L/opt/luabot/linuxathena/lib' << '-l' << 'luajit-5.1'
-    //         binary.cppCompiler.args << '-I/opt/luabot/linuxathena/include/luajit-2.1'
-    //     }
-    // } else if (binary.targetPlatform.name == 'osxuniversal') {
-    //     // macOS simulation
-    //     binary.linker.args << '-L/opt/luabot/lib' << '-l' << 'luajit-5.1'
-    //     binary.cppCompiler.args << '-I/opt/luabot/include/luajit-2.1'
-    // } else if (binary.targetPlatform.name == 'linuxx86-64') {
-    //     // Linux simulation
-    //     binary.cppCompiler.args << '-I/opt/luabot/include/luajit-2.1'
-    //     binary.linker.args << '-L/opt/luabot/lib' << '-l' << 'luajit-5.1'
-    // } else if (binary.targetPlatform.name == 'windowsx86-64') {
-    //     // Windows simulation
-    //     binary.cppCompiler.args << '/IC:/Program Files/LuaBot/include/luajit-2.1'
-    //     binary.linker.args << 'C:/Program Files/LuaBot/lib/lua51.lib'
-    // }
-}
-
 model {
     components {
         frcUserProgram(NativeExecutableSpec) {
@@ -102,10 +84,6 @@ model {
                 exportedHeaders {
                     srcDir 'src'
                 }
-            }
-
-            binaries.all {
-                configurePlatformDependencies(it)
             }
 
             // Set deploy task to deploy this component
@@ -132,10 +110,6 @@ model {
                 }
             }
 
-            binaries.all {
-                configurePlatformDependencies(it)
-            }
-
             // Enable run tasks for this component
             wpi.cpp.enableExternalTasks(it)
 
@@ -153,6 +127,10 @@ task extractLuaModules {
     doLast {
         def vendordepsDir = file('vendordeps')
         def luabotDir = file('build/luabot')
+        
+        // Cache directory similar to Gradle's dependency cache
+        def cacheDir = new File(gradle.gradleUserHomeDir, 'caches/luabot-modules')
+        cacheDir.mkdirs()
 
         // Parse all vendordeps JSON files
         vendordepsDir.eachFileMatch(~/.*\.json/) { vendordepFile ->
@@ -183,41 +161,42 @@ task extractLuaModules {
                     
                     println "Resolving Lua dependency: ${groupId}:${artifactId}:${version}:${classifier}"
                     
-                    // Check if already downloaded in WPILib's local maven repo first
-                    def wpilibMaven = new File(System.getProperty('user.home'), "wpilib/2026/maven")
-                    def localZip = new File(wpilibMaven, fullPath)
+                    // Check cache directory first (persistent across builds)
+                    def cachedZip = new File(cacheDir, "${groupId.replace('.', '-')}-${artifactId}-${version}-${classifier}.zip")
                     
                     def zipToExtract = null
                     
-                    if (localZip.exists()) {
-                        println "  ✓ Found in local WPILib maven: ${localZip.absolutePath}"
-                        zipToExtract = localZip
+                    if (cachedZip.exists()) {
+                        println "  ✓ Found in cache: ${cachedZip.name}"
+                        zipToExtract = cachedZip
                     } else {
-                        // Not found locally, try downloading from Maven URLs
+                        // Not found in cache, try downloading from Maven URLs
+                        def downloadSuccess = false
                         for (mavenUrl in mavenUrls) {
                             try {
                                 def url = new URL("${mavenUrl}${fullPath}")
-                                def zipFile = new File(luaDir, "${artifactId}-${version}.zip")
                                 
                                 println "  Downloading from: ${url}"
                                 
                                 url.withInputStream { input ->
-                                    zipFile.withOutputStream { output ->
+                                    cachedZip.withOutputStream { output ->
                                         output << input
                                     }
                                 }
                                 
-                                zipToExtract = zipFile
+                                zipToExtract = cachedZip
+                                downloadSuccess = true
+                                println "  ✓ Downloaded and cached: ${cachedZip.name}"
                                 break
                                 
                             } catch (Exception e) {
                                 println "  ✗ Failed to download from ${mavenUrl}: ${e.message}"
                             }
                         }
-                    }
-                    
-                    if (zipToExtract == null) {
-                        throw new GradleException("Failed to find or download Lua dependency: ${groupId}:${artifactId}:${version}:${classifier}")
+                        
+                        if (!downloadSuccess) {
+                            throw new GradleException("Failed to download Lua dependency: ${groupId}:${artifactId}:${version}:${classifier}")
+                        }
                     }
                     
                     println "  Extracting to: ${luaDir.absolutePath}"
@@ -225,71 +204,10 @@ task extractLuaModules {
                     // Extract the zip file
                     ant.unzip(src: zipToExtract.absolutePath, dest: luaDir.absolutePath, overwrite: true)
                     
-                    // Delete the downloaded zip file if we downloaded it (not from local maven)
-                    if (zipToExtract != localZip && zipToExtract.exists()) {
-                        zipToExtract.delete()
-                    }
-                    
-                    println "  ✓ Successfully extracted ${fileName}"
+                    println "  ✓ Successfully extracted"
                 }
             }
         }
-    }
-}
-
-// Deploy Lua modules to RoboRIO via SSH
-task deployLuaModules {
-    dependsOn extractLuaModules
-    
-    doLast {
-        // Setup SSH Ant tasks
-        ant.taskdef(
-            name: 'scp',
-            classname: 'org.apache.tools.ant.taskdefs.optional.ssh.Scp',
-            classpath: configurations.sshAntTask.asPath
-        )
-        ant.taskdef(
-            name: 'sshexec',
-            classname: 'org.apache.tools.ant.taskdefs.optional.ssh.SSHExec',
-            classpath: configurations.sshAntTask.asPath
-        )
-        
-        def team = project.frc.getTeamNumber()
-        def host = "roborio-${team}-frc.local"
-        def user = "admin"
-        def password = "" // Empty for RoboRIO
-        def luaPath = "/opt/luabot/share/luajit-2.1"
-        
-        println "Deploying Lua modules to ${host}:${luaPath}"
-        
-        // Create temporary directory on RoboRIO
-        ant.sshexec(
-            host: host,
-            username: user,
-            password: password,
-            trust: true,
-            command: "mkdir -p /tmp/lua-modules"
-        )
-        
-        // Copy files to temp directory via SCP
-        ant.scp(
-            todir: "${user}@${host}:/tmp/lua-modules",
-            password: password,
-            trust: true
-        ) {
-            fileset(dir: 'build/lua')
-        }
-        
-        // Create target directory and move files with sudo
-        ant.sshexec(
-            host: host,
-            username: user,
-            password: password,
-            trust: true,
-            command: "sudo mkdir -p ${luaPath} && sudo cp -r /tmp/lua-modules/* ${luaPath}/ && sudo rm -rf /tmp/lua-modules"
-        )
-        
-        println "✓ Successfully deployed Lua modules to ${luaPath}"
     }
 }
 

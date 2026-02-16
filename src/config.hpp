@@ -5,6 +5,8 @@
 
 #include "scripting.hpp"
 
+#define LUABOT_NATIVE 0
+
 namespace config {
 
 /** Get a value from the 'general' settings. See `robot/config.lua` 

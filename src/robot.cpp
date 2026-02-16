@@ -2,6 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
+#include <filesystem>
 #include <iostream>
 
 #include <frc/DriverStation.h>
@@ -100,6 +101,14 @@ void Robot::TestExit() {}
 void Robot::SimulationInit() {}
 void Robot::SimulationPeriodic() {}
 
+#if LUABOT_NATIVE
+int main() {
+    std::filesystem::path path (frc::filesystem::GetOperatingDirectory());
+    path /= "robot/robot.lua";
+    return luabot::start_robot(path.string());
+}
+
+#else
 #ifndef RUNNING_FRC_TESTS
 /** This is not ideal, but frc::StartRobot instantiates a singleton version
     of Robot main with no explicit shutdown.  Our lua engine must exist before
@@ -115,6 +124,7 @@ int main()
     detail::displayBanner();
     return frc::StartRobot<Robot>();
 }
+#endif
 #endif
 
 #include <luabot/apriltag.ipp>

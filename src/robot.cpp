@@ -10,6 +10,13 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc2/command/CommandScheduler.h>
 
+#include <cameraserver/CameraServer.h>
+#if BOT_DUMB_CAMERA
+    #include <opencv2/core/core.hpp>
+    #include <opencv2/core/types.hpp>
+    #include <opencv2/imgproc/imgproc.hpp>
+#endif
+
 #include "config.hpp"
 #include "robot.hpp"
 #include "scripting.hpp"
@@ -20,8 +27,9 @@ using frc::DriverStation;
 using frc::SmartDashboard;
 
 namespace detail {
-    /** Display engine and bot information banner. */
-    static void displayBanner() {
+/** Display engine and bot information banner. */
+static void displayBanner()
+{
     lua::printVersion();
     std::cout << "Engine running at "
               << config::num<int> ("period")
@@ -31,11 +39,12 @@ namespace detail {
     std::cerr.flush();
 }
 
-    static void displayPaths() {
-        std::cout << "launch dir:    " << frc::filesystem::GetLaunchDirectory() << std::endl
-                  << "operating dir: " << frc::filesystem::GetOperatingDirectory() << std::endl;
-    }
+static void displayPaths()
+{
+    std::cout << "launch dir:    " << frc::filesystem::GetLaunchDirectory() << std::endl
+              << "operating dir: " << frc::filesystem::GetOperatingDirectory() << std::endl;
 }
+} // namespace detail
 
 Robot::Robot()
 {
@@ -43,11 +52,17 @@ Robot::Robot()
     _container = Container::create();
 }
 
-void Robot::RobotInit() {
-    SmartDashboard::PutString ("Controller", 
-        config::boolean("gamepad") ? "Gamepad" : "Flightsticks");
+void Robot::RobotInit()
+{
+    SmartDashboard::PutString ("Controller",
+                               config::boolean ("gamepad") ? "Gamepad" : "Flightsticks");
     detail::displayPaths();
     config::display();
+
+#if 1
+    std::thread vision (cameraThread);
+    vision.detach();
+#endif
 }
 
 void Robot::RobotPeriodic()
@@ -101,15 +116,69 @@ void Robot::TestExit() {}
 void Robot::SimulationInit() {}
 void Robot::SimulationPeriodic() {}
 
+void Robot::cameraThread()
+{
+#if SIM_CAMERA_DISABLED
+    if (RobotBase::IsSimulation())
+        return;
+#endif
+    const auto cameraName = "Camera 1";
+    const auto width = 640;
+    const auto height = 360;
+    const auto fps = 20;
+
+    // Get the USB camera from CameraServer
+    cs::UsbCamera camera = frc::CameraServer::StartAutomaticCapture (cameraName, 0);
+    camera.SetExposureAuto();
+    camera.SetWhiteBalanceAuto();
+
+    // Set the resolution
+    camera.SetResolution (width, height);
+    camera.SetFPS (fps);
+
+#if BOT_DUMB_CAMERA
+    // Get a CvSink. This will capture Mats from the Camera
+    cs::CvSink cvSink = frc::CameraServer::GetVideo();
+    // Setup a CvSource. This will send images back to the Dashboard
+    cs::CvSource outputStream =
+        frc::CameraServer::PutVideo (cameraName, width, height);
+
+    // Mats are very memory expensive. Lets reuse this Mat.
+    cv::Mat mat;
+
+    while (true) {
+        // Tell the CvSink to grab a frame from the camera and
+        // put it
+        // in the source mat.  If there is an error notify the
+        // output.
+        if (cvSink.GrabFrame (mat) == 0) {
+            // Send the output the error.
+            outputStream.NotifyError (cvSink.GetError());
+            // skip the rest of the current iteration
+            continue;
+        }
+    #if 0
+            // Put a rectangle on the image
+            rectangle (mat, cv::Point (100, 100), 
+                            cv::Point (400, 400), 
+                            cv::Scalar (255, 255, 255), 5);
+            // Give the output stream a new image to display
+            outputStream.PutFrame (mat);
+    #endif
+    }
+#endif
+}
+
 #if LUABOT_NATIVE
-int main() {
+int main()
+{
     std::filesystem::path path (frc::filesystem::GetOperatingDirectory());
     path /= "robot/robot.lua";
-    return luabot::start_robot(path.string());
+    return luabot::start_robot (path.string());
 }
 
 #else
-#ifndef RUNNING_FRC_TESTS
+    #ifndef RUNNING_FRC_TESTS
 /** This is not ideal, but frc::StartRobot instantiates a singleton version
     of Robot main with no explicit shutdown.  Our lua engine must exist before
     and after the robot's ctor and dtor. Having lifecylce at the global scope
@@ -124,7 +193,7 @@ int main()
     detail::displayBanner();
     return frc::StartRobot<Robot>();
 }
-#endif
+    #endif
 #endif
 
 #include <luabot/apriltag.ipp>

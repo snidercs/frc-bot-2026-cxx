@@ -34,4 +34,6 @@ public:
 private:
     std::optional<frc2::CommandPtr> m_autonomousCommand;
     std::unique_ptr<Container> _container;
+
+    static void cameraThread();
 };

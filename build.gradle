@@ -159,7 +159,7 @@ task extractLuaModules {
                     def fileName = "${artifactId}-${version}-${classifier}.zip"
                     def fullPath = "${artifactPath}/${fileName}"
                     
-                    println "Resolving Lua dependency: ${groupId}:${artifactId}:${version}:${classifier}"
+                    // println "Resolving Lua dependency: ${groupId}:${artifactId}:${version}:${classifier}"
                     
                     // Check cache directory first (persistent across builds)
                     def cachedZip = new File(cacheDir, "${groupId.replace('.', '-')}-${artifactId}-${version}-${classifier}.zip")
@@ -167,7 +167,7 @@ task extractLuaModules {
                     def zipToExtract = null
                     
                     if (cachedZip.exists()) {
-                        println "  ✓ Found in cache: ${cachedZip.name}"
+                        // println "  ✓ Found in cache: ${cachedZip.name}"
                         zipToExtract = cachedZip
                     } else {
                         // Not found in cache, try downloading from Maven URLs
@@ -176,7 +176,7 @@ task extractLuaModules {
                             try {
                                 def url = new URL("${mavenUrl}${fullPath}")
                                 
-                                println "  Downloading from: ${url}"
+                                // println "  Downloading from: ${url}"
                                 
                                 url.withInputStream { input ->
                                     cachedZip.withOutputStream { output ->
@@ -186,11 +186,11 @@ task extractLuaModules {
                                 
                                 zipToExtract = cachedZip
                                 downloadSuccess = true
-                                println "  ✓ Downloaded and cached: ${cachedZip.name}"
+                                // println "  ✓ Downloaded and cached: ${cachedZip.name}"
                                 break
                                 
                             } catch (Exception e) {
-                                println "  ✗ Failed to download from ${mavenUrl}: ${e.message}"
+                                println "Failed to download from ${mavenUrl}: ${e.message}"
                             }
                         }
                         
@@ -199,12 +199,17 @@ task extractLuaModules {
                         }
                     }
                     
-                    println "  Extracting to: ${luaDir.absolutePath}"
+                    // println "  Extracting to: ${luaDir.absolutePath}"
                     
                     // Extract the zip file
-                    ant.unzip(src: zipToExtract.absolutePath, dest: luaDir.absolutePath, overwrite: true)
                     
-                    println "  ✓ Successfully extracted"
+                    // Check if luabot/init.lua exists after extraction
+                    def initFile = new File(luaDir, "luabot/init.lua")
+                    if (!initFile.exists()) {
+                        ant.unzip(src: zipToExtract.absolutePath, dest: luaDir.absolutePath, overwrite: true)
+                    }
+                    
+                    // println "  ✓ Successfully extracted"
                 }
             }
         }

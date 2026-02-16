@@ -12,6 +12,9 @@
 #include "container.hpp"
 #include "visiontest.hpp"
 
+// enable to use single camera test command.
+#define BOT_VISION_SINGLE 1
+
 class JoystickContainer : public Container {
 public:
     JoystickContainer() = default;
@@ -44,9 +47,11 @@ protected:
         _sticks[0].Button(config::integer("climber_lower_button_index")).WhileTrue (
             climber().lowerCommand());
         
+#if BOT_VISION_SINGLE
         // Vision tracking test - button 7
         _sticks[0].Button(7).WhileTrue (
             test::createVisionTrackingTest(&turret(), &vision()));
+#endif
         // clang-format on
     }
 

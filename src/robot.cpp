@@ -122,7 +122,7 @@ void Robot::cameraThread()
     if (RobotBase::IsSimulation())
         return;
 #endif
-    const auto cameraName = "Camera 1";
+    const auto cameraName = "DumbCamera";
     const auto width = 640;
     const auto height = 360;
     const auto fps = 20;
@@ -157,11 +157,11 @@ void Robot::cameraThread()
             // skip the rest of the current iteration
             continue;
         }
-    #if 0
+    #if 1
             // Put a rectangle on the image
-            rectangle (mat, cv::Point (100, 100), 
-                            cv::Point (400, 400), 
-                            cv::Scalar (255, 255, 255), 5);
+            // cs::rectangle (mat, cv::Point (100, 100), 
+            //                 cv::Point (400, 400), 
+            //                 cv::Scalar (255, 255, 255), 5);
             // Give the output stream a new image to display
             outputStream.PutFrame (mat);
     #endif

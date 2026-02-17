@@ -131,6 +131,14 @@ Container::Container()
     _climber = std::make_unique<subsystems::Climber>();
     _turret = std::make_unique<subsystems::Turret>();
     _vision = std::make_unique<VisionIOSingle>(config::str("vision_test_camera"));
+    
+    // Load Choreo trajectory for autonomous
+    try {
+        m_testTrajectory = choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("TestPath");
+        std::cout << "Successfully loaded Choreo trajectory: TestPath" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to load Choreo trajectory: " << e.what() << std::endl;
+    }
 }
 
 Container::~Container()
@@ -172,23 +180,52 @@ void Container::configureBindingsInternal()
 
 frc2::CommandPtr Container::GetAutonomousCommand()
 {
-    // Store the starting X position (will be set when command starts)
-    auto startX = std::make_shared<units::meter_t>(0_m);
+    if (!m_testTrajectory.has_value()) {
+        std::cerr << "No trajectory loaded! Returning empty autonomous command." << std::endl;
+        return frc2::cmd::None();
+    }
     
-    // Drive forward 3 meters from starting position, then brake
-    return drivetrain().RunOnce([this, startX]() {
-            // Capture the starting X position when autonomous begins
-            *startX = drivetrain().GetState().Pose.X();
+    // Get alliance color for trajectory mirroring
+    auto alliance = frc::DriverStation::GetAlliance();
+    bool isRed = alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kRed;
+    
+    // Get the starting pose, mirroring for red alliance if needed
+    // Template parameter is the FRC year (2026), not a type
+    auto startingPose = m_testTrajectory->GetInitialPose<2026>(isRed);
+    
+    if (!startingPose.has_value()) {
+        std::cerr << "Failed to get initial pose from trajectory!" << std::endl;
+        return frc2::cmd::None();
+    }
+    
+    std::cout << "=== Autonomous Start ===" << std::endl;
+    std::cout << "Alliance: " << (isRed ? "RED" : "BLUE") << std::endl;
+    std::cout << "Starting pose: X=" << startingPose->X().value() 
+              << ", Y=" << startingPose->Y().value()
+              << ", Rotation=" << startingPose->Rotation().Degrees().value() << "°" << std::endl;
+    
+    // Create autonomous command sequence:
+    // 1. Reset odometry to starting pose
+    // 2. Follow the trajectory
+    // 3. Brake when done
+    return drivetrain().RunOnce([this, pose = startingPose.value()]() {
+            drivetrain().ResetPose(pose);
+            m_autoTimer.Reset();
+            m_autoTimer.Start();
         })
         .AndThen(
-            drivetrain().ApplyRequest([this]() -> auto&& {
-                return autoForward; 
+            drivetrain().Run([this, isRed]() {
+                auto elapsedTime = m_autoTimer.Get();
+                // Template parameter is the FRC year (2026), not a type
+                auto sample = m_testTrajectory->SampleAt<2026>(elapsedTime, isRed);
+                
+                if (sample.has_value()) {
+                    drivetrain().FollowTrajectory(sample.value());
+                }
             })
-            .Until([this, startX]() {
-                // Stop when we've traveled 3 meters from start position
-                auto currentX = drivetrain().GetState().Pose.X();
-                auto distanceTraveled = units::math::abs(currentX - *startX);
-                return distanceTraveled >= 1_m;
+            .Until([this]() {
+                // Stop when trajectory is complete
+                return m_autoTimer.Get() >= m_testTrajectory->GetTotalTime();
             })
         )
         .AndThen(
@@ -196,5 +233,5 @@ frc2::CommandPtr Container::GetAutonomousCommand()
                 return brake;
             })
         )
-        .WithName("DriveForward3Meters");
+        .WithName("ChoreoTrajectoryAuto");
 }

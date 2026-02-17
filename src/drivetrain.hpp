@@ -12,6 +12,11 @@
 
 using namespace ctre::phoenix6;
 
+// Forward declaration for Choreo trajectory following
+namespace choreo {
+    class SwerveSample;
+}
+
 namespace subsystems {
 
 /**
@@ -226,6 +231,16 @@ public:
     }
 
     void Periodic() override;
+
+    /**
+     * \brief Follow a Choreo trajectory sample using PID feedback control.
+     * 
+     * This method applies feedforward from the trajectory sample and adds
+     * PID feedback to correct for position errors.
+     * 
+     * \param sample The Choreo trajectory sample to follow
+     */
+    void FollowTrajectory(const choreo::SwerveSample& sample);
 
     /**
      * \brief Runs the SysId Quasistatic test in the given direction for the routine

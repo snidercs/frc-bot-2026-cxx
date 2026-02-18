@@ -21,7 +21,7 @@
 #include "robot.hpp"
 #include "scripting.hpp"
 
-#include <luabot/luabot.hpp>
+#include "luabot/luabot2.hpp"
 
 using frc::DriverStation;
 using frc::SmartDashboard;
@@ -158,27 +158,33 @@ void Robot::cameraThread()
             continue;
         }
     #if 1
-            // Put a rectangle on the image
-            // cs::rectangle (mat, cv::Point (100, 100), 
-            //                 cv::Point (400, 400), 
-            //                 cv::Scalar (255, 255, 255), 5);
-            // Give the output stream a new image to display
-            outputStream.PutFrame (mat);
+        // Put a rectangle on the image
+        // cs::rectangle (mat, cv::Point (100, 100),
+        //                 cv::Point (400, 400),
+        //                 cv::Scalar (255, 255, 255), 5);
+        // Give the output stream a new image to display
+        outputStream.PutFrame (mat);
     #endif
     }
 #endif
 }
 
-#if LUABOT_NATIVE
+#ifndef RUNNING_FRC_TESTS
+    #if LUABOT_NATIVE
+static lua::Lifecycle sLuaEngine;
+
 int main()
 {
+    if (! lua::bootstrap())
+        throw std::runtime_error ("lua engine could not be bootstrapped");
     std::filesystem::path path (frc::filesystem::GetOperatingDirectory());
     path /= "robot/robot.lua";
-    return luabot::start_robot (path.string());
+    auto* L = lua::state().lua_state();
+    return luabot::start_robot (path.string(), L);
 }
 
-#else
-    #ifndef RUNNING_FRC_TESTS
+    #else
+
 /** This is not ideal, but frc::StartRobot instantiates a singleton version
     of Robot main with no explicit shutdown.  Our lua engine must exist before
     and after the robot's ctor and dtor. Having lifecylce at the global scope

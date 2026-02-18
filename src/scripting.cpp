@@ -53,7 +53,7 @@ static char separator() {
 std::string withSearchQualifiers (std::string_view input) {
     std::stringstream out;
     out << input << detail::separator() << "?.lua;"
-        << detail::separator() << "?" << detail::separator() << "init.lua";
+        << input << detail::separator() << "?" << detail::separator() << "init.lua";
     return out.str();
 }
 

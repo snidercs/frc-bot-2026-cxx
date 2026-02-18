@@ -5,7 +5,7 @@ local config = {
 
     gamepad     = false,        -- Control robot with gamepad
    
-    heading_button_index = 18,  -- The button index to use for resetting the heading direction.
+    heading_button_index = 8,   -- The button index to use for resetting the heading direction.
     
     intake_trigger_index = 18,  -- The button index to engage the intake.
 
@@ -26,7 +26,7 @@ local config = {
     turret_shooter_device_id = 16,   -- TODO: Update with actual CAN ID
     turret_shooter_can_bus = "rio",
     turret_aim_button_index = 7,     -- Button to toggle auto-aim
-    turret_shoot_button_index = 8,   -- Button to shoot
+    turret_shoot_button_index = 18,   -- Button to shoot
     
     uptake_device_id = 21,
     update_can_bus = "rio",

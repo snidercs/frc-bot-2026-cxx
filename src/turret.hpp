@@ -27,7 +27,9 @@ public:
     frc2::CommandPtr manualRotateCommand(std::function<double()> speedSupplier);
     frc2::CommandPtr spinUpCommand();
     frc2::CommandPtr stopCommand();
+
     frc2::CommandPtr shootCommand();
+    frc2::CommandPtr manualShootCommand();
 
     // Manual control
     void setRotationVelocity(units::turns_per_second_t velocity);
@@ -69,6 +71,7 @@ private:
     ctre::phoenix6::controls::PositionVoltage _positionRequest{0_tr};
     ctre::phoenix6::controls::VelocityVoltage _rotationVelocityRequest{0_tps};
     ctre::phoenix6::controls::VelocityVoltage _shooterVelocityRequest{0_tps};
+    ctre::phoenix6::controls::VelocityVoltage _uptakeVelocityRequest{0_tps};
     ctre::phoenix6::controls::VoltageOut _voltageRequest{0_V};
     ctre::phoenix6::controls::DutyCycleOut _dutyCycleRequest{0.0};
 
@@ -77,8 +80,9 @@ private:
     units::degree_t _targetAngle = 0_deg;
 
     // Constants
-    static constexpr units::turns_per_second_t kShooterVelocity = 80_tps;  // TODO: tune
+    static constexpr units::turns_per_second_t kShooterVelocity = 50_tps;  // TODO: tune
     static constexpr units::turns_per_second_t kShooterTolerance = 2_tps;
+    static constexpr units::turns_per_second_t kUptakeVelocity = 100_tps;   // TODO: tune uptake speed
     static constexpr units::degree_t kAngleTolerance = 2_deg;
     static constexpr units::turns_per_second_t kManualRotationSpeed = 0.5_tps;
     

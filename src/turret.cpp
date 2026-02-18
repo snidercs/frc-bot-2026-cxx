@@ -72,9 +72,38 @@ void Turret::configureMotors() {
                 .WithNeutralMode(signals::NeutralModeValue::Coast)
         );
     
+    // Uptake motor configuration (velocity control for feeding)
+    configs::TalonFXConfiguration uptakeConfig = configs::TalonFXConfiguration{}
+        .WithCurrentLimits(
+            configs::CurrentLimitsConfigs{}
+                .WithSupplyCurrentLimit(30_A)
+                .WithSupplyCurrentLimitEnable(true)
+                .WithStatorCurrentLimit(60_A)
+                .WithStatorCurrentLimitEnable(true)
+        )
+        .WithVoltage(
+            configs::VoltageConfigs{}
+                .WithPeakForwardVoltage(12_V)
+                .WithPeakReverseVoltage(-12_V)
+        )
+        .WithSlot0(
+            configs::Slot0Configs{}
+                .WithKP(0.2)      // TODO: tune uptake PID
+                .WithKI(0.0)
+                .WithKD(0.0)
+                .WithKV(0.12)
+                .WithKS(0.2)      // Static friction feedforward
+        )
+        .WithMotorOutput(
+            configs::MotorOutputConfigs{}
+                .WithInverted(signals::InvertedValue::CounterClockwise_Positive)
+                .WithNeutralMode(signals::NeutralModeValue::Coast)
+        );
+    
     // Apply configs
     _rotationMotor.GetConfigurator().Apply(rotationConfig);
     _shooterMotor.GetConfigurator().Apply(shooterConfig);
+    _uptakeMotor.GetConfigurator().Apply(uptakeConfig);
     
     // // Configure status signal update frequencies
     BaseStatusSignal::SetUpdateFrequencyForAll(
@@ -83,12 +112,15 @@ void Turret::configureMotors() {
         _rotationMotor.GetVelocity(),
         _rotationMotor.GetSupplyCurrent(),
         _shooterMotor.GetVelocity(),
-        _shooterMotor.GetSupplyCurrent()
+        _shooterMotor.GetSupplyCurrent(),
+        _uptakeMotor.GetVelocity(),
+        _uptakeMotor.GetSupplyCurrent()
     );
     
     // Optimize CAN bus utilization
     _rotationMotor.OptimizeBusUtilization();
     _shooterMotor.OptimizeBusUtilization();
+    _uptakeMotor.OptimizeBusUtilization();
 }
 
 void Turret::Periodic() {
@@ -244,3 +276,27 @@ frc2::CommandPtr Turret::shootCommand() {
     )
     .WithName("Shoot");
 }
+
+frc2::CommandPtr Turret::manualShootCommand() {
+    return frc2::cmd::Sequence(
+        // Step 1: Spin up shooter flywheels
+        frc2::cmd::RunOnce([this] {
+            setShooterVelocity(kShooterVelocity);
+        }),
+        
+        // Step 2: Wait 1 second for shooter to spin up
+        frc2::cmd::Wait(1.0_s),
+        
+        // Step 3: Run uptake motor to feed balls into shooter
+        frc2::cmd::Run([this] {
+            _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
+        })
+    )
+    .FinallyDo([this] {
+        // On button release: stop uptake immediately, let shooter coast down
+        _uptakeMotor.SetControl(_voltageRequest.WithOutput(0_V));
+        stopShooter();
+    })
+    .WithName("ManualShoot");
+}
+

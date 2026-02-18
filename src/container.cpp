@@ -38,9 +38,13 @@ protected:
             drivetrain().RunOnce ([this] { drivetrain().SeedFieldCentric(); }));
 
         // Intake control
-        _sticks[1].Button(config::integer("intake_trigger_index")).WhileTrue (
+        _sticks[0].Button(config::integer("intake_trigger_index")).WhileTrue (
             intake().intakeCommand());
         
+        // Shooter Control
+        _sticks[1].Button(config::integer("turret_shoot_button_index")).WhileTrue (
+            turret().manualShootCommand());
+
         // Climber control
         _sticks[0].Button(config::integer("climber_climb_button_index")).WhileTrue (
             climber().climbCommand());

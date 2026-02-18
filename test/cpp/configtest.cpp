@@ -56,16 +56,19 @@ TEST(ConfigTest, GetCanBusStrings) {
 // Test button index retrieval
 TEST(ConfigTest, GetButtonIndices) {
     auto headingButton = config::integer("heading_button_index");
-    EXPECT_EQ(headingButton, 18);
-    
-    auto intakeTrigger = config::integer("intake_trigger_index");
-    EXPECT_EQ(intakeTrigger, 18);
+    EXPECT_EQ(headingButton, 8);
     
     auto climbButton = config::integer("climber_climb_button_index");
     EXPECT_EQ(climbButton, 16);
     
     auto lowerButton = config::integer("climber_lower_button_index");
     EXPECT_EQ(lowerButton, 17);
+    
+    auto turretAimButton = config::integer("turret_aim_button_index");
+    EXPECT_EQ(turretAimButton, 7);
+    
+    auto turretShootButton = config::integer("turret_shoot_button_index");
+    EXPECT_EQ(turretShootButton, 18);
 }
 
 // Test missing values return defaults

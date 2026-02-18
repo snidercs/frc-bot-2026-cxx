@@ -21,12 +21,15 @@ local config = {
     climber_lower_button_index = 17,  -- Button to lower (move up)
 
     -- Turret shooter configuration
-    turret_rotation_device_id = 16,
+    turret_rotation_device_id = 19,
     turret_rotation_can_bus = "rio",
-    turret_shooter_device_id = 21,   -- TODO: Update with actual CAN ID
+    turret_shooter_device_id = 16,   -- TODO: Update with actual CAN ID
     turret_shooter_can_bus = "rio",
     turret_aim_button_index = 7,     -- Button to toggle auto-aim
     turret_shoot_button_index = 8,   -- Button to shoot
+    
+    uptake_device_id = 21,
+    update_can_bud = "rio",
     
     -- Vision test configuration
     vision_test_camera = "TestCam"   -- PhotonVision camera name for single-camera testing

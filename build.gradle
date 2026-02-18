@@ -41,12 +41,12 @@ deploy {
                 }
 
                 // Static files artifact
-                frcStaticFileDeploy(getArtifactTypeClass('FileTreeArtifact')) {
-                    files = project.fileTree('build/luabot/share/luajit-2.1')
-                    directory = '/home/lvuser/luabot/*'
-                    deleteOldFiles = true // Change to true to delete files on roboRIO that no
-                                          // longer exist in deploy directory of this project
-                }
+                // frcStaticFileDeploy(getArtifactTypeClass('FileTreeArtifact')) {
+                //     files = project.fileTree('build/luabot/share/luajit-2.1')
+                //     directory = '/home/lvuser/luabot/*'
+                //     deleteOldFiles = true // Change to true to delete files on roboRIO that no
+                //                           // longer exist in deploy directory of this project
+                // }
             }
         }
     }

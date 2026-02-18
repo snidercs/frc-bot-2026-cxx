@@ -74,21 +74,21 @@ void Turret::configureMotors() {
     
     // Apply configs
     _rotationMotor.GetConfigurator().Apply(rotationConfig);
-    // _shooterMotor.GetConfigurator().Apply(shooterConfig);
+    _shooterMotor.GetConfigurator().Apply(shooterConfig);
     
     // // Configure status signal update frequencies
-    // BaseStatusSignal::SetUpdateFrequencyForAll(
-    //     50_Hz,
-    //     _rotationMotor.GetPosition(),
-    //     _rotationMotor.GetVelocity(),
-    //     _rotationMotor.GetSupplyCurrent(),
-    //     _shooterMotor.GetVelocity(),
-    //     _shooterMotor.GetSupplyCurrent()
-    // );
+    BaseStatusSignal::SetUpdateFrequencyForAll(
+        50_Hz,
+        _rotationMotor.GetPosition(),
+        _rotationMotor.GetVelocity(),
+        _rotationMotor.GetSupplyCurrent(),
+        _shooterMotor.GetVelocity(),
+        _shooterMotor.GetSupplyCurrent()
+    );
     
     // Optimize CAN bus utilization
     _rotationMotor.OptimizeBusUtilization();
-    // _shooterMotor.OptimizeBusUtilization();
+    _shooterMotor.OptimizeBusUtilization();
 }
 
 void Turret::Periodic() {
@@ -122,7 +122,7 @@ void Turret::setRotationDutyCycle(double dutyCycle) {
 }
 
 void Turret::setShooterVelocity(units::turns_per_second_t velocity) {
-    // _shooterMotor.SetControl(_shooterVelocityRequest.WithVelocity(velocity));
+    _shooterMotor.SetControl(_shooterVelocityRequest.WithVelocity(velocity));
 }
 
 void Turret::stopRotation() {
@@ -130,7 +130,7 @@ void Turret::stopRotation() {
 }
 
 void Turret::stopShooter() {
-    // _shooterMotor.SetControl(_voltageRequest.WithOutput(0_V));
+    _shooterMotor.SetControl(_voltageRequest.WithOutput(0_V));
 }
 
 void Turret::stop() {
@@ -162,7 +162,7 @@ units::degree_t Turret::getCurrentAngle() const {
 
 units::turns_per_second_t Turret::getShooterVelocity() const {
     // Need to cast away const to call GetVelocity() - Phoenix 6 API limitation
-    return 0_rad_per_s; //const_cast<ctre::phoenix6::hardware::TalonFX&>(_shooterMotor).GetVelocity().GetValue();
+    return const_cast<ctre::phoenix6::hardware::TalonFX&>(_shooterMotor).GetVelocity().GetValue();
 }
 
 bool Turret::isAtTarget() const {

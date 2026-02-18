@@ -55,10 +55,10 @@ private:
         config::integer("turret_rotation_device_id"),
         config::str("turret_rotation_can_bus")};
     
-    // // Shooter flywheel motor(s) - TODO: add second motor if needed
-    // ctre::phoenix6::hardware::TalonFX _shooterMotor{
-    //     config::integer("turret_shooter_device_id"),
-    //     config::str("turret_shooter_can_bus")};
+    // Shooter flywheel motor(s) - TODO: add second motor if needed
+    ctre::phoenix6::hardware::TalonFX _shooterMotor{
+        config::integer("turret_shooter_device_id"),
+        config::str("turret_shooter_can_bus")};
 
     // Control requests (reusable)
     ctre::phoenix6::controls::PositionVoltage _positionRequest{0_tr};

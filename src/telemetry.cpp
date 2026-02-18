@@ -1,11 +1,15 @@
 #include "telemetry.hpp"
 #include <frc/smartdashboard/SmartDashboard.h>
 
+#define BOT_SIGNAL_LOGGER 0
+
 using namespace ctre::phoenix6;
 
 Telemetry::Telemetry(units::meters_per_second_t maxSpeed) : MaxSpeed{maxSpeed}
 {
+#if BOT_SIGNAL_LOGGER
     SignalLogger::Start();
+#endif
 
     /* Set up the module state Mechanism2d telemetry */
     for (size_t i = 0; i < m_moduleSpeeds.size(); ++i) {

@@ -42,6 +42,13 @@ void Turret::configureMotors() {
         .WithFeedback(
             configs::FeedbackConfigs{}
                 .WithSensorToMechanismRatio(kRotationGearRatio)
+        )
+        .WithSoftwareLimitSwitch(
+            configs::SoftwareLimitSwitchConfigs{}
+                .WithForwardSoftLimitThreshold(0.5_tr)   // +180 degrees
+                .WithForwardSoftLimitEnable(true)
+                .WithReverseSoftLimitThreshold(-0.5_tr)  // -180 degrees
+                .WithReverseSoftLimitEnable(true)
         );
     
     // Shooter motor configuration (velocity control for flywheel)
@@ -92,6 +99,10 @@ void Turret::configureMotors() {
 }
 
 void Turret::Periodic() {
+    // Cache sensor values for const accessors
+    _cachedAngle = _rotationMotor.GetPosition().GetValue() * 360.0;
+    // _cachedShooterVelocity = _shooterMotor.GetVelocity().GetValue();
+    
     // Telemetry
     frc::SmartDashboard::PutBoolean("Turret/Auto Aim Enabled", _autoAimEnabled);
     frc::SmartDashboard::PutNumber("Turret/Current Angle (deg)", getCurrentAngle().value());
@@ -154,15 +165,11 @@ void Turret::setTargetAngle(units::degree_t angle) {
 }
 
 units::degree_t Turret::getCurrentAngle() const {
-    // Convert motor rotations back to degrees
-    // Need to cast away const to call GetPosition() - Phoenix 6 API limitation
-    auto rotations = const_cast<ctre::phoenix6::hardware::TalonFX&>(_rotationMotor).GetPosition().GetValue();
-    return rotations * 360.0;
+    return _cachedAngle;
 }
 
 units::turns_per_second_t Turret::getShooterVelocity() const {
-    // Need to cast away const to call GetVelocity() - Phoenix 6 API limitation
-    return 0_rad_per_s; //const_cast<ctre::phoenix6::hardware::TalonFX&>(_shooterMotor).GetVelocity().GetValue();
+    return _cachedShooterVelocity;
 }
 
 bool Turret::isAtTarget() const {

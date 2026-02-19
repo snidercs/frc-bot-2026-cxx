@@ -46,46 +46,32 @@ void CommandSwerveDrivetrain::StartSimThread()
 
 void CommandSwerveDrivetrain::FollowTrajectory(const choreo::SwerveSample& sample)
 {
-    // Static PID controllers for trajectory following
-    // These persist across calls to maintain state (integral accumulation, etc.)
-    static frc::PIDController xController{10.0, 0.0, 0.0};
-    static frc::PIDController yController{10.0, 0.0, 0.0};
-    static frc::PIDController headingController{7.5, 0.0, 0.0};
-    
-    // Configure heading controller for continuous input (wraps at -π to π)
-    static bool controllersInitialized = false;
-    if (!controllersInitialized) {
-        headingController.EnableContinuousInput(-std::numbers::pi, std::numbers::pi);
-        controllersInitialized = true;
-    }
-
     // Get current robot pose from odometry
     auto currentPose = GetState().Pose;
     
-    // Calculate PID corrections for position error
-    // sample.x/y/heading are already units, extract .value() for both measurement and setpoint
-    double xCorrection = xController.Calculate(currentPose.X().value(), sample.x.value());
-    double yCorrection = yController.Calculate(currentPose.Y().value(), sample.y.value());
+    // Start with the trajectory's field-relative chassis speeds as feedforward
+    auto targetSpeeds = sample.GetChassisSpeeds();
     
-    // Calculate heading correction
-    double headingCorrection = headingController.Calculate(
-        currentPose.Rotation().Radians().value(), 
-        sample.heading.value()
-    );
+    // Add PID corrections for position error
+    targetSpeeds.vx += units::meters_per_second_t{
+        m_xController.Calculate(currentPose.X().value(), sample.x.value())};
+    targetSpeeds.vy += units::meters_per_second_t{
+        m_yController.Calculate(currentPose.Y().value(), sample.y.value())};
+    targetSpeeds.omega += units::radians_per_second_t{
+        m_headingController.Calculate(
+            currentPose.Rotation().Radians().value(), sample.heading.value())};
     
-    // Combine feedforward velocities from trajectory with feedback corrections
-    // sample.vx/vy/omega are already units, add correction as units
-    frc::ChassisSpeeds speeds = frc::ChassisSpeeds::FromFieldRelativeSpeeds(
-        sample.vx + units::meters_per_second_t{xCorrection},
-        sample.vy + units::meters_per_second_t{yCorrection},
-        sample.omega + units::radians_per_second_t{headingCorrection},
-        currentPose.Rotation()
-    );
-    
-    // Apply the calculated chassis speeds using a field-centric request
-    swerve::requests::FieldCentric request{};
-    SetControl(request
-        .WithVelocityX(speeds.vx)
-        .WithVelocityY(speeds.vy)
-        .WithRotationalRate(speeds.omega));
+    // Apply using ApplyFieldSpeeds (designed for autonomous trajectory following)
+    // with module force feedforwards from the trajectory for better tracking
+    SetControl(m_pathApplyFieldSpeeds
+        .WithSpeeds(targetSpeeds)
+        .WithWheelForceFeedforwardsX({sample.moduleForcesX.begin(), sample.moduleForcesX.end()})
+        .WithWheelForceFeedforwardsY({sample.moduleForcesY.begin(), sample.moduleForcesY.end()}));
+}
+
+void CommandSwerveDrivetrain::ResetTrajectoryControllers()
+{
+    m_xController.Reset();
+    m_yController.Reset();
+    m_headingController.Reset();
 }

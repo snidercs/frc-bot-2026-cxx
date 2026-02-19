@@ -49,7 +49,7 @@ frc2::CommandPtr createVisionTrackingTest(subsystems::Turret* turret,
         frc::SmartDashboard::PutNumber("VisionTest/TargetYaw", targetYaw);
         frc::SmartDashboard::PutNumber("VisionTest/DutyCycle", dutyCycle);
         // frc::SmartDashboard::PutNumber("VisionTest/MeasurementCount", measurements.size());
-    })
+    }, {turret})
     .WithName("VisionTrackingTest")
     .FinallyDo([turret] { turret->stopRotation(); });
 }

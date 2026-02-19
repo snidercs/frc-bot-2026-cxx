@@ -2,8 +2,11 @@
 
 #include "ctre/phoenix6/SignalLogger.hpp"
 
+#include <numbers>
+
 #include <frc/DriverStation.h>
 #include <frc/Notifier.h>
+#include <frc/controller/PIDController.h>
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/SubsystemBase.h>
 #include <frc2/command/sysid/SysIdRoutine.h>
@@ -130,6 +133,9 @@ public:
     CommandSwerveDrivetrain(swerve::SwerveDrivetrainConstants const &driveTrainConstants, ModuleConstants const &... modules) :
         TunerSwerveDrivetrain{driveTrainConstants, modules...}
     {
+        // Configure heading controller for continuous input (wraps at -π to π)
+        m_headingController.EnableContinuousInput(-std::numbers::pi, std::numbers::pi);
+        
         if (utils::IsSimulation()) {
             StartSimThread();
         }
@@ -156,6 +162,9 @@ public:
     ) :
         TunerSwerveDrivetrain{driveTrainConstants, odometryUpdateFrequency, modules...}
     {
+        // Configure heading controller for continuous input (wraps at -π to π)
+        m_headingController.EnableContinuousInput(-std::numbers::pi, std::numbers::pi);
+        
         if (utils::IsSimulation()) {
             StartSimThread();
         }
@@ -189,6 +198,9 @@ public:
             odometryStandardDeviation, visionStandardDeviation, modules...
         }
     {
+        // Configure heading controller for continuous input (wraps at -π to π)
+        m_headingController.EnableContinuousInput(-std::numbers::pi, std::numbers::pi);
+        
         if (utils::IsSimulation()) {
             StartSimThread();
         }
@@ -241,6 +253,13 @@ public:
      * \param sample The Choreo trajectory sample to follow
      */
     void FollowTrajectory(const choreo::SwerveSample& sample);
+    
+    /**
+     * \brief Reset the trajectory following PID controllers.
+     * 
+     * Call this when starting a new trajectory to clear accumulated error.
+     */
+    void ResetTrajectoryControllers();
 
     /**
      * \brief Runs the SysId Quasistatic test in the given direction for the routine
@@ -311,6 +330,14 @@ public:
 
 private:
     void StartSimThread();
+    
+    // PID controllers for trajectory following
+    frc::PIDController m_xController{10.0, 0.0, 0.0};
+    frc::PIDController m_yController{10.0, 0.0, 0.0};
+    frc::PIDController m_headingController{7.5, 0.0, 0.0};
+
+    // Swerve request for field-centric trajectory following
+    swerve::requests::ApplyFieldSpeeds m_pathApplyFieldSpeeds;
 };
 
 }

@@ -97,9 +97,9 @@ public:
         // reset the field-centric heading on left bumper press
         joystick.LeftBumper().OnTrue (drivetrain().RunOnce ([this] { drivetrain().SeedFieldCentric(); }));
 
-        // Intake controls
-        joystick.Button(1).WhileTrue (intake().intakeCommand());
-        joystick.Button(2).WhileTrue (intake().ejectCommand());
+        // Intake controls (use RightBumper/RightTrigger to avoid conflict with A/B buttons)
+        joystick.RightBumper().WhileTrue (intake().intakeCommand());
+        joystick.RightTrigger().WhileTrue (intake().ejectCommand());
         
         // Climber controls
         joystick.Button(config::integer("climber_climb_button_index")).WhileTrue (climber().climbCommand());
@@ -209,7 +209,9 @@ frc2::CommandPtr Container::GetAutonomousCommand()
     // 2. Follow the trajectory
     // 3. Brake when done
     return drivetrain().RunOnce([this, pose = startingPose.value()]() {
+            // Reset odometry and trajectory controllers
             drivetrain().ResetPose(pose);
+            drivetrain().ResetTrajectoryControllers();
             m_autoTimer.Reset();
             m_autoTimer.Start();
         })

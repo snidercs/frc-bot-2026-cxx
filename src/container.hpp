@@ -6,6 +6,10 @@
 
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/button/CommandXboxController.h>
+#include <frc/Timer.h>
+#include <optional>
+#include <choreo/Choreo.h>
+#include <choreo/trajectory/SwerveSample.h>
 #include "drivetrain.hpp"
 #include "intake.hpp"
 #include "climber.hpp"
@@ -51,6 +55,10 @@ protected:
     /* Note: This must be constructed before the drivetrain, otherwise we need to
      *       define a destructor to un-register the telemetry from the drivetrain */
     Telemetry logger { MaxSpeed };
+
+    /* Choreo trajectory for autonomous */
+    std::optional<choreo::Trajectory<choreo::SwerveSample>> m_testTrajectory;
+    frc::Timer m_autoTimer;
 
 private:
     void configureBindingsInternal();

@@ -174,8 +174,6 @@ void setPath (const std::vector<std::string>& paths) {
     std::cout << "PATH=" << path << std::endl;
     sol::table package = L["package"];
     package.set ("path", detail::path);
-
-    setPath(strm.str());
 }
 
 const std::string& searchDirectory() {

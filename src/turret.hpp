@@ -78,6 +78,10 @@ private:
     // State
     bool _autoAimEnabled = false;
     units::degree_t _targetAngle = 0_deg;
+    
+    // Cached sensor values (updated in Periodic to avoid const_cast)
+    units::degree_t _cachedAngle = 0_deg;
+    units::turns_per_second_t _cachedShooterVelocity = 0_tps;
 
     // Constants
     static constexpr units::turns_per_second_t kShooterVelocity = 50_tps;  // TODO: tune

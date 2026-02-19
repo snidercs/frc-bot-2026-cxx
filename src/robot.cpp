@@ -87,13 +87,21 @@ void Robot::AutonomousInit()
 
 void Robot::AutonomousPeriodic() {}
 
-void Robot::AutonomousExit() {}
+void Robot::AutonomousExit()
+{
+    // Reset the optional - command is owned by scheduler
+    m_autonomousCommand.reset();
+}
 
 void Robot::TeleopInit()
 {
     DriverStation::SilenceJoystickConnectionWarning (false);
+    
+    // This makes sure that the autonomous stops running when
+    // teleop starts running.
     if (m_autonomousCommand) {
         m_autonomousCommand->Cancel();
+        m_autonomousCommand.reset();
     }
 }
 

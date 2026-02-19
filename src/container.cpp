@@ -52,8 +52,8 @@ protected:
             climber().lowerCommand());
         
 #if BOT_VISION_SINGLE
-        // Vision tracking test - button 7
-        _sticks[0].Button(7).WhileTrue (
+        // Vision tracking test
+        _sticks[0].Button(config::integer("turret_aim_button_index")).WhileTrue (
             test::createVisionTrackingTest(&turret(), &vision()));
 #endif
         // clang-format on

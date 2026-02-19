@@ -30,6 +30,14 @@ public:
     */
     double getBestTargetYaw();
 
+    /** Fetches new results from the camera and caches them.
+     
+        Call this once per cycle before using getStatus(), getLastTargets(),
+        or getBestTargetYaw(). Prevents multiple GetAllUnreadResults() calls
+        which would consume the queue and return empty on subsequent reads.
+    */
+    void updateResults();
+
 private:
     // PhotonVision camera
     photon::PhotonCamera _camera;
@@ -52,6 +60,9 @@ private:
     // Thresholds for measurement gating
     static constexpr double kMaxAmbiguity = 0.3;  // Reject if ambiguity > 30%
     static constexpr units::second_t kMaxLatency = 0.5_s;  // Reject if older than 500ms
+    
+    // Cached camera results (populated by updateResults(), read by accessors)
+    std::vector<photon::PhotonPipelineResult> _cachedResults;
     
     bool isValidMeasurement(const photon::PhotonPipelineResult& result);
     VisionMeasurement createMeasurement(const photon::PhotonPipelineResult& result);

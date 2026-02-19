@@ -131,23 +131,26 @@ void Turret::configureMotors() {
 }
 
 void Turret::Periodic() {
-    // Cache sensor values for const accessors
+    // Cache all sensor values once per cycle to minimize CAN bus reads
     _cachedAngle = _rotationMotor.GetPosition().GetValue() * 360.0;
     _cachedShooterVelocity = _shooterMotor.GetVelocity().GetValue();
+    _cachedRotationVelocity = _rotationMotor.GetVelocity().GetValue();
+    _cachedMotorVoltage = _rotationMotor.GetMotorVoltage().GetValue();
+    _cachedMotorCurrent = _rotationMotor.GetSupplyCurrent().GetValue();
     
-    // Telemetry
+    // Telemetry (all values from cache — no additional CAN reads)
     frc::SmartDashboard::PutBoolean("Turret/Auto Aim Enabled", _autoAimEnabled);
-    frc::SmartDashboard::PutNumber("Turret/Current Angle (deg)", getCurrentAngle().value());
+    frc::SmartDashboard::PutNumber("Turret/Current Angle (deg)", _cachedAngle.value());
     frc::SmartDashboard::PutNumber("Turret/Target Angle (deg)", _targetAngle.value());
-    frc::SmartDashboard::PutNumber("Turret/Rotation Velocity (rps)", _rotationMotor.GetVelocity().GetValue().value());
-    frc::SmartDashboard::PutNumber("Turret/Shooter Velocity (rps)", getShooterVelocity().value());
+    frc::SmartDashboard::PutNumber("Turret/Rotation Velocity (rps)", _cachedRotationVelocity.value());
+    frc::SmartDashboard::PutNumber("Turret/Shooter Velocity (rps)", _cachedShooterVelocity.value());
     frc::SmartDashboard::PutBoolean("Turret/At Target", isAtTarget());
     frc::SmartDashboard::PutBoolean("Turret/Shooter Ready", isShooterReady());
     
     // Debug: Motor status
-    frc::SmartDashboard::PutNumber("Turret/Motor Voltage", _rotationMotor.GetMotorVoltage().GetValue().value());
-    frc::SmartDashboard::PutNumber("Turret/Motor Current", _rotationMotor.GetSupplyCurrent().GetValue().value());
-    frc::SmartDashboard::PutNumber("Turret/Motor Position", _rotationMotor.GetPosition().GetValue().value());
+    frc::SmartDashboard::PutNumber("Turret/Motor Voltage", _cachedMotorVoltage.value());
+    frc::SmartDashboard::PutNumber("Turret/Motor Current", _cachedMotorCurrent.value());
+    frc::SmartDashboard::PutNumber("Turret/Motor Position", _cachedAngle.value() / 360.0);
 }
 
 void Turret::setRotationVelocity(units::turns_per_second_t velocity) {
@@ -197,7 +200,8 @@ void Turret::disableAutoAim() {
 void Turret::setTargetAngle(units::degree_t angle) {
     _targetAngle = angle;
     // Convert degrees to rotations for position control
-    units::turn_t targetRotations = angle / 360.0;
+    // units::turn_t{degree_t} performs automatic unit conversion (90_deg → 0.25_tr)
+    units::turn_t targetRotations{angle};
     _rotationMotor.SetControl(_positionRequest.WithPosition(targetRotations));
 }
 
@@ -292,7 +296,7 @@ frc2::CommandPtr Turret::shootCommand() {
 frc2::CommandPtr Turret::manualShootCommand() {
     return frc2::cmd::Sequence(
         // Step 1: Spin up shooter flywheels
-        frc2::cmd::RunOnce([this] {
+        RunOnce([this] {
             setShooterVelocity(kShooterVelocity);
         }),
         
@@ -300,7 +304,7 @@ frc2::CommandPtr Turret::manualShootCommand() {
         frc2::cmd::Wait(1.0_s),
         
         // Step 3: Run uptake motor to feed balls into shooter
-        frc2::cmd::Run([this] {
+        Run([this] {
             _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
         })
     )

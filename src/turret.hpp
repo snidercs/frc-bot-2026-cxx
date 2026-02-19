@@ -23,11 +23,10 @@ public:
 
     // Command factories
     frc2::CommandPtr aimAtTargetCommand(std::function<frc::Pose2d()> robotPoseSupplier,
-                                         std::function<frc::Pose2d()> targetPoseSupplier);
+                                        std::function<frc::Pose2d()> targetPoseSupplier);
     frc2::CommandPtr manualRotateCommand(std::function<double()> speedSupplier);
     frc2::CommandPtr spinUpCommand();
     frc2::CommandPtr stopCommand();
-
     frc2::CommandPtr shootCommand();
     frc2::CommandPtr manualShootCommand();
 
@@ -37,6 +36,7 @@ public:
     void setShooterVelocity(units::turns_per_second_t velocity);
     void stopRotation();
     void stopShooter();
+    void stopUptake();
     void stop();
 
     // Auto-aim functions

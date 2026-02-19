@@ -165,9 +165,14 @@ void Turret::stopShooter() {
     _shooterMotor.SetControl(_voltageRequest.WithOutput(0_V));
 }
 
+void Turret::stopUptake() {
+    _uptakeMotor.SetControl(_voltageRequest.WithOutput(0_V));
+}
+
 void Turret::stop() {
     stopRotation();
     stopShooter();
+    stopUptake();
 }
 
 void Turret::enableAutoAim() {
@@ -294,9 +299,8 @@ frc2::CommandPtr Turret::manualShootCommand() {
     )
     .FinallyDo([this] {
         // On button release: stop uptake immediately, let shooter coast down
-        _uptakeMotor.SetControl(_voltageRequest.WithOutput(0_V));
+        stopUptake();
         stopShooter();
     })
     .WithName("ManualShoot");
 }
-

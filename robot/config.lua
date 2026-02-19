@@ -28,8 +28,8 @@ local config = {
     turret_aim_button_index = 7,     -- Button to toggle auto-aim
     turret_shoot_button_index = 18,   -- Button to shoot
     
-    uptake_device_id = 21,
-    update_can_bus = "rio",
+    turret_uptake_device_id = 21,
+    turret_uptake_can_bus = "rio",
     
     -- Vision test configuration
     vision_test_camera = "TestCam"   -- PhotonVision camera name for single-camera testing

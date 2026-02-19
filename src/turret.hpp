@@ -64,8 +64,8 @@ private:
     
     // Uptake motor (feeds game pieces into shooter)
     ctre::phoenix6::hardware::TalonFX _uptakeMotor{
-        config::integer("uptake_device_id"),
-        config::str("uptake_can_bus")};
+        config::integer("turret_uptake_device_id"),
+        config::str("turret_uptake_can_bus")};
 
     // Control requests (reusable)
     ctre::phoenix6::controls::PositionVoltage _positionRequest{0_tr};

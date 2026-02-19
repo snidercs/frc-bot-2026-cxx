@@ -29,9 +29,9 @@ protected:
         drivetrain().SetDefaultCommand (
             drivetrain().ApplyRequest ([this]() -> auto&& {
                 return drive
-                    .WithVelocityX(-_sticks[1].GetHID().GetRawAxis(1) * MaxSpeed)
-                    .WithVelocityY(-_sticks[1].GetHID().GetRawAxis(0) * MaxSpeed)
-                    .WithRotationalRate (-_sticks[0].GetHID().GetRawAxis(0) * MaxAngularRate);
+                    .WithVelocityX(-_sticks[0].GetHID().GetRawAxis(1) * MaxSpeed)
+                    .WithVelocityY(-_sticks[0].GetHID().GetRawAxis(0) * MaxSpeed)
+                    .WithRotationalRate (-_sticks[1].GetHID().GetRawAxis(0) * MaxAngularRate);
             }));
 
         _sticks[0].Button(config::integer("heading_button_index")).OnTrue (

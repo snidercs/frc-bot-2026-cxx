@@ -121,6 +121,8 @@ void Turret::configureMotors() {
     _rotationMotor.OptimizeBusUtilization();
     _shooterMotor.OptimizeBusUtilization();
     _uptakeMotor.OptimizeBusUtilization();
+
+    _rotationMotor.SetNeutralMode(ctre::phoenix6::signals::NeutralModeValue::Brake);
 }
 
 void Turret::Periodic() {

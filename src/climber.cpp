@@ -30,10 +30,15 @@ void Climber::configureMotor() {
                 .WithInverted(signals::InvertedValue::CounterClockwise_Positive)
                 .WithNeutralMode(signals::NeutralModeValue::Brake)  // Use brake mode for climber safety
         );
-    
+    config.Feedback.SensorToMechanismRatio = 180.0;
+    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 0.0_tr;
+    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -3.109043_tr;
+
     // Apply config
     m_motor.GetConfigurator().Apply(config);
-    
+    m_motor.SetPosition(0.0_tr);
     // Configure status signal update frequencies to prevent CAN stale errors
     // Set to 50 Hz for telemetry signals
     BaseStatusSignal::SetUpdateFrequencyForAll(

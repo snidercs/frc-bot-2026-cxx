@@ -91,7 +91,7 @@ private:
 
     void configureMotors();
     units::degree_t computeAimAngle(const frc::Pose2d& robotPose, 
-                                     const frc::Pose2d& targetPose) const;
+                                    const frc::Pose2d& targetPose) const;
 };
 
 } // namespace subsystems

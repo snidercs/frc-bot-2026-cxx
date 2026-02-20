@@ -101,7 +101,14 @@ void Turret::configureMotors() {
         );
     
     // Apply configs
+    rotationConfig.Feedback.SensorToMechanismRatio = 10.0;
+    rotationConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    rotationConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 0.25_tr;
+    rotationConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    rotationConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.05542_tr;
     _rotationMotor.GetConfigurator().Apply(rotationConfig);
+    _rotationMotor.SetPosition(0.25_tr);
+
     _shooterMotor.GetConfigurator().Apply(shooterConfig);
     _uptakeMotor.GetConfigurator().Apply(uptakeConfig);
     

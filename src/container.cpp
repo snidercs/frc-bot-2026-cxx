@@ -51,6 +51,12 @@ protected:
         _sticks[0].Button(config::integer("climber_lower_button_index")).WhileTrue (
             climber().lowerCommand());
         
+            // Manual turret rotation on joystick axis (e.g., right stick X on stick 1)
+        turret().SetDefaultCommand(
+            turret().manualRotateCommand([this] { 
+                return 0.5 * _sticks[0].GetHID().GetRawAxis(3); // Right stick X
+            }));
+            
 #if BOT_VISION_SINGLE
         // Vision tracking test - button 7
         _sticks[0].Button(7).WhileTrue (
@@ -122,19 +128,18 @@ private:
 Container::Container()
 {
     // Construct drivetrain with 250 Hz odometry update frequency to prevent CAN stale errors
-    _drivetrain = std::make_unique<subsystems::CommandSwerveDrivetrain>(
+    _drivetrain = std::make_unique<subsystems::CommandSwerveDrivetrain> (
         TunerConstants::DrivetrainConstants,
         250_Hz,
         TunerConstants::FrontLeft,
         TunerConstants::FrontRight,
         TunerConstants::BackLeft,
-        TunerConstants::BackRight
-    );
-    
+        TunerConstants::BackRight);
+
     _intake = std::make_unique<subsystems::Intake>();
     _climber = std::make_unique<subsystems::Climber>();
     _turret = std::make_unique<subsystems::Turret>();
-    _vision = std::make_unique<VisionIOSingle>(config::str("vision_test_camera"));
+    _vision = std::make_unique<VisionIOSingle> (config::str ("vision_test_camera"));
 }
 
 Container::~Container()
@@ -177,28 +182,26 @@ void Container::configureBindingsInternal()
 frc2::CommandPtr Container::GetAutonomousCommand()
 {
     // Store the starting X position (will be set when command starts)
-    auto startX = std::make_shared<units::meter_t>(0_m);
-    
+    auto startX = std::make_shared<units::meter_t> (0_m);
+
     // Drive forward 3 meters from starting position, then brake
-    return drivetrain().RunOnce([this, startX]() {
-            // Capture the starting X position when autonomous begins
-            *startX = drivetrain().GetState().Pose.X();
-        })
-        .AndThen(
-            drivetrain().ApplyRequest([this]() -> auto&& {
-                return autoForward; 
-            })
-            .Until([this, startX]() {
-                // Stop when we've traveled 3 meters from start position
-                auto currentX = drivetrain().GetState().Pose.X();
-                auto distanceTraveled = units::math::abs(currentX - *startX);
-                return distanceTraveled >= 1_m;
-            })
-        )
-        .AndThen(
-            drivetrain().ApplyRequest([this]() -> auto&& {
+    return drivetrain().RunOnce ([this, startX]() {
+                           // Capture the starting X position when autonomous begins
+                           *startX = drivetrain().GetState().Pose.X();
+                       })
+        .AndThen (
+            drivetrain().ApplyRequest ([this]() -> auto&& {
+                            return autoForward;
+                        })
+                .Until ([this, startX]() {
+                    // Stop when we've traveled 3 meters from start position
+                    auto currentX = drivetrain().GetState().Pose.X();
+                    auto distanceTraveled = units::math::abs (currentX - *startX);
+                    return distanceTraveled >= 1_m;
+                }))
+        .AndThen (
+            drivetrain().ApplyRequest ([this]() -> auto&& {
                 return brake;
-            })
-        )
-        .WithName("DriveForward3Meters");
+            }))
+        .WithName ("DriveForward3Meters");
 }

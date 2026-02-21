@@ -7,6 +7,8 @@
 #include <frc2/command/Commands.h>
 #include <frc2/command/button/RobotModeTriggers.h>
 #include <frc2/command/button/CommandJoystick.h>
+#include <pathplanner/lib/commands/PathPlannerAuto.h>
+#include <pathplanner/lib/auto/NamedCommands.h>
 
 #include "config.hpp"
 #include "container.hpp"
@@ -135,13 +137,22 @@ Container::Container()
     _climber = std::make_unique<subsystems::Climber>();
     _turret = std::make_unique<subsystems::Turret>();
     _vision = std::make_unique<VisionIOSingle>(config::str("vision_test_camera"));
+
+    // Register named commands for PathPlanner event markers.
+    // These must be registered BEFORE creating any PathPlannerAutos.
+    pathplanner::NamedCommands::registerCommand("intake", intake().intakeCommand());
+    pathplanner::NamedCommands::registerCommand("eject", intake().ejectCommand());
+    pathplanner::NamedCommands::registerCommand("shoot", turret().shootCommand());
+    pathplanner::NamedCommands::registerCommand("spinUp", turret().spinUpCommand());
+    pathplanner::NamedCommands::registerCommand("stopIntake", intake().stopCommand());
+    pathplanner::NamedCommands::registerCommand("stopShooter", turret().stopCommand());
     
-    // Load Choreo trajectory for autonomous
+    // Configure PathPlanner AutoBuilder for autonomous
     try {
-        m_testTrajectory = choreo::Choreo::LoadTrajectory<choreo::SwerveSample>("TestPath");
-        std::cout << "Successfully loaded Choreo trajectory: TestPath" << std::endl;
+        drivetrain().ConfigurePathPlanner();
+        std::cout << "Successfully configured PathPlanner AutoBuilder" << std::endl;
     } catch (const std::exception& e) {
-        std::cerr << "Failed to load Choreo trajectory: " << e.what() << std::endl;
+        std::cerr << "Failed to configure PathPlanner: " << e.what() << std::endl;
     }
 }
 
@@ -184,60 +195,13 @@ void Container::configureBindingsInternal()
 
 frc2::CommandPtr Container::GetAutonomousCommand()
 {
-    if (!m_testTrajectory.has_value()) {
-        std::cerr << "No trajectory loaded! Returning empty autonomous command." << std::endl;
+    // Load and return a PathPlannerAuto by name.
+    // The auto file must exist in src/main/deploy/pathplanner/autos/
+    // and be created using the PathPlanner GUI application.
+    try {
+        return pathplanner::PathPlannerAuto("ShooterTest").ToPtr();
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to load PathPlanner auto: " << e.what() << std::endl;
         return frc2::cmd::None();
     }
-    
-    // Get alliance color for trajectory mirroring
-    auto alliance = frc::DriverStation::GetAlliance();
-    bool isRed = alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kRed;
-    
-    // Get the starting pose, mirroring for red alliance if needed
-    // Template parameter is the FRC year (2026), not a type
-    auto startingPose = m_testTrajectory->GetInitialPose<2026>(isRed);
-    
-    if (!startingPose.has_value()) {
-        std::cerr << "Failed to get initial pose from trajectory!" << std::endl;
-        return frc2::cmd::None();
-    }
-    
-    std::cout << "=== Autonomous Start ===" << std::endl;
-    std::cout << "Alliance: " << (isRed ? "RED" : "BLUE") << std::endl;
-    std::cout << "Starting pose: X=" << startingPose->X().value() 
-              << ", Y=" << startingPose->Y().value()
-              << ", Rotation=" << startingPose->Rotation().Degrees().value() << "°" << std::endl;
-    
-    // Create autonomous command sequence:
-    // 1. Reset odometry to starting pose
-    // 2. Follow the trajectory
-    // 3. Brake when done
-    return drivetrain().RunOnce([this, pose = startingPose.value()]() {
-            // Reset odometry and trajectory controllers
-            drivetrain().ResetPose(pose);
-            drivetrain().ResetTrajectoryControllers();
-            m_autoTimer.Reset();
-            m_autoTimer.Start();
-        })
-        .AndThen(
-            drivetrain().Run([this, isRed]() {
-                auto elapsedTime = m_autoTimer.Get();
-                // Template parameter is the FRC year (2026), not a type
-                auto sample = m_testTrajectory->SampleAt<2026>(elapsedTime, isRed);
-                
-                if (sample.has_value()) {
-                    drivetrain().FollowTrajectory(sample.value());
-                }
-            })
-            .Until([this]() {
-                // Stop when trajectory is complete
-                return m_autoTimer.Get() >= m_testTrajectory->GetTotalTime();
-            })
-        )
-        .AndThen(
-            drivetrain().ApplyRequest([this]() -> auto&& {
-                return brake;
-            })
-        )
-        .WithName("ChoreoTrajectoryAuto");
 }

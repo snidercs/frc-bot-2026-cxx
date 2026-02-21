@@ -89,7 +89,7 @@ private:
     units::ampere_t _cachedMotorCurrent = 0_A;
 
     // Constants
-    static constexpr units::turns_per_second_t kShooterVelocity = 50_tps;  // TODO: tune
+    static constexpr units::turns_per_second_t kShooterVelocity = 55_tps;  // TODO: tune
     static constexpr units::turns_per_second_t kShooterTolerance = 2_tps;
     static constexpr units::turns_per_second_t kUptakeVelocity = 100_tps;   // TODO: tune uptake speed
     static constexpr units::degree_t kAngleTolerance = 2_deg;

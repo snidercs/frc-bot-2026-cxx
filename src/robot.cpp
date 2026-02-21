@@ -78,10 +78,14 @@ void Robot::DisabledExit() {}
 
 void Robot::AutonomousInit()
 {
+    std::cout << "AutonomousInit: Getting autonomous command..." << std::endl;
     m_autonomousCommand = _container->GetAutonomousCommand();
 
     if (m_autonomousCommand) {
+        std::cout << "AutonomousInit: Scheduling autonomous command" << std::endl;
         frc2::CommandScheduler::GetInstance().Schedule(*m_autonomousCommand);
+    } else {
+        std::cerr << "AutonomousInit: No autonomous command returned!" << std::endl;
     }
 }
 

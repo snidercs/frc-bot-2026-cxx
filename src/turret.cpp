@@ -278,18 +278,22 @@ frc2::CommandPtr Turret::stopCommand() {
 
 frc2::CommandPtr Turret::shootCommand() {
     return frc2::cmd::Sequence(
-        // Spin up flywheel
-        Run([this] { setShooterVelocity(kShooterVelocity); })
-            .Until([this] { return isShooterReady(); })
-            .WithTimeout(2.0_s),
-        // Wait for aim to be on target
-        frc2::cmd::WaitUntil([this] { return isAtTarget() && isShooterReady(); })
-            .WithTimeout(1.0_s),
-        // TODO: Add command to feed note into shooter
-        frc2::cmd::Wait(0.5_s),  // Placeholder for feeding time
-        // Stop shooter
-        RunOnce([this] { stopShooter(); })
+        // Step 1: Spin up shooter flywheel
+        RunOnce([this] { setShooterVelocity(kShooterVelocity); }),
+
+        // Step 2: Wait for shooter to reach target velocity
+        frc2::cmd::Wait(1.0_s),
+
+        // Step 3: Run uptake motor to feed game piece into shooter
+        Run([this] {
+            _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
+        })
+        .WithTimeout(3.0_s)
     )
+    .FinallyDo([this] {
+        stopUptake();
+        stopShooter();
+    })
     .WithName("Shoot");
 }
 

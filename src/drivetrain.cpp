@@ -1,10 +1,9 @@
 #include "drivetrain.hpp"
 #include <frc/RobotController.h>
-#include <frc/controller/PIDController.h>
-#include <choreo/trajectory/SwerveSample.h>
-#include <numbers>
+#include <frc/DriverStation.h>
 
 using namespace subsystems;
+using namespace pathplanner;
 
 void CommandSwerveDrivetrain::Periodic()
 {
@@ -44,34 +43,34 @@ void CommandSwerveDrivetrain::StartSimThread()
     m_simNotifier->StartPeriodic(kSimLoopPeriod);
 }
 
-void CommandSwerveDrivetrain::FollowTrajectory(const choreo::SwerveSample& sample)
+void CommandSwerveDrivetrain::ConfigurePathPlanner()
 {
-    // Get current robot pose from odometry
-    auto currentPose = GetState().Pose;
-    
-    // Start with the trajectory's field-relative chassis speeds as feedforward
-    auto targetSpeeds = sample.GetChassisSpeeds();
-    
-    // Add PID corrections for position error
-    targetSpeeds.vx += units::meters_per_second_t{
-        m_xController.Calculate(currentPose.X().value(), sample.x.value())};
-    targetSpeeds.vy += units::meters_per_second_t{
-        m_yController.Calculate(currentPose.Y().value(), sample.y.value())};
-    targetSpeeds.omega += units::radians_per_second_t{
-        m_headingController.Calculate(
-            currentPose.Rotation().Radians().value(), sample.heading.value())};
-    
-    // Apply using ApplyFieldSpeeds (designed for autonomous trajectory following)
-    // with module force feedforwards from the trajectory for better tracking
-    SetControl(m_pathApplyFieldSpeeds
-        .WithSpeeds(targetSpeeds)
-        .WithWheelForceFeedforwardsX({sample.moduleForcesX.begin(), sample.moduleForcesX.end()})
-        .WithWheelForceFeedforwardsY({sample.moduleForcesY.begin(), sample.moduleForcesY.end()}));
-}
+    // Load the RobotConfig from PathPlanner GUI settings
+    auto config = RobotConfig::fromGUISettings();
 
-void CommandSwerveDrivetrain::ResetTrajectoryControllers()
-{
-    m_xController.Reset();
-    m_yController.Reset();
-    m_headingController.Reset();
+    AutoBuilder::configure(
+        [this]() { return GetState().Pose; },        // Robot pose supplier
+        [this](const frc::Pose2d& pose) { ResetPose(pose); }, // Method to reset odometry
+        [this]() { return GetState().Speeds; },       // ChassisSpeeds supplier (ROBOT RELATIVE)
+        [this](const frc::ChassisSpeeds& speeds, const DriveFeedforwards& feedforwards) {
+            SetControl(m_pathApplyRobotSpeeds
+                .WithSpeeds(speeds)
+                .WithWheelForceFeedforwardsX(feedforwards.robotRelativeForcesX)
+                .WithWheelForceFeedforwardsY(feedforwards.robotRelativeForcesY));
+        },
+        std::make_shared<PPHolonomicDriveController>(
+            PIDConstants { 10.0, 0.0, 0.0 },  // Translation PID constants
+            PIDConstants { 7.5, 0.0, 0.0 }    // Rotation PID constants
+        ),
+        config,
+        []() {
+            // Flip paths for red alliance
+            auto alliance = frc::DriverStation::GetAlliance();
+            if (alliance) {
+                return alliance.value() == frc::DriverStation::Alliance::kRed;
+            }
+            return false;
+        },
+        this // drivetrain subsystem requirements
+    );
 }

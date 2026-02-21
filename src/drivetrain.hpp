@@ -13,12 +13,11 @@
 
 #include "generated/TunerConstants.h"
 
-using namespace ctre::phoenix6;
+#include <pathplanner/lib/auto/AutoBuilder.h>
+#include <pathplanner/lib/config/RobotConfig.h>
+#include <pathplanner/lib/controllers/PPHolonomicDriveController.h>
 
-// Forward declaration for Choreo trajectory following
-namespace choreo {
-    class SwerveSample;
-}
+using namespace ctre::phoenix6;
 
 namespace subsystems {
 
@@ -133,9 +132,6 @@ public:
     CommandSwerveDrivetrain(swerve::SwerveDrivetrainConstants const &driveTrainConstants, ModuleConstants const &... modules) :
         TunerSwerveDrivetrain{driveTrainConstants, modules...}
     {
-        // Configure heading controller for continuous input (wraps at -π to π)
-        m_headingController.EnableContinuousInput(-std::numbers::pi, std::numbers::pi);
-        
         if (utils::IsSimulation()) {
             StartSimThread();
         }
@@ -162,9 +158,6 @@ public:
     ) :
         TunerSwerveDrivetrain{driveTrainConstants, odometryUpdateFrequency, modules...}
     {
-        // Configure heading controller for continuous input (wraps at -π to π)
-        m_headingController.EnableContinuousInput(-std::numbers::pi, std::numbers::pi);
-        
         if (utils::IsSimulation()) {
             StartSimThread();
         }
@@ -198,9 +191,6 @@ public:
             odometryStandardDeviation, visionStandardDeviation, modules...
         }
     {
-        // Configure heading controller for continuous input (wraps at -π to π)
-        m_headingController.EnableContinuousInput(-std::numbers::pi, std::numbers::pi);
-        
         if (utils::IsSimulation()) {
             StartSimThread();
         }
@@ -244,22 +234,13 @@ public:
 
     void Periodic() override;
 
-    /**
-     * \brief Follow a Choreo trajectory sample using PID feedback control.
-     * 
-     * This method applies feedforward from the trajectory sample and adds
-     * PID feedback to correct for position errors.
-     * 
-     * \param sample The Choreo trajectory sample to follow
+    /** Configure PathPlanner's AutoBuilder for autonomous path following.
+     *
+     *  Must be called once after drivetrain construction (typically in the
+     *  Container constructor) before any PathPlannerAuto or AutoBuilder
+     *  calls are made.
      */
-    void FollowTrajectory(const choreo::SwerveSample& sample);
-    
-    /**
-     * \brief Reset the trajectory following PID controllers.
-     * 
-     * Call this when starting a new trajectory to clear accumulated error.
-     */
-    void ResetTrajectoryControllers();
+    void ConfigurePathPlanner();
 
     /**
      * \brief Runs the SysId Quasistatic test in the given direction for the routine
@@ -330,14 +311,9 @@ public:
 
 private:
     void StartSimThread();
-    
-    // PID controllers for trajectory following
-    frc::PIDController m_xController{10.0, 0.0, 0.0};
-    frc::PIDController m_yController{10.0, 0.0, 0.0};
-    frc::PIDController m_headingController{7.5, 0.0, 0.0};
 
-    // Swerve request for field-centric trajectory following
-    swerve::requests::ApplyFieldSpeeds m_pathApplyFieldSpeeds;
+    // Swerve request for robot-relative autonomous driving (used by PathPlanner)
+    swerve::requests::ApplyRobotSpeeds m_pathApplyRobotSpeeds;
 };
 
 }

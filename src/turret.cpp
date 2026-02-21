@@ -38,10 +38,17 @@ void Turret::configureMotors() {
             configs::MotorOutputConfigs{}
                 .WithInverted(signals::InvertedValue::CounterClockwise_Positive)
                 .WithNeutralMode(signals::NeutralModeValue::Brake)
+    
+        ).WithFeedback(
+            ctre::phoenix6::configs::FeedbackConfigs{}
+                .WithSensorToMechanismRatio(10.0)
         )
-        .WithFeedback(
-            configs::FeedbackConfigs{}
-                .WithSensorToMechanismRatio(kRotationGearRatio)
+        .WithSoftwareLimitSwitch(
+            ctre::phoenix6::configs::SoftwareLimitSwitchConfigs{}
+                .WithForwardSoftLimitEnable(true)
+                .WithForwardSoftLimitThreshold(0.25_tr)
+                .WithReverseSoftLimitEnable(true)
+                .WithReverseSoftLimitThreshold(-0.05542_tr)
         );
     
     // Shooter motor configuration (velocity control for flywheel)
@@ -98,18 +105,8 @@ void Turret::configureMotors() {
             configs::MotorOutputConfigs{}
                 .WithInverted(signals::InvertedValue::CounterClockwise_Positive)
                 .WithNeutralMode(signals::NeutralModeValue::Coast)
-        )
-        .WithFeedback(
-            ctre::phoenix6::configs::FeedbackConfigs{}
-                .WithSensorToMechanismRatio(10.0)
-        )
-        .WithSoftwareLimitSwitch(
-            ctre::phoenix6::configs::SoftwareLimitSwitchConfigs{}
-                .WithForwardSoftLimitEnable(true)
-                .WithForwardSoftLimitThreshold(0.25_tr)
-                .WithReverseSoftLimitEnable(true)
-                .WithReverseSoftLimitThreshold(-0.05542_tr)
         );
+        
     
     // Apply configs
     _rotationMotor.GetConfigurator().Apply(rotationConfig);

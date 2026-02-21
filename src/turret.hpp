@@ -8,6 +8,13 @@
 #include "ctre/phoenix6/TalonFX.hpp"
 #include "config.hpp"
 
+// 9ft front right corner to back right corner of recepticle.
+// speed 55 tps
+// 3ft 10 inches recepticle
+
+// 52 tps at 6 ft 10 inches
+// 50 tps works at 6 ft 10 inches too.
+
 namespace subsystems {
 
 /** Turret shooter subsystem with auto-aim capability.

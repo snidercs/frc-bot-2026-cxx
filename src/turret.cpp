@@ -98,15 +98,22 @@ void Turret::configureMotors() {
             configs::MotorOutputConfigs{}
                 .WithInverted(signals::InvertedValue::CounterClockwise_Positive)
                 .WithNeutralMode(signals::NeutralModeValue::Coast)
+        )
+        .WithFeedback(
+            ctre::phoenix6::configs::FeedbackConfigs{}
+                .WithSensorToMechanismRatio(10.0)
+        )
+        .WithSoftwareLimitSwitch(
+            ctre::phoenix6::configs::SoftwareLimitSwitchConfigs{}
+                .WithForwardSoftLimitEnable(true)
+                .WithForwardSoftLimitThreshold(0.25_tr)
+                .WithReverseSoftLimitEnable(true)
+                .WithReverseSoftLimitThreshold(-0.05542_tr)
         );
     
     // Apply configs
-    rotationConfig.Feedback.SensorToMechanismRatio = 10.0;
-    rotationConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    rotationConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 0.25_tr;
-    rotationConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    rotationConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.05542_tr;
     _rotationMotor.GetConfigurator().Apply(rotationConfig);
+    _rotationMotor.SetNeutralMode(ctre::phoenix6::signals::NeutralModeValue::Brake);
     _rotationMotor.SetPosition(0.25_tr);
 
     _shooterMotor.GetConfigurator().Apply(shooterConfig);
@@ -128,8 +135,6 @@ void Turret::configureMotors() {
     _rotationMotor.OptimizeBusUtilization();
     _shooterMotor.OptimizeBusUtilization();
     _uptakeMotor.OptimizeBusUtilization();
-
-    _rotationMotor.SetNeutralMode(ctre::phoenix6::signals::NeutralModeValue::Brake);
 }
 
 void Turret::Periodic() {

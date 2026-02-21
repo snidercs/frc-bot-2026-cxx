@@ -29,12 +29,18 @@ void Climber::configureMotor() {
             configs::MotorOutputConfigs{}
                 .WithInverted(signals::InvertedValue::CounterClockwise_Positive)
                 .WithNeutralMode(signals::NeutralModeValue::Brake)  // Use brake mode for climber safety
+        )
+        .WithFeedback(
+            ctre::phoenix6::configs::FeedbackConfigs{}
+                .WithSensorToMechanismRatio(180.0)
+        )
+        .WithSoftwareLimitSwitch(
+            ctre::phoenix6::configs::SoftwareLimitSwitchConfigs{}
+                .WithForwardSoftLimitEnable(true)
+                .WithForwardSoftLimitThreshold(0.0_tr)
+                .WithReverseSoftLimitEnable(true)
+                .WithReverseSoftLimitThreshold(-3.109043_tr)
         );
-    config.Feedback.SensorToMechanismRatio = 180.0;
-    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 0.0_tr;
-    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -3.109043_tr;
 
     // Apply config
     m_motor.GetConfigurator().Apply(config);

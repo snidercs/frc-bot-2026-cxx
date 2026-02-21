@@ -8,8 +8,6 @@
 #include "ctre/phoenix6/TalonFX.hpp"
 #include "config.hpp"
 
-// raw rotation: -0.978027 (counter clockwise) to 2.268066
-
 namespace subsystems {
 
 /** Turret shooter subsystem with auto-aim capability.

@@ -164,6 +164,41 @@ void Turret::setRotationDutyCycle(double dutyCycle) {
     _rotationMotor.SetControl(_dutyCycleRequest.WithOutput(dutyCycle));
 }
 
+void Turret::updateRotationControl(double operatorCommand) {
+    // Deadband check for "zero" input
+    constexpr double kDeadband = 0.05;
+    bool hasInput = std::abs(operatorCommand) > kDeadband;
+    
+    if (hasInput) {
+        // Operator is actively controlling - use percent output
+        _isHoldingPosition = false;
+        
+        // Scale command to a reasonable output range (e.g., -0.3 to 0.3 for safe manual control)
+        constexpr double kMaxOutput = 0.3;
+        double scaledOutput = std::clamp(operatorCommand, -1.0, 1.0) * kMaxOutput;
+        
+        _rotationMotor.SetControl(_dutyCycleRequest.WithOutput(scaledOutput));
+        
+    } else {
+        // No operator input - hold current position
+        if (!_isHoldingPosition) {
+            // LATCH the current position (only once when entering hold mode)
+            // This prevents continuously resetting the setpoint which would fight
+            // any small corrections the controller is making
+            _holdPosition = _rotationMotor.GetPosition().GetValue();
+            _isHoldingPosition = true;
+        }
+        
+        // Use position control to actively hold the latched position
+        // This resists drift from gravity/momentum
+        _rotationMotor.SetControl(_positionRequest.WithPosition(_holdPosition));
+    }
+    
+    // Telemetry for debugging
+    frc::SmartDashboard::PutBoolean("Turret/Holding Position", _isHoldingPosition);
+    frc::SmartDashboard::PutNumber("Turret/Hold Position (turns)", _holdPosition.value());
+}
+
 void Turret::setShooterVelocity(units::turns_per_second_t velocity) {
     _shooterMotor.SetControl(_shooterVelocityRequest.WithVelocity(velocity));
 }
@@ -259,11 +294,12 @@ frc2::CommandPtr Turret::manualRotateCommand(std::function<double()> speedSuppli
     return Run([this, speedSupplier] {
         if (!_autoAimEnabled) {
             double speed = speedSupplier();
-            setRotationVelocity(speed * kManualRotationSpeed);
+            // Use the new position-hold control logic
+            updateRotationControl(speed);
         }
     })
-    .WithName("ManualRotate")
-    .FinallyDo([this] { stopRotation(); });
+    .WithName("ManualRotate");
+    // NOTE: No FinallyDo needed - updateRotationControl handles hold automatically
 }
 
 frc2::CommandPtr Turret::spinUpCommand() {

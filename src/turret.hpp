@@ -14,6 +14,7 @@
 
 // 52 tps at 6 ft 10 inches
 // 50 tps works at 6 ft 10 inches too.
+// 52 tps at 8ft dead on.
 
 namespace subsystems {
 
@@ -40,6 +41,7 @@ public:
     // Manual control
     void setRotationVelocity(units::turns_per_second_t velocity);
     void setRotationDutyCycle(double dutyCycle);  // For testing: -0.1 to 0.1
+    void updateRotationControl(double operatorCommand);  // NEW: Handles hold/manual control
     void setShooterVelocity(units::turns_per_second_t velocity);
     void stopRotation();
     void stopShooter();
@@ -85,6 +87,10 @@ private:
     // State
     bool _autoAimEnabled = false;
     units::degree_t _targetAngle = 0_deg;
+    
+    // Position hold state (for locking when no operator input)
+    bool _isHoldingPosition = false;
+    units::turn_t _holdPosition = 0_tr;
 
     // Constants
     static constexpr units::turns_per_second_t kShooterVelocity = 50_tps;  // TODO: tune

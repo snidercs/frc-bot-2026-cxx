@@ -51,10 +51,13 @@ protected:
         _sticks[0].Button(config::integer("climber_lower_button_index")).WhileTrue (
             climber().lowerCommand());
         
-            // Manual turret rotation on joystick axis (e.g., right stick X on stick 1)
+        // Manual turret rotation
+        const auto rotStick = config::integer("turret_rotation_axis_stick");
+        const auto rotIdx = config::integer("turret_rotation_axis_index");
+        const auto rotGain = config::number("turret_roation_gain");
         turret().SetDefaultCommand(
-            turret().manualRotateCommand([this] { 
-                return 0.5 * _sticks[0].GetHID().GetRawAxis(3); // Right stick X
+            turret().manualRotateCommand([this, rotStick, rotIdx, rotGain] { 
+                return rotGain * _sticks[rotStick].GetHID().GetRawAxis(rotIdx); // Right stick X
             }));
             
 #if BOT_VISION_SINGLE

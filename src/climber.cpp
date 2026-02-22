@@ -29,11 +29,22 @@ void Climber::configureMotor() {
             configs::MotorOutputConfigs{}
                 .WithInverted(signals::InvertedValue::CounterClockwise_Positive)
                 .WithNeutralMode(signals::NeutralModeValue::Brake)  // Use brake mode for climber safety
+        )
+        .WithFeedback(
+            ctre::phoenix6::configs::FeedbackConfigs{}
+                .WithSensorToMechanismRatio(180.0)
+        )
+        .WithSoftwareLimitSwitch(
+            ctre::phoenix6::configs::SoftwareLimitSwitchConfigs{}
+                .WithForwardSoftLimitEnable(true)
+                .WithForwardSoftLimitThreshold(0.0_tr)
+                .WithReverseSoftLimitEnable(true)
+                .WithReverseSoftLimitThreshold(-3.109043_tr)
         );
-    
+
     // Apply config
     m_motor.GetConfigurator().Apply(config);
-    
+    m_motor.SetPosition(0.0_tr);
     // Configure status signal update frequencies to prevent CAN stale errors
     // Set to 50 Hz for telemetry signals
     BaseStatusSignal::SetUpdateFrequencyForAll(
@@ -45,10 +56,12 @@ void Climber::configureMotor() {
 }
 
 void Climber::Periodic() {
+#if BOT_TRACE_SUBSYSTEMS
     // Telemetry for debugging and monitoring
     frc::SmartDashboard::PutNumber("Climber/Velocity (rps)", m_motor.GetVelocity().GetValue().value());
     frc::SmartDashboard::PutNumber("Climber/Current (A)", m_motor.GetSupplyCurrent().GetValue().value());
     frc::SmartDashboard::PutNumber("Climber/Voltage (V)", m_motor.GetMotorVoltage().GetValue().value());
+#endif
 }
 
 void Climber::setDutyCycle(double dutyCycle) {

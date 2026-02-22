@@ -53,6 +53,15 @@ protected:
         _sticks[0].Button(config::integer("climber_lower_button_index")).WhileTrue (
             climber().lowerCommand());
         
+        // Manual turret rotation
+        const auto rotStick = config::integer("turret_rotation_axis_stick");
+        const auto rotIdx = config::integer("turret_rotation_axis_index");
+        const auto rotGain = config::number("turret_roation_gain");
+        turret().SetDefaultCommand(
+            turret().manualRotateCommand([this, rotStick, rotIdx, rotGain] { 
+                return rotGain * _sticks[rotStick].GetHID().GetRawAxis(rotIdx); // Right stick X
+            }));
+            
 #if BOT_VISION_SINGLE
         // Vision tracking test
         _sticks[0].Button(config::integer("turret_aim_button_index")).WhileTrue (
@@ -124,15 +133,14 @@ private:
 Container::Container()
 {
     // Construct drivetrain with 250 Hz odometry update frequency to prevent CAN stale errors
-    _drivetrain = std::make_unique<subsystems::CommandSwerveDrivetrain>(
+    _drivetrain = std::make_unique<subsystems::CommandSwerveDrivetrain> (
         TunerConstants::DrivetrainConstants,
         250_Hz,
         TunerConstants::FrontLeft,
         TunerConstants::FrontRight,
         TunerConstants::BackLeft,
-        TunerConstants::BackRight
-    );
-    
+        TunerConstants::BackRight);
+
     _intake = std::make_unique<subsystems::Intake>();
     _climber = std::make_unique<subsystems::Climber>();
     _turret = std::make_unique<subsystems::Turret>();

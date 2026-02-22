@@ -91,11 +91,13 @@ void Intake::configureMotors() {
 }
 
 void Intake::Periodic() {
+#if BOT_TRACE_SUBSYSTEMS
     // Telemetry for debugging and monitoring
     frc::SmartDashboard::PutNumber("Intake/Top Velocity (rps)", m_topMotor.GetVelocity().GetValue().value());
     frc::SmartDashboard::PutNumber("Intake/Bottom Velocity (rps)", m_bottomMotor.GetVelocity().GetValue().value());
     frc::SmartDashboard::PutNumber("Intake/Top Current (A)", m_topMotor.GetSupplyCurrent().GetValue().value());
     frc::SmartDashboard::PutNumber("Intake/Bottom Current (A)", m_bottomMotor.GetSupplyCurrent().GetValue().value());
+#endif
 }
 
 void Intake::setVoltage(units::volt_t voltage) {

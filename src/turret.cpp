@@ -38,17 +38,17 @@ void Turret::configureMotors() {
             configs::MotorOutputConfigs{}
                 .WithInverted(signals::InvertedValue::CounterClockwise_Positive)
                 .WithNeutralMode(signals::NeutralModeValue::Brake)
-        )
-        .WithFeedback(
-            configs::FeedbackConfigs{}
-                .WithSensorToMechanismRatio(kRotationGearRatio)
+    
+        ).WithFeedback(
+            ctre::phoenix6::configs::FeedbackConfigs{}
+                .WithSensorToMechanismRatio(10.0)
         )
         .WithSoftwareLimitSwitch(
-            configs::SoftwareLimitSwitchConfigs{}
-                .WithForwardSoftLimitThreshold(0.5_tr)   // +180 degrees
+            ctre::phoenix6::configs::SoftwareLimitSwitchConfigs{}
                 .WithForwardSoftLimitEnable(true)
-                .WithReverseSoftLimitThreshold(-0.5_tr)  // -180 degrees
+                .WithForwardSoftLimitThreshold(0.25_tr)
                 .WithReverseSoftLimitEnable(true)
+                .WithReverseSoftLimitThreshold(-0.05542_tr)
         );
     
     // Shooter motor configuration (velocity control for flywheel)
@@ -106,9 +106,13 @@ void Turret::configureMotors() {
                 .WithInverted(signals::InvertedValue::CounterClockwise_Positive)
                 .WithNeutralMode(signals::NeutralModeValue::Coast)
         );
+        
     
     // Apply configs
     _rotationMotor.GetConfigurator().Apply(rotationConfig);
+    _rotationMotor.SetNeutralMode(ctre::phoenix6::signals::NeutralModeValue::Brake);
+    _rotationMotor.SetPosition(0.25_tr);
+
     _shooterMotor.GetConfigurator().Apply(shooterConfig);
     _uptakeMotor.GetConfigurator().Apply(uptakeConfig);
     
@@ -138,6 +142,7 @@ void Turret::Periodic() {
     _cachedMotorVoltage = _rotationMotor.GetMotorVoltage().GetValue();
     _cachedMotorCurrent = _rotationMotor.GetSupplyCurrent().GetValue();
     
+#if BOT_TRACE_SUBSYSTEMS
     // Telemetry (all values from cache — no additional CAN reads)
     frc::SmartDashboard::PutBoolean("Turret/Auto Aim Enabled", _autoAimEnabled);
     frc::SmartDashboard::PutNumber("Turret/Current Angle (deg)", _cachedAngle.value());
@@ -150,7 +155,8 @@ void Turret::Periodic() {
     // Debug: Motor status
     frc::SmartDashboard::PutNumber("Turret/Motor Voltage", _cachedMotorVoltage.value());
     frc::SmartDashboard::PutNumber("Turret/Motor Current", _cachedMotorCurrent.value());
-    frc::SmartDashboard::PutNumber("Turret/Motor Position", _cachedAngle.value() / 360.0);
+    frc::SmartDashboard::PutNumber("Turret/Motor Position", _rotationMotor.GetPosition().GetValue().value());
+#endif
 }
 
 void Turret::setRotationVelocity(units::turns_per_second_t velocity) {
@@ -165,6 +171,41 @@ void Turret::setRotationDutyCycle(double dutyCycle) {
     frc::SmartDashboard::PutNumber("Turret/Commanded Duty Cycle", dutyCycle);
     
     _rotationMotor.SetControl(_dutyCycleRequest.WithOutput(dutyCycle));
+}
+
+void Turret::updateRotationControl(double operatorCommand) {
+    // Deadband check for "zero" input
+    constexpr double kDeadband = 0.05;
+    bool hasInput = std::abs(operatorCommand) > kDeadband;
+    
+    if (hasInput) {
+        // Operator is actively controlling - use percent output
+        _isHoldingPosition = false;
+        
+        // Scale command to a reasonable output range (e.g., -0.3 to 0.3 for safe manual control)
+        constexpr double kMaxOutput = 0.3;
+        double scaledOutput = std::clamp(operatorCommand, -1.0, 1.0) * kMaxOutput;
+        
+        _rotationMotor.SetControl(_dutyCycleRequest.WithOutput(scaledOutput));
+        
+    } else {
+        // No operator input - hold current position
+        if (!_isHoldingPosition) {
+            // LATCH the current position (only once when entering hold mode)
+            // This prevents continuously resetting the setpoint which would fight
+            // any small corrections the controller is making
+            _holdPosition = _rotationMotor.GetPosition().GetValue();
+            _isHoldingPosition = true;
+        }
+        
+        // Use position control to actively hold the latched position
+        // This resists drift from gravity/momentum
+        _rotationMotor.SetControl(_positionRequest.WithPosition(_holdPosition));
+    }
+    
+    // Telemetry for debugging
+    frc::SmartDashboard::PutBoolean("Turret/Holding Position", _isHoldingPosition);
+    frc::SmartDashboard::PutNumber("Turret/Hold Position (turns)", _holdPosition.value());
 }
 
 void Turret::setShooterVelocity(units::turns_per_second_t velocity) {
@@ -259,11 +300,12 @@ frc2::CommandPtr Turret::manualRotateCommand(std::function<double()> speedSuppli
     return Run([this, speedSupplier] {
         if (!_autoAimEnabled) {
             double speed = speedSupplier();
-            setRotationVelocity(speed * kManualRotationSpeed);
+            // Use the new position-hold control logic
+            updateRotationControl(speed);
         }
     })
-    .WithName("ManualRotate")
-    .FinallyDo([this] { stopRotation(); });
+    .WithName("ManualRotate");
+    // NOTE: No FinallyDo needed - updateRotationControl handles hold automatically
 }
 
 frc2::CommandPtr Turret::spinUpCommand() {

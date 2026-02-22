@@ -10,6 +10,14 @@
 #include "ctre/phoenix6/TalonFX.hpp"
 #include "config.hpp"
 
+// 9ft front right corner to back right corner of recepticle.
+// speed 55 tps
+// 3ft 10 inches recepticle
+
+// 52 tps at 6 ft 10 inches
+// 50 tps works at 6 ft 10 inches too.
+// 52 tps at 8ft dead on.
+
 namespace subsystems {
 
 /** Turret shooter subsystem with auto-aim capability.
@@ -35,6 +43,7 @@ public:
     // Manual control
     void setRotationVelocity(units::turns_per_second_t velocity);
     void setRotationDutyCycle(double dutyCycle);  // For testing: -0.1 to 0.1
+    void updateRotationControl(double operatorCommand);  // NEW: Handles hold/manual control
     void setShooterVelocity(units::turns_per_second_t velocity);
     void stopRotation();
     void stopShooter();
@@ -88,6 +97,10 @@ private:
     units::volt_t _cachedMotorVoltage = 0_V;
     units::ampere_t _cachedMotorCurrent = 0_A;
 
+    // Position hold state (for locking when no operator input)
+    bool _isHoldingPosition = false;
+    units::turn_t _holdPosition = 0_tr;
+
     // Constants
     static constexpr units::turns_per_second_t kShooterVelocity = 55_tps;  // TODO: tune
     static constexpr units::turns_per_second_t kShooterTolerance = 2_tps;
@@ -100,7 +113,7 @@ private:
 
     void configureMotors();
     units::degree_t computeAimAngle(const frc::Pose2d& robotPose, 
-                                     const frc::Pose2d& targetPose) const;
+                                    const frc::Pose2d& targetPose) const;
 };
 
 } // namespace subsystems

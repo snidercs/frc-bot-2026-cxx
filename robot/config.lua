@@ -23,6 +23,10 @@ local config = {
     -- Turret shooter configuration
     turret_rotation_device_id = 19,
     turret_rotation_can_bus = "rio",
+    turret_rotation_axis_stick = 0,
+    turret_rotation_axis_index = 3,
+    turret_roation_gain = 0.5,
+
     turret_shooter_device_id = 16,   -- TODO: Update with actual CAN ID
     turret_shooter_can_bus = "rio",
     turret_aim_button_index = 7,     -- Button to toggle auto-aim

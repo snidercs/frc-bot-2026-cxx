@@ -135,6 +135,7 @@ void Turret::configureMotors() {
 }
 
 void Turret::Periodic() {
+#if BOT_TRACE_SUBSYSTEMS
     // Telemetry
     frc::SmartDashboard::PutBoolean("Turret/Auto Aim Enabled", _autoAimEnabled);
     frc::SmartDashboard::PutNumber("Turret/Current Angle (deg)", getCurrentAngle().value());
@@ -148,6 +149,7 @@ void Turret::Periodic() {
     frc::SmartDashboard::PutNumber("Turret/Motor Voltage", _rotationMotor.GetMotorVoltage().GetValue().value());
     frc::SmartDashboard::PutNumber("Turret/Motor Current", _rotationMotor.GetSupplyCurrent().GetValue().value());
     frc::SmartDashboard::PutNumber("Turret/Motor Position", _rotationMotor.GetPosition().GetValue().value());
+#endif
 }
 
 void Turret::setRotationVelocity(units::turns_per_second_t velocity) {

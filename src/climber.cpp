@@ -56,10 +56,12 @@ void Climber::configureMotor() {
 }
 
 void Climber::Periodic() {
+#if BOT_TRACE_SUBSYSTEMS
     // Telemetry for debugging and monitoring
     frc::SmartDashboard::PutNumber("Climber/Velocity (rps)", m_motor.GetVelocity().GetValue().value());
     frc::SmartDashboard::PutNumber("Climber/Current (A)", m_motor.GetSupplyCurrent().GetValue().value());
     frc::SmartDashboard::PutNumber("Climber/Voltage (V)", m_motor.GetMotorVoltage().GetValue().value());
+#endif
 }
 
 void Climber::setDutyCycle(double dutyCycle) {

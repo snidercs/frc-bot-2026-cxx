@@ -5,8 +5,12 @@
 
 #include "scripting.hpp"
 
+// Enable to luanch a native Lua version of the robot code.
 #define LUABOT_NATIVE   0
+// Enable to run the dumb camera in background thread
 #define BOT_DUMB_CAMERA 1
+// Enable to put debug data in network tables for subsystems
+#define BOT_TRACE_SUBSYSTEMS 0
 
 namespace config {
 

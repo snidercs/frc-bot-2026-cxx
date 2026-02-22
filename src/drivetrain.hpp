@@ -2,13 +2,20 @@
 
 #include "ctre/phoenix6/SignalLogger.hpp"
 
+#include <numbers>
+
 #include <frc/DriverStation.h>
 #include <frc/Notifier.h>
+#include <frc/controller/PIDController.h>
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/SubsystemBase.h>
 #include <frc2/command/sysid/SysIdRoutine.h>
 
 #include "generated/TunerConstants.h"
+
+#include <pathplanner/lib/auto/AutoBuilder.h>
+#include <pathplanner/lib/config/RobotConfig.h>
+#include <pathplanner/lib/controllers/PPHolonomicDriveController.h>
 
 using namespace ctre::phoenix6;
 
@@ -227,6 +234,14 @@ public:
 
     void Periodic() override;
 
+    /** Configure PathPlanner's AutoBuilder for autonomous path following.
+     *
+     *  Must be called once after drivetrain construction (typically in the
+     *  Container constructor) before any PathPlannerAuto or AutoBuilder
+     *  calls are made.
+     */
+    void ConfigurePathPlanner();
+
     /**
      * \brief Runs the SysId Quasistatic test in the given direction for the routine
      * specified by m_sysIdRoutineToApply.
@@ -296,6 +311,9 @@ public:
 
 private:
     void StartSimThread();
+
+    // Swerve request for robot-relative autonomous driving (used by PathPlanner)
+    swerve::requests::ApplyRobotSpeeds m_pathApplyRobotSpeeds;
 };
 
 }

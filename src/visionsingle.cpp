@@ -144,13 +144,16 @@ wpi::array<double, 3> VisionIOSingle::computeStdDevs(double distance) const {
     return {xyStdDev, xyStdDev, thetaStdDev};
 }
 
+void VisionIOSingle::updateResults() {
+    _cachedResults = _camera.GetAllUnreadResults();
+}
+
 std::string VisionIOSingle::getStatus() {
     std::string status = "VisionIOSingle - ";
-    auto results = _camera.GetAllUnreadResults();
     
-    if (!results.empty() && results.back().HasTargets()) {
+    if (!_cachedResults.empty() && _cachedResults.back().HasTargets()) {
         status += "Tracking (";
-        status += std::to_string(results.back().GetTargets().size());
+        status += std::to_string(_cachedResults.back().GetTargets().size());
         status += " targets)";
     } else {
         status += "No targets";
@@ -160,13 +163,11 @@ std::string VisionIOSingle::getStatus() {
 }
 
 std::string VisionIOSingle::getLastTargets() {
-    auto results = _camera.GetAllUnreadResults();
-    
-    if (results.empty()) {
+    if (_cachedResults.empty()) {
         return "No results available";
     }
     
-    auto result = results.back();
+    auto result = _cachedResults.back();
     
     if (!result.HasTargets()) {
         return "No targets detected";
@@ -191,14 +192,12 @@ std::string VisionIOSingle::getRejectedCounts() {
 }
 
 double VisionIOSingle::getBestTargetYaw() {
-    auto results = _camera.GetAllUnreadResults();
-    
-    if (results.empty()) {
+    if (_cachedResults.empty()) {
         frc::SmartDashboard::PutString("VisionSingle/Debug", "No results");
         return 0.0;
     }
     
-    auto result = results.back();
+    auto result = _cachedResults.back();
     
     if (!result.HasTargets()) {
         frc::SmartDashboard::PutString("VisionSingle/Debug", "No targets in result");

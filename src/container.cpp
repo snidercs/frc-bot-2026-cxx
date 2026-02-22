@@ -7,6 +7,8 @@
 #include <frc2/command/Commands.h>
 #include <frc2/command/button/RobotModeTriggers.h>
 #include <frc2/command/button/CommandJoystick.h>
+#include <pathplanner/lib/commands/PathPlannerAuto.h>
+#include <pathplanner/lib/auto/NamedCommands.h>
 
 #include "config.hpp"
 #include "container.hpp"
@@ -61,8 +63,8 @@ protected:
             }));
             
 #if BOT_VISION_SINGLE
-        // Vision tracking test - button 7
-        _sticks[0].Button(7).WhileTrue (
+        // Vision tracking test
+        _sticks[0].Button(config::integer("turret_aim_button_index")).WhileTrue (
             test::createVisionTrackingTest(&turret(), &vision()));
 #endif
         // clang-format on
@@ -110,9 +112,9 @@ public:
         // reset the field-centric heading on left bumper press
         joystick.LeftBumper().OnTrue (drivetrain().RunOnce ([this] { drivetrain().SeedFieldCentric(); }));
 
-        // Intake controls
-        joystick.Button(1).WhileTrue (intake().intakeCommand());
-        joystick.Button(2).WhileTrue (intake().ejectCommand());
+        // Intake controls (use RightBumper/RightTrigger to avoid conflict with A/B buttons)
+        joystick.RightBumper().WhileTrue (intake().intakeCommand());
+        joystick.RightTrigger().WhileTrue (intake().ejectCommand());
         
         // Climber controls
         joystick.Button(config::integer("climber_climb_button_index")).WhileTrue (climber().climbCommand());
@@ -142,7 +144,24 @@ Container::Container()
     _intake = std::make_unique<subsystems::Intake>();
     _climber = std::make_unique<subsystems::Climber>();
     _turret = std::make_unique<subsystems::Turret>();
-    _vision = std::make_unique<VisionIOSingle> (config::str ("vision_test_camera"));
+    _vision = std::make_unique<VisionIOSingle>(config::str("vision_test_camera"));
+
+    // Register named commands for PathPlanner event markers.
+    // These must be registered BEFORE creating any PathPlannerAutos.
+    pathplanner::NamedCommands::registerCommand("intake", intake().intakeCommand());
+    pathplanner::NamedCommands::registerCommand("eject", intake().ejectCommand());
+    pathplanner::NamedCommands::registerCommand("shoot", turret().shootCommand());
+    pathplanner::NamedCommands::registerCommand("spinUp", turret().spinUpCommand());
+    pathplanner::NamedCommands::registerCommand("stopIntake", intake().stopCommand());
+    pathplanner::NamedCommands::registerCommand("stopShooter", turret().stopCommand());
+    
+    // Configure PathPlanner AutoBuilder for autonomous
+    try {
+        drivetrain().ConfigurePathPlanner();
+        std::cout << "Successfully configured PathPlanner AutoBuilder" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to configure PathPlanner: " << e.what() << std::endl;
+    }
 }
 
 Container::~Container()
@@ -184,27 +203,13 @@ void Container::configureBindingsInternal()
 
 frc2::CommandPtr Container::GetAutonomousCommand()
 {
-    // Store the starting X position (will be set when command starts)
-    auto startX = std::make_shared<units::meter_t> (0_m);
-
-    // Drive forward 3 meters from starting position, then brake
-    return drivetrain().RunOnce ([this, startX]() {
-                           // Capture the starting X position when autonomous begins
-                           *startX = drivetrain().GetState().Pose.X();
-                       })
-        .AndThen (
-            drivetrain().ApplyRequest ([this]() -> auto&& {
-                            return autoForward;
-                        })
-                .Until ([this, startX]() {
-                    // Stop when we've traveled 3 meters from start position
-                    auto currentX = drivetrain().GetState().Pose.X();
-                    auto distanceTraveled = units::math::abs (currentX - *startX);
-                    return distanceTraveled >= 1_m;
-                }))
-        .AndThen (
-            drivetrain().ApplyRequest ([this]() -> auto&& {
-                return brake;
-            }))
-        .WithName ("DriveForward3Meters");
+    // Load and return a PathPlannerAuto by name.
+    // The auto file must exist in src/main/deploy/pathplanner/autos/
+    // and be created using the PathPlanner GUI application.
+    try {
+        return pathplanner::PathPlannerAuto("ShooterTest").ToPtr();
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to load PathPlanner auto: " << e.what() << std::endl;
+        return frc2::cmd::None();
+    }
 }

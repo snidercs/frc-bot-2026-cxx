@@ -36,7 +36,7 @@ void log (std::string_view key);
     @return The configuration value as type T, or T(0) if the key is not found or has the wrong type
 */
 template <typename T>
-static double num (std::string_view key)
+static T num (std::string_view key)
 {
     static_assert (std::is_integral_v<T> || std::is_floating_point_v<T>,
                    "T must be an integer or floating point type");

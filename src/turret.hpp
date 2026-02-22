@@ -5,6 +5,8 @@
 #include <frc/geometry/Pose2d.h>
 #include <frc/geometry/Rotation2d.h>
 #include <units/angle.h>
+#include <units/voltage.h>
+#include <units/current.h>
 #include "ctre/phoenix6/TalonFX.hpp"
 #include "config.hpp"
 
@@ -88,12 +90,19 @@ private:
     bool _autoAimEnabled = false;
     units::degree_t _targetAngle = 0_deg;
     
+    // Cached sensor values (updated in Periodic to avoid redundant CAN reads)
+    units::degree_t _cachedAngle = 0_deg;
+    units::turns_per_second_t _cachedShooterVelocity = 0_tps;
+    units::turns_per_second_t _cachedRotationVelocity = 0_tps;
+    units::volt_t _cachedMotorVoltage = 0_V;
+    units::ampere_t _cachedMotorCurrent = 0_A;
+
     // Position hold state (for locking when no operator input)
     bool _isHoldingPosition = false;
     units::turn_t _holdPosition = 0_tr;
 
     // Constants
-    static constexpr units::turns_per_second_t kShooterVelocity = 50_tps;  // TODO: tune
+    static constexpr units::turns_per_second_t kShooterVelocity = 55_tps;  // TODO: tune
     static constexpr units::turns_per_second_t kShooterTolerance = 2_tps;
     static constexpr units::turns_per_second_t kUptakeVelocity = 100_tps;   // TODO: tune uptake speed
     static constexpr units::degree_t kAngleTolerance = 2_deg;

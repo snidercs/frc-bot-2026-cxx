@@ -78,22 +78,34 @@ void Robot::DisabledExit() {}
 
 void Robot::AutonomousInit()
 {
+    std::cout << "AutonomousInit: Getting autonomous command..." << std::endl;
     m_autonomousCommand = _container->GetAutonomousCommand();
 
     if (m_autonomousCommand) {
-        m_autonomousCommand->Schedule();
+        std::cout << "AutonomousInit: Scheduling autonomous command" << std::endl;
+        frc2::CommandScheduler::GetInstance().Schedule(*m_autonomousCommand);
+    } else {
+        std::cerr << "AutonomousInit: No autonomous command returned!" << std::endl;
     }
 }
 
 void Robot::AutonomousPeriodic() {}
 
-void Robot::AutonomousExit() {}
+void Robot::AutonomousExit()
+{
+    // Reset the optional - command is owned by scheduler
+    m_autonomousCommand.reset();
+}
 
 void Robot::TeleopInit()
 {
     DriverStation::SilenceJoystickConnectionWarning (false);
+    
+    // This makes sure that the autonomous stops running when
+    // teleop starts running.
     if (m_autonomousCommand) {
         m_autonomousCommand->Cancel();
+        m_autonomousCommand.reset();
     }
 }
 

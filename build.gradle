@@ -40,6 +40,13 @@ deploy {
                                            // longer exist in deploy directory of this project
                 }
 
+                // PathPlanner path and auto files
+                frcPathPlannerDeploy(getArtifactTypeClass('FileTreeArtifact')) {
+                    files = project.fileTree('src/main/deploy/pathplanner')
+                    directory = '/home/lvuser/deploy/pathplanner'
+                    deleteOldFiles = false
+                }
+
                 // Static files artifact
                 // frcStaticFileDeploy(getArtifactTypeClass('FileTreeArtifact')) {
                 //     files = project.fileTree('build/luabot/share/luajit-2.1')

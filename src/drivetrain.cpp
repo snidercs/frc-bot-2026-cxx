@@ -1,7 +1,9 @@
 #include "drivetrain.hpp"
 #include <frc/RobotController.h>
+#include <frc/DriverStation.h>
 
 using namespace subsystems;
+using namespace pathplanner;
 
 void CommandSwerveDrivetrain::Periodic()
 {
@@ -39,4 +41,36 @@ void CommandSwerveDrivetrain::StartSimThread()
         UpdateSimState(deltaTime, frc::RobotController::GetBatteryVoltage());
     });
     m_simNotifier->StartPeriodic(kSimLoopPeriod);
+}
+
+void CommandSwerveDrivetrain::ConfigurePathPlanner()
+{
+    // Load the RobotConfig from PathPlanner GUI settings
+    auto config = RobotConfig::fromGUISettings();
+
+    AutoBuilder::configure(
+        [this]() { return GetState().Pose; },        // Robot pose supplier
+        [this](const frc::Pose2d& pose) { ResetPose(pose); }, // Method to reset odometry
+        [this]() { return GetState().Speeds; },       // ChassisSpeeds supplier (ROBOT RELATIVE)
+        [this](const frc::ChassisSpeeds& speeds, const DriveFeedforwards& feedforwards) {
+            SetControl(m_pathApplyRobotSpeeds
+                .WithSpeeds(speeds)
+                .WithWheelForceFeedforwardsX(feedforwards.robotRelativeForcesX)
+                .WithWheelForceFeedforwardsY(feedforwards.robotRelativeForcesY));
+        },
+        std::make_shared<PPHolonomicDriveController>(
+            PIDConstants { 10.0, 0.0, 0.0 },  // Translation PID constants
+            PIDConstants { 7.5, 0.0, 0.0 }    // Rotation PID constants
+        ),
+        config,
+        []() {
+            // Flip paths for red alliance
+            auto alliance = frc::DriverStation::GetAlliance();
+            if (alliance) {
+                return alliance.value() == frc::DriverStation::Alliance::kRed;
+            }
+            return false;
+        },
+        this // drivetrain subsystem requirements
+    );
 }

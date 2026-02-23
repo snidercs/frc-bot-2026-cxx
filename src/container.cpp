@@ -57,6 +57,9 @@ protected:
         // Disable climber soft limits while held; re-enable and zero position on release
         _sticks[1].Button(4).OnTrue(climber().disableSoftLimitsCommand())
                              .OnFalse(climber().enableSoftLimitsAndResetCommand());
+
+        // Zero turret rotation position
+        _sticks[1].Button(3).OnTrue(turret().calibrateRotationZero());
         
         // Manual turret rotation
         const auto rotStick = config::integer("turret_rotation_axis_stick");

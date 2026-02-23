@@ -39,6 +39,7 @@ public:
     frc2::CommandPtr stopCommand();
     frc2::CommandPtr shootCommand();
     frc2::CommandPtr manualShootCommand();
+    frc2::CommandPtr calibrateRotationZero();
 
     // Manual control
     void setRotationVelocity(units::turns_per_second_t velocity);

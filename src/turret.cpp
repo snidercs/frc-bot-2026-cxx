@@ -361,3 +361,12 @@ frc2::CommandPtr Turret::manualShootCommand() {
     })
     .WithName("ManualShoot");
 }
+
+frc2::CommandPtr Turret::calibrateRotationZero() {
+    return RunOnce([this] {
+        // Calibrate the zero point
+        _rotationMotor.SetPosition(0_tr);
+        // this second line is how to physically rotate to position "0"
+        // _rotationMotor.SetControl(_positionRequest.WithPosition(0_tr));
+    }).WithName("ZeroRotation");
+}

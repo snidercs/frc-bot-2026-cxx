@@ -48,10 +48,15 @@ protected:
             turret().manualShootCommand());
 
         // Climber control
+
         _sticks[0].Button(config::integer("climber_climb_button_index")).WhileTrue (
             climber().climbCommand());
         _sticks[0].Button(config::integer("climber_lower_button_index")).WhileTrue (
             climber().lowerCommand());
+
+        // Disable climber soft limits while held; re-enable and zero position on release
+        _sticks[1].Button(4).OnTrue(climber().disableSoftLimitsCommand())
+                             .OnFalse(climber().enableSoftLimitsAndResetCommand());
         
         // Manual turret rotation
         const auto rotStick = config::integer("turret_rotation_axis_stick");

@@ -17,6 +17,8 @@ public:
     frc2::CommandPtr climbCommand();
     frc2::CommandPtr lowerCommand();
     frc2::CommandPtr stopCommand();
+    frc2::CommandPtr disableSoftLimitsCommand();
+    frc2::CommandPtr enableSoftLimitsAndResetCommand();
 
     // Manual control
     void setDutyCycle(double dutyCycle);
@@ -34,6 +36,8 @@ private:
     // Constants
     static constexpr double kClimbDutyCycle = 0.65;   // Positive = down/climbing
     static constexpr double kLowerDutyCycle = -0.65;  // Negative = up/lowering
+    static constexpr units::turn_t kForwardSoftLimit = 0.0_tr;
+    static constexpr units::turn_t kReverseSoftLimit = -3.109043_tr;
 
     void configureMotor();
 };

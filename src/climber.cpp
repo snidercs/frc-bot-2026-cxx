@@ -37,9 +37,9 @@ void Climber::configureMotor() {
         .WithSoftwareLimitSwitch(
             ctre::phoenix6::configs::SoftwareLimitSwitchConfigs{}
                 .WithForwardSoftLimitEnable(true)
-                .WithForwardSoftLimitThreshold(0.0_tr)
+                .WithForwardSoftLimitThreshold(kForwardSoftLimit)
                 .WithReverseSoftLimitEnable(true)
-                .WithReverseSoftLimitThreshold(-3.109043_tr)
+                .WithReverseSoftLimitThreshold(kReverseSoftLimit)
         );
 
     // Apply config
@@ -88,4 +88,27 @@ frc2::CommandPtr Climber::lowerCommand() {
 frc2::CommandPtr Climber::stopCommand() {
     return RunOnce([this] { stop(); })
         .WithName("StopClimber");
+}
+
+frc2::CommandPtr Climber::disableSoftLimitsCommand() {
+    return RunOnce([this] {
+        m_motor.GetConfigurator().Apply(
+            configs::SoftwareLimitSwitchConfigs{}
+                .WithForwardSoftLimitEnable(false)
+                .WithReverseSoftLimitEnable(false)
+        );
+    }).WithName("DisableSoftLimits");
+}
+
+frc2::CommandPtr Climber::enableSoftLimitsAndResetCommand() {
+    return RunOnce([this] {
+        m_motor.SetPosition(0.0_tr);
+        m_motor.GetConfigurator().Apply(
+            configs::SoftwareLimitSwitchConfigs{}
+                .WithForwardSoftLimitEnable(true)
+                .WithForwardSoftLimitThreshold(kForwardSoftLimit)
+                .WithReverseSoftLimitEnable(true)
+                .WithReverseSoftLimitThreshold(kReverseSoftLimit)
+        );
+    }).WithName("EnableSoftLimitsAndReset");
 }

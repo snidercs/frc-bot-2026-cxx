@@ -37,8 +37,11 @@ public:
     frc2::CommandPtr manualRotateCommand(std::function<double()> speedSupplier);
     frc2::CommandPtr spinUpCommand();
     frc2::CommandPtr stopCommand();
+
+    frc2::CommandPtr shooterOnCommand();
+    frc2::CommandPtr shooterOffCommand();
     frc2::CommandPtr shootCommand();
-    frc2::CommandPtr manualShootCommand();
+
     frc2::CommandPtr calibrateRotationZero();
 
     // Manual control
@@ -118,6 +121,8 @@ private:
     
     // Gear ratio from motor to turret (motor rotations per turret rotation)
     static constexpr double kRotationGearRatio = 100.0;  // TODO: measure actual ratio
+    
+    
 
     void configureMotors();
     units::degree_t computeAimAngle(const frc::Pose2d& robotPose, 

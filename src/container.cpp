@@ -48,10 +48,9 @@ protected:
         
         // Shooter Control
         _sticks[1].Button(config::integer("turret_shoot_button_index")).WhileTrue (
-            turret().manualShootCommand());
+            turret().shootCommand());
 
         // Climber control
-
         _sticks[0].Button(config::integer("climber_climb_button_index")).WhileTrue (
             climber().climbCommand());
         _sticks[0].Button(config::integer("climber_lower_button_index")).WhileTrue (

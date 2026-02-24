@@ -318,41 +318,20 @@ frc2::CommandPtr Turret::stopCommand() {
         .WithName("StopTurret");
 }
 
-frc2::CommandPtr Turret::shootCommand() {
-    return frc2::cmd::Sequence(
-        // Step 1: Spin up shooter flywheel
-        RunOnce([this] { setShooterVelocity(kShooterVelocity); }),
-
-        // Step 2: Wait for shooter to reach target velocity
-        frc2::cmd::Wait(1.0_s),
-
-        // Step 3: Run uptake motor to feed game piece into shooter
-        Run([this] {
-            _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
-        })
-        .WithTimeout(3.0_s)
-    )
-    .FinallyDo([this] {
-        stopUptake();
-        stopShooter();
-    })
-    .WithName("Shoot");
-}
-
-frc2::CommandPtr Turret::manualShootCommand() {
-    // Warm path: shooter already at speed — skip the 1s prime, go straight to uptake
+frc2::CommandPtr Turret::shooterOnCommand() {
+    // Warm: already at speed, go straight to uptake
+    // Cold: spin up first, wait until ready, then uptake
     auto warm = frc2::cmd::Sequence(
         RunOnce([this] { setShooterVelocity(kShooterVelocity); }),
-        Run([this] {
+        RunOnce([this] {
             _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
         })
     );
 
-    // Cold path: spin up first, wait 1s, then run uptake
     auto cold = frc2::cmd::Sequence(
         RunOnce([this] { setShooterVelocity(kShooterVelocity); }),
-        frc2::cmd::WaitUntil([this]() { return isShooterReady(); }),
-        Run([this] {
+        frc2::cmd::WaitUntil([this] { return isShooterReady(); }),
+        RunOnce([this] {
             _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
         })
     );
@@ -361,12 +340,23 @@ frc2::CommandPtr Turret::manualShootCommand() {
         std::move(warm),
         std::move(cold),
         [this] { return isShooterReady(); }
-    )
-    .FinallyDo([this] {
+    ).WithName("ShooterOn");
+}
+
+frc2::CommandPtr Turret::shooterOffCommand() {
+    return RunOnce([this] {
         stopUptake();
         stopShooter();
-    })
-    .WithName("ManualShoot");
+    }).WithName("ShooterOff");
+}
+
+frc2::CommandPtr Turret::shootCommand() {
+    return shooterOnCommand()
+        .FinallyDo([this] { 
+            stopUptake();
+            stopShooter(); 
+        })
+        .WithName("ManualShoot");
 }
 
 frc2::CommandPtr Turret::calibrateRotationZero() {

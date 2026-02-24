@@ -159,12 +159,9 @@ Container::Container()
     // Register named commands for PathPlanner event markers.
     // These must be registered BEFORE creating any PathPlannerAutos.
     using nc = pathplanner::NamedCommands;
-    nc::registerCommand("intake", intake().intakeCommand());
-    nc::registerCommand("eject", intake().ejectCommand());
-    nc::registerCommand("shoot", turret().shootCommand());
-    nc::registerCommand("spinUp", turret().spinUpCommand());
-    nc::registerCommand("stopIntake", intake().stopCommand());
-    nc::registerCommand("stopShooter", turret().stopCommand());
+    nc::registerCommand("shooterOn",  turret().shooterOnCommand());
+    nc::registerCommand("shooterOff", turret().shooterOffCommand());
+    nc::registerCommand("turretStop", turret().stopCommand());
     
     // Configure PathPlanner AutoBuilder for autonomous
     bool pathPlannerConfigured = true;

@@ -351,12 +351,15 @@ frc2::CommandPtr Turret::shooterOffCommand() {
 }
 
 frc2::CommandPtr Turret::shootCommand() {
-    return shooterOnCommand()
-        .FinallyDo([this] { 
-            stopUptake();
-            stopShooter(); 
-        })
-        .WithName("ManualShoot");
+    return frc2::cmd::Sequence(
+        shooterOnCommand(),
+        frc2::cmd::Idle()
+    )
+    .FinallyDo([this] { 
+        stopUptake();
+        stopShooter(); 
+    })
+    .WithName("ManualShoot");
 }
 
 frc2::CommandPtr Turret::calibrateRotationZero() {

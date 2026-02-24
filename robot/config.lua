@@ -5,7 +5,7 @@ local config = {
 
     gamepad     = false,        -- Control robot with gamepad
     
-    auto_default_name = "ShooterTest",
+    auto_default_name = "Backup-Shoot-Left",
 
     heading_button_index = 8,   -- The button index to use for resetting the heading direction.
 

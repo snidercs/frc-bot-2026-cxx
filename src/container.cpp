@@ -156,12 +156,6 @@ Container::Container()
     _turret = std::make_unique<subsystems::Turret>();
     _vision = std::make_unique<VisionIOSingle>(config::str("vision_test_camera"));
 
-    // Register named commands for PathPlanner event markers.
-    // These must be registered BEFORE creating any PathPlannerAutos.
-    using nc = pathplanner::NamedCommands;
-    nc::registerCommand("shooterOn",  turret().shooterOnCommand());
-    nc::registerCommand("shooterOff", turret().shooterOffCommand());
-    nc::registerCommand("turretStop", turret().stopCommand());
     
     // Configure PathPlanner AutoBuilder for autonomous
     bool pathPlannerConfigured = true;
@@ -169,12 +163,16 @@ Container::Container()
         drivetrain().ConfigurePathPlanner();
         std::cout << "Successfully configured PathPlanner AutoBuilder" << std::endl;
     } catch (const std::exception& e) {
-        pathPlannerConfigured = true;
+        pathPlannerConfigured = false;
         std::cerr << "Failed to configure PathPlanner: " << e.what() << std::endl;
     }
 
     if (pathPlannerConfigured) {
         try {
+            using nc = pathplanner::NamedCommands;
+            nc::registerCommand("shooterOn",  turret().shooterOnCommand());
+            nc::registerCommand("shooterOff", turret().shooterOffCommand());
+            nc::registerCommand("turretStop", turret().stopCommand());
             _autoBuilder = AutoBuilder::buildAutoChooser (config::str ("auto_default_name"));
             frc::SmartDashboard::PutData ("AutoChooser", &_autoBuilder.value());
         } catch (const std::exception& e) {

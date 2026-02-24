@@ -55,4 +55,5 @@ private:
     std::unique_ptr<subsystems::Climber> _climber;
     std::unique_ptr<subsystems::Turret> _turret;
     std::unique_ptr<VisionIOSingle> _vision;
+    std::optional<frc::SendableChooser<frc2::Command *>> _autoBuilder;
 };

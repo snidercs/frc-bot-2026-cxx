@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include <frc/smartdashboard/SmartDashboard.h>
 #include <frc2/command/Commands.h>
 #include <frc2/command/button/RobotModeTriggers.h>
 #include <frc2/command/button/CommandJoystick.h>
@@ -13,6 +14,8 @@
 #include "config.hpp"
 #include "container.hpp"
 #include "visiontest.hpp"
+
+using pathplanner::AutoBuilder;
 
 // enable to use single camera test command.
 #define BOT_VISION_SINGLE 1
@@ -156,19 +159,32 @@ Container::Container()
 
     // Register named commands for PathPlanner event markers.
     // These must be registered BEFORE creating any PathPlannerAutos.
-    pathplanner::NamedCommands::registerCommand("intake", intake().intakeCommand());
-    pathplanner::NamedCommands::registerCommand("eject", intake().ejectCommand());
-    pathplanner::NamedCommands::registerCommand("shoot", turret().shootCommand());
-    pathplanner::NamedCommands::registerCommand("spinUp", turret().spinUpCommand());
-    pathplanner::NamedCommands::registerCommand("stopIntake", intake().stopCommand());
-    pathplanner::NamedCommands::registerCommand("stopShooter", turret().stopCommand());
+    using nc = pathplanner::NamedCommands;
+    nc::registerCommand("intake", intake().intakeCommand());
+    nc::registerCommand("eject", intake().ejectCommand());
+    nc::registerCommand("shoot", turret().shootCommand());
+    nc::registerCommand("spinUp", turret().spinUpCommand());
+    nc::registerCommand("stopIntake", intake().stopCommand());
+    nc::registerCommand("stopShooter", turret().stopCommand());
     
     // Configure PathPlanner AutoBuilder for autonomous
+    bool pathPlannerConfigured = true;
     try {
         drivetrain().ConfigurePathPlanner();
         std::cout << "Successfully configured PathPlanner AutoBuilder" << std::endl;
     } catch (const std::exception& e) {
+        pathPlannerConfigured = true;
         std::cerr << "Failed to configure PathPlanner: " << e.what() << std::endl;
+    }
+
+    if (pathPlannerConfigured) {
+        try {
+            _autoBuilder = AutoBuilder::buildAutoChooser (config::str ("auto_default_name"));
+            frc::SmartDashboard::PutData ("AutoChooser", &_autoBuilder.value());
+        } catch (const std::exception& e) {
+            pathPlannerConfigured = false;
+            std::cerr << "Autobuilder failed: " << e.what() << std::endl;
+        }
     }
 }
 
@@ -211,13 +227,16 @@ void Container::configureBindingsInternal()
 
 frc2::CommandPtr Container::GetAutonomousCommand()
 {
-    // Load and return a PathPlannerAuto by name.
-    // The auto file must exist in src/main/deploy/pathplanner/autos/
-    // and be created using the PathPlanner GUI application.
+    std::string autoName = config::str("auto_default_name");
+    if (_autoBuilder.has_value()) {
+        if (auto* selected = _autoBuilder.value().GetSelected(); selected != nullptr)
+            autoName = selected->GetName();
+    }
+
     try {
-        return pathplanner::PathPlannerAuto("ShooterTest").ToPtr();
+        return pathplanner::PathPlannerAuto(autoName).ToPtr();
     } catch (const std::exception& e) {
-        std::cerr << "Failed to load PathPlanner auto: " << e.what() << std::endl;
+        std::cerr << "Failed to load PathPlanner auto '" << autoName << "': " << e.what() << std::endl;
         return frc2::cmd::None();
     }
 }

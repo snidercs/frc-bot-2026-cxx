@@ -4,11 +4,12 @@ local config = {
     period      = 20,           -- in milliseconds
 
     gamepad     = false,        -- Control robot with gamepad
-   
-    heading_button_index = 8,   -- The button index to use for resetting the heading direction.
     
-    intake_trigger_index = 18,  -- The button index to engage the intake.
+    auto_default_name = "ShooterTest",
 
+    heading_button_index = 8,   -- The button index to use for resetting the heading direction.
+
+    intake_trigger_index = 18,  -- The button index to engage the intake.
     intake_top_device_id = 14,
     intake_top_can_bus = "rio",
     intake_bottom_device_id = 15,

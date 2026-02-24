@@ -9,6 +9,7 @@
 #include <frc/Filesystem.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc2/command/CommandScheduler.h>
+#include <hal/HALBase.h>
 
 #include <cameraserver/CameraServer.h>
 #if BOT_DUMB_CAMERA
@@ -209,7 +210,12 @@ int main()
     if (! lua::bootstrap())
         throw std::runtime_error ("lua engine could not be bootstrapped");
     detail::displayBanner();
-    return frc::StartRobot<Robot>();
+    int result = frc::StartRobot<Robot>();
+    HAL_Shutdown();
+    // Bypass C++ static destructors to avoid a crash in PathPlanner's
+    // PPHolonomicDriveController destructor trying to access an already-
+    // destroyed wpi::SendableRegistry mutex (static destruction order issue).
+    _Exit(result);
 }
     #endif
 #endif

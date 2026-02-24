@@ -58,9 +58,16 @@ public:
     void setTargetAngle(units::degree_t angle);
     
     // Status
+    /** Returns the current turret rotation angle from the cached sensor value. */
     units::degree_t getCurrentAngle() const;
+
+    /** Returns the current shooter flywheel velocity from the cached sensor value. */
     units::turns_per_second_t getShooterVelocity() const;
+
+    /** Returns true if the turret rotation is within @c kAngleTolerance of the target angle. */
     bool isAtTarget() const;
+
+    /** Returns true if the shooter flywheel is within @c kShooterTolerance of @c kShooterVelocity. */
     bool isShooterReady() const;
 
 private:
@@ -103,11 +110,11 @@ private:
     units::turn_t _holdPosition = 0_tr;
 
     // Constants
-    static constexpr units::turns_per_second_t kShooterVelocity = 55_tps;  // TODO: tune
-    static constexpr units::turns_per_second_t kShooterTolerance = 2_tps;
-    static constexpr units::turns_per_second_t kUptakeVelocity = 100_tps;   // TODO: tune uptake speed
+    static constexpr units::turns_per_second_t kShooterVelocity = 55_tps;
+    static constexpr units::turns_per_second_t kShooterTolerance = 5_tps;
+    static constexpr units::turns_per_second_t kUptakeVelocity = 100_tps;
     static constexpr units::degree_t kAngleTolerance = 2_deg;
-    static constexpr units::turns_per_second_t kManualRotationSpeed = 0.5_tps;
+    static constexpr units::turns_per_second_t kManualRotationSpeed = 0.3_tps;
     
     // Gear ratio from motor to turret (motor rotations per turret rotation)
     static constexpr double kRotationGearRatio = 100.0;  // TODO: measure actual ratio

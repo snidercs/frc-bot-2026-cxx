@@ -340,22 +340,29 @@ frc2::CommandPtr Turret::shootCommand() {
 }
 
 frc2::CommandPtr Turret::manualShootCommand() {
-    return frc2::cmd::Sequence(
-        // Step 1: Spin up shooter flywheels
-        RunOnce([this] {
-            setShooterVelocity(kShooterVelocity);
-        }),
-        
-        // Step 2: Wait 1 second for shooter to spin up
-        frc2::cmd::Wait(1.0_s),
-        
-        // Step 3: Run uptake motor to feed balls into shooter
+    // Warm path: shooter already at speed — skip the 1s prime, go straight to uptake
+    auto warm = frc2::cmd::Sequence(
+        RunOnce([this] { setShooterVelocity(kShooterVelocity); }),
         Run([this] {
             _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
         })
+    );
+
+    // Cold path: spin up first, wait 1s, then run uptake
+    auto cold = frc2::cmd::Sequence(
+        RunOnce([this] { setShooterVelocity(kShooterVelocity); }),
+        frc2::cmd::WaitUntil([this]() { return isShooterReady(); }),
+        Run([this] {
+            _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
+        })
+    );
+
+    return frc2::cmd::Either(
+        std::move(warm),
+        std::move(cold),
+        [this] { return isShooterReady(); }
     )
     .FinallyDo([this] {
-        // On button release: stop uptake immediately, let shooter coast down
         stopUptake();
         stopShooter();
     })

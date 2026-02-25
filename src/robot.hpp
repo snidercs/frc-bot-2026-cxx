@@ -32,7 +32,7 @@ public:
     void SimulationPeriodic() override;
 
 private:
-    std::optional<frc2::CommandPtr> m_autonomousCommand;
+    std::optional<frc2::CommandPtr> _autoCommand;
     std::unique_ptr<Container> _container;
 
     static void cameraThread();

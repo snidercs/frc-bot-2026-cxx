@@ -80,11 +80,11 @@ void Robot::DisabledExit() {}
 void Robot::AutonomousInit()
 {
     std::cout << "AutonomousInit: Getting autonomous command..." << std::endl;
-    m_autonomousCommand = _container->GetAutonomousCommand();
+    _autoCommand = _container->GetAutonomousCommand();
 
-    if (m_autonomousCommand) {
+    if (_autoCommand) {
         std::cout << "AutonomousInit: Scheduling autonomous command" << std::endl;
-        frc2::CommandScheduler::GetInstance().Schedule(*m_autonomousCommand);
+        frc2::CommandScheduler::GetInstance().Schedule(*_autoCommand);
     } else {
         std::cerr << "AutonomousInit: No autonomous command returned!" << std::endl;
     }
@@ -95,7 +95,7 @@ void Robot::AutonomousPeriodic() {}
 void Robot::AutonomousExit()
 {
     // Reset the optional - command is owned by scheduler
-    m_autonomousCommand.reset();
+    _autoCommand.reset();
 }
 
 void Robot::TeleopInit()
@@ -104,10 +104,12 @@ void Robot::TeleopInit()
     
     // This makes sure that the autonomous stops running when
     // teleop starts running.
-    if (m_autonomousCommand) {
-        m_autonomousCommand->Cancel();
-        m_autonomousCommand.reset();
+    if (_autoCommand) {
+        _autoCommand->Cancel();
+        _autoCommand.reset();
     }
+
+    _container->drivetrain().SeedFieldCentric();
 }
 
 void Robot::TeleopPeriodic() {}

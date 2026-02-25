@@ -14,9 +14,10 @@ public:
     void Periodic() override;
 
     // Command factories
+    frc2::CommandPtr startCommand();
+    frc2::CommandPtr stopCommand();
     frc2::CommandPtr intakeCommand();
     frc2::CommandPtr ejectCommand();
-    frc2::CommandPtr stopCommand();
 
     // Manual control
     void setVoltage(units::volt_t voltage);

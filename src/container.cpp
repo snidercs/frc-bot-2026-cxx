@@ -170,9 +170,12 @@ Container::Container()
     if (pathPlannerConfigured) {
         try {
             using nc = pathplanner::NamedCommands;
-            nc::registerCommand("shooterOn",  turret().shooterOnCommand());
-            nc::registerCommand("shooterOff", turret().shooterOffCommand());
-            nc::registerCommand("turretStop", turret().stopCommand());
+            nc::registerCommand("shooterOn",   turret().shooterOnCommand());
+            nc::registerCommand("shooterOff",  turret().shooterOffCommand());
+            nc::registerCommand("turretStop",  turret().stopCommand());
+            nc::registerCommand("intakeStart", intake().startCommand());
+            nc::registerCommand("intakeStop",  intake().stopCommand());
+
             _autoBuilder = AutoBuilder::buildAutoChooser (config::str ("auto_default_name"));
             frc::SmartDashboard::PutData ("AutoChooser", &_autoBuilder.value());
         } catch (const std::exception& e) {

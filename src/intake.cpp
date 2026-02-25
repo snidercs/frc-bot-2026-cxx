@@ -116,6 +116,16 @@ void Intake::stop() {
 }
 
 // Command factories
+frc2::CommandPtr Intake::startCommand() {
+    return RunOnce([this] { setVoltage(kIntakeVoltage); })
+        .WithName("IntakeStart");
+}
+
+frc2::CommandPtr Intake::stopCommand() {
+    return RunOnce([this] { stop(); })
+        .WithName("IntakeStop");
+}
+
 frc2::CommandPtr Intake::intakeCommand() {
     return Run([this] { setVoltage(kIntakeVoltage); })
         .WithName("Intake")
@@ -126,9 +136,4 @@ frc2::CommandPtr Intake::ejectCommand() {
     return Run([this] { setVoltage(kEjectVoltage); })
         .WithName("Eject")
         .FinallyDo([this] { stop(); });
-}
-
-frc2::CommandPtr Intake::stopCommand() {
-    return RunOnce([this] { stop(); })
-        .WithName("StopIntake");
 }

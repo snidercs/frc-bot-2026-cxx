@@ -34,8 +34,8 @@ private:
     ctre::phoenix6::controls::DutyCycleOut m_dutyCycleRequest{0.0};
 
     // Constants
-    static constexpr double kClimbDutyCycle = 0.65;   // Positive = down/climbing
-    static constexpr double kLowerDutyCycle = -0.65;  // Negative = up/lowering
+    static constexpr double kClimbDutyCycle = 0.99;   // Positive = down/climbing
+    static constexpr double kLowerDutyCycle = -0.99;  // Negative = up/lowering
     static constexpr units::turn_t kForwardSoftLimit = 0.0_tr;
     static constexpr units::turn_t kReverseSoftLimit = -3.109043_tr;
 

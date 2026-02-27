@@ -69,6 +69,13 @@ void Robot::RobotInit()
 void Robot::RobotPeriodic()
 {
     frc2::CommandScheduler::GetInstance().Run();
+#if 0
+    // TODO: TEMPORARY — remove after determining correct Pigeon2 mounting offset.
+    // Point intake away from driver station, read "Pigeon2 Raw Yaw" from SmartDashboard.
+    // That value is your Blue alliance seed angle; Red = that value + 180°.
+    auto heading = _container->drivetrain().GetState().Pose.Rotation().Degrees();
+    SmartDashboard::PutNumber("Drivetrain Heading (deg)", heading.value());
+#endif
 }
 
 void Robot::DisabledInit() {}
@@ -108,8 +115,6 @@ void Robot::TeleopInit()
         _autoCommand->Cancel();
         _autoCommand.reset();
     }
-
-    _container->drivetrain().SeedFieldCentric();
 }
 
 void Robot::TeleopPeriodic() {}

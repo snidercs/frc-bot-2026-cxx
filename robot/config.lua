@@ -38,7 +38,11 @@ local config = {
     turret_uptake_can_bus = "rio",
     
     -- Vision test configuration
-    vision_test_camera = "TestCam"   -- PhotonVision camera name for single-camera testing
+    vision_test_camera = "TestCam",  -- PhotonVision camera name for single-camera testing
+
+    -- Drive input shaping
+    drive_deadband       = 0.1,  -- Raw axis deadband threshold [0, 1)
+    drive_input_exponent = 2.0   -- Exponential curve exponent (1.0 = linear, 2.0 = quadratic)
 }
 
 return config

@@ -13,6 +13,7 @@
 
 #include "config.hpp"
 #include "container.hpp"
+#include "inpututil.hpp"
 #include "visiontest.hpp"
 
 using pathplanner::AutoBuilder;
@@ -30,13 +31,16 @@ protected:
     {
         // std::cout << "JoystickContainer::configureBindings()" << std::endl;
 
+        const auto deadband = config::number("drive_deadband");
+        const auto exponent = config::number("drive_input_exponent");
+
         // clang-format off
         drivetrain().SetDefaultCommand (
-            drivetrain().ApplyRequest ([this]() -> auto&& {
+            drivetrain().ApplyRequest ([this, deadband, exponent]() -> auto&& {
                 return drive
-                    .WithVelocityX(-_sticks[0].GetHID().GetRawAxis(1) * MaxSpeed)
-                    .WithVelocityY(-_sticks[0].GetHID().GetRawAxis(0) * MaxSpeed)
-                    .WithRotationalRate (-_sticks[1].GetHID().GetRawAxis(0) * MaxAngularRate);
+                    .WithVelocityX(-applyCurve(_sticks[0].GetHID().GetRawAxis(1), deadband, exponent) * MaxSpeed)
+                    .WithVelocityY(-applyCurve(_sticks[0].GetHID().GetRawAxis(0), deadband, exponent) * MaxSpeed)
+                    .WithRotationalRate(-applyCurve(_sticks[1].GetHID().GetRawAxis(0), deadband, exponent) * MaxAngularRate);
             }));
 
         _sticks[0].Button(config::integer("heading_button_index")).OnTrue (
@@ -96,15 +100,19 @@ public:
     {
         // std::cout << "GamepadContainer::configureBindings()" << std::endl;
 
+        const auto deadband = config::number("drive_deadband");
+        const auto exponent = config::number("drive_input_exponent");
+
         // clang-format off
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain().SetDefaultCommand (
             // Drivetrain will execute this command periodically
-            drivetrain().ApplyRequest ([this]() -> auto&& {
-                return drive.WithVelocityX (-joystick.GetLeftY() * MaxSpeed)      // Drive forward with negative Y (forward)
-                    .WithVelocityY (-joystick.GetLeftX() * MaxSpeed)              // Drive left with negative X (left)
-                    .WithRotationalRate (-joystick.GetRightX() * MaxAngularRate); // Drive counterclockwise with negative X (left)
+            drivetrain().ApplyRequest ([this, deadband, exponent]() -> auto&& {
+                return drive
+                    .WithVelocityX(-applyCurve(joystick.GetLeftY(), deadband, exponent) * MaxSpeed)       // Drive forward with negative Y (forward)
+                    .WithVelocityY(-applyCurve(joystick.GetLeftX(), deadband, exponent) * MaxSpeed)       // Drive left with negative X (left)
+                    .WithRotationalRate(-applyCurve(joystick.GetRightX(), deadband, exponent) * MaxAngularRate); // Drive counterclockwise with negative X (left)
             }));
 
         joystick.A().WhileTrue (drivetrain().ApplyRequest ([this]() -> auto&& { return brake; }));

@@ -45,6 +45,8 @@ protected:
         // Intake control
         _sticks[0].Button(config::integer("intake_trigger_index")).WhileTrue (
             intake().intakeCommand());
+        _sticks[1].Button(config::integer("intake_eject_index")).WhileTrue (
+            intake().ejectCommand());
         
         // Shooter Control
         _sticks[1].Button(config::integer("turret_shoot_button_index")).WhileTrue (

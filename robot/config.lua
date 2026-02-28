@@ -10,6 +10,7 @@ local config = {
     heading_button_index = 8,   -- The button index to use for resetting the heading direction.
 
     intake_trigger_index = 18,  -- The button index to engage the intake.
+    intake_eject_index = 19,    -- The button index to eject (stick 1).
     intake_top_device_id = 14,
     intake_top_can_bus = "rio",
     intake_bottom_device_id = 15,

@@ -2,6 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
+#include "container.hpp"
 #include <filesystem>
 #include <iostream>
 
@@ -26,6 +27,7 @@
 
 using frc::DriverStation;
 using frc::SmartDashboard;
+using bot::Container;
 
 namespace detail {
 /** Display engine and bot information banner. */

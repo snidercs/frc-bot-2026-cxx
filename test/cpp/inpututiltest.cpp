@@ -11,18 +11,18 @@ static constexpr double kTolerance = 1e-9;
 // ---------------------------------------------------------------------------
 
 TEST(ApplyCurveTest, ZeroInputReturnsZero) {
-    EXPECT_DOUBLE_EQ(applyCurve(0.0, kDeadband, kExponent), 0.0);
+    EXPECT_DOUBLE_EQ(bot::applyCurve(0.0, kDeadband, kExponent), 0.0);
 }
 
 TEST(ApplyCurveTest, WithinDeadbandReturnsZero) {
-    EXPECT_DOUBLE_EQ(applyCurve(0.05, kDeadband, kExponent), 0.0);
-    EXPECT_DOUBLE_EQ(applyCurve(-0.05, kDeadband, kExponent), 0.0);
+    EXPECT_DOUBLE_EQ(bot::applyCurve(0.05, kDeadband, kExponent), 0.0);
+    EXPECT_DOUBLE_EQ(bot::applyCurve(-0.05, kDeadband, kExponent), 0.0);
 }
 
 TEST(ApplyCurveTest, AtDeadbandEdgeReturnsZero) {
     // The curve starts AT the deadband — the edge itself must still be 0
-    EXPECT_DOUBLE_EQ(applyCurve(kDeadband, kDeadband, kExponent), 0.0);
-    EXPECT_DOUBLE_EQ(applyCurve(-kDeadband, kDeadband, kExponent), 0.0);
+    EXPECT_DOUBLE_EQ(bot::applyCurve(kDeadband, kDeadband, kExponent), 0.0);
+    EXPECT_DOUBLE_EQ(bot::applyCurve(-kDeadband, kDeadband, kExponent), 0.0);
 }
 
 // ---------------------------------------------------------------------------
@@ -31,19 +31,19 @@ TEST(ApplyCurveTest, AtDeadbandEdgeReturnsZero) {
 // ---------------------------------------------------------------------------
 
 TEST(ApplyCurveTest, FullDeflectionReturnsOne) {
-    EXPECT_NEAR(applyCurve(1.0, kDeadband, kExponent), 1.0, kTolerance);
-    EXPECT_NEAR(applyCurve(-1.0, kDeadband, kExponent), -1.0, kTolerance);
+    EXPECT_NEAR(bot::applyCurve(1.0, kDeadband, kExponent), 1.0, kTolerance);
+    EXPECT_NEAR(bot::applyCurve(-1.0, kDeadband, kExponent), -1.0, kTolerance);
 }
 
 TEST(ApplyCurveTest, FullDeflectionReturnsOneWithCubicExponent) {
-    EXPECT_NEAR(applyCurve(1.0, kDeadband, 3.0), 1.0, kTolerance);
-    EXPECT_NEAR(applyCurve(-1.0, kDeadband, 3.0), -1.0, kTolerance);
+    EXPECT_NEAR(bot::applyCurve(1.0, kDeadband, 3.0), 1.0, kTolerance);
+    EXPECT_NEAR(bot::applyCurve(-1.0, kDeadband, 3.0), -1.0, kTolerance);
 }
 
 TEST(ApplyCurveTest, FullDeflectionReturnsOneWithLinearExponent) {
     // Exponent of 1.0 should behave like a normalized linear function
-    EXPECT_NEAR(applyCurve(1.0, kDeadband, 1.0), 1.0, kTolerance);
-    EXPECT_NEAR(applyCurve(-1.0, kDeadband, 1.0), -1.0, kTolerance);
+    EXPECT_NEAR(bot::applyCurve(1.0, kDeadband, 1.0), 1.0, kTolerance);
+    EXPECT_NEAR(bot::applyCurve(-1.0, kDeadband, 1.0), -1.0, kTolerance);
 }
 
 // ---------------------------------------------------------------------------
@@ -51,8 +51,8 @@ TEST(ApplyCurveTest, FullDeflectionReturnsOneWithLinearExponent) {
 // ---------------------------------------------------------------------------
 
 TEST(ApplyCurveTest, NegativeInputMirrorsPositive) {
-    const double pos = applyCurve(0.6, kDeadband, kExponent);
-    const double neg = applyCurve(-0.6, kDeadband, kExponent);
+    const double pos = bot::applyCurve(0.6, kDeadband, kExponent);
+    const double neg = bot::applyCurve(-0.6, kDeadband, kExponent);
     EXPECT_NEAR(pos, -neg, kTolerance);
 }
 
@@ -64,7 +64,7 @@ TEST(ApplyCurveTest, OutputIsMonotonicallyIncreasing) {
     double prev = 0.0;
     for (int i = 1; i <= 10; ++i) {
         const double input = kDeadband + (1.0 - kDeadband) * (i / 10.0);
-        const double output = applyCurve(input, kDeadband, kExponent);
+        const double output = bot::applyCurve(input, kDeadband, kExponent);
         EXPECT_GT(output, prev) << "Output not increasing at input=" << input;
         prev = output;
     }
@@ -79,8 +79,8 @@ TEST(ApplyCurveTest, OutputIsMonotonicallyIncreasing) {
 TEST(ApplyCurveTest, CurveIsBelow_LinearMidpoint_WithQuadraticExponent) {
     // Midpoint of the active range
     const double mid = kDeadband + (1.0 - kDeadband) * 0.5;
-    const double curvedOutput = applyCurve(mid, kDeadband, kExponent);    // quadratic
-    const double linearOutput  = applyCurve(mid, kDeadband, 1.0);          // linear
+    const double curvedOutput = bot::applyCurve(mid, kDeadband, kExponent);    // quadratic
+    const double linearOutput  = bot::applyCurve(mid, kDeadband, 1.0);          // linear
 
     EXPECT_LT(curvedOutput, linearOutput)
         << "Quadratic curve should produce less output than linear at midpoint";

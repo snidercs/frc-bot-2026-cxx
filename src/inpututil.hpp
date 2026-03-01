@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+namespace bot {
+
 /** Applies a normalized exponential curve to a raw joystick axis value.
  
     The input is first checked against the deadband. If within the deadband,
@@ -28,4 +30,6 @@ inline double applyCurve(double raw, double deadband, double exponent) noexcept
 
     const double normalized = (std::abs(raw) - deadband) / (1.0 - deadband);
     return std::copysign(std::pow(normalized, exponent), raw);
+}
+
 }

@@ -21,6 +21,8 @@ using pathplanner::AutoBuilder;
 // enable to use single camera test command.
 #define BOT_VISION_SINGLE 1
 
+namespace bot {
+
 class JoystickContainer : public Container {
 public:
     JoystickContainer() = default;
@@ -246,4 +248,6 @@ frc2::CommandPtr Container::GetAutonomousCommand()
         std::cerr << "Failed to load PathPlanner auto '" << autoName << "': " << e.what() << std::endl;
         return frc2::cmd::None();
     }
+}
+
 }

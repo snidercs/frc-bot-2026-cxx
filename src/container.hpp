@@ -15,6 +15,8 @@
 #include "visionsingle.hpp"
 #include "telemetry.hpp"
 
+namespace bot {
+
 class Container {
 public:
     Container();
@@ -55,3 +57,5 @@ private:
     std::unique_ptr<VisionIOSingle> _vision;
     std::optional<frc::SendableChooser<frc2::Command *>> _autoBuilder;
 };
+
+}

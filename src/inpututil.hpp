@@ -12,6 +12,8 @@ namespace bot {
     scaled back with the original sign. This guarantees the curve passes through
     (deadband, 0) and (1, 1) on the input/output graph.
 
+    Desmos: https://www.desmos.com/calculator/btx9xycoaz
+    
     Formula:
     @code
         normalized = (|raw| - deadband) / (1 - deadband)

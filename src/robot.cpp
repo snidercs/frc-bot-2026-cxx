@@ -149,6 +149,13 @@ void Robot::cameraThread()
     const auto height = 360;
     const auto fps = 20;
 
+    // Only start the camera if a USB device is actually present
+    CS_Status status  { 0 };
+    if (cs::EnumerateUsbCameras(&status).empty()) {
+        std::cout << "[camera] no USB cameras found, exiting camera thread\n";
+        return;
+    }
+
     // Get the USB camera from CameraServer
     cs::UsbCamera camera = frc::CameraServer::StartAutomaticCapture (cameraName, 0);
     camera.SetExposureAuto();

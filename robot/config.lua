@@ -41,8 +41,10 @@ local config = {
     vision_test_camera = "TestCam",  -- PhotonVision camera name for single-camera testing
 
     -- Drive input shaping
-    drive_deadband       = 0.1,  -- Raw axis deadband threshold [0, 1)
-    drive_input_exponent = 2.0   -- Exponential curve exponent (1.0 = linear, 2.0 = quadratic)
+    drive_deadband        = 0.05,  -- Raw axis deadband threshold [0, 1)
+    drive_input_exponent  = 2.5,   -- Exponential curve exponent (1.0 = linear, 2.0 = quadratic)
+    rotate_deadband       = 0.05,
+    rotate_input_exponent = 1.25
 }
 
 return config

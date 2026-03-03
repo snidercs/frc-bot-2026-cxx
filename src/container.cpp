@@ -35,14 +35,19 @@ protected:
 
         const auto deadband = config::number("drive_deadband");
         const auto exponent = config::number("drive_input_exponent");
+        const auto rotExp = config::number("rotate_input_exponent");
+        const auto rotDead = config::number("rotate_deadband");
 
         // clang-format off
         drivetrain().SetDefaultCommand (
-            drivetrain().ApplyRequest ([this, deadband, exponent]() -> auto&& {
+            drivetrain().ApplyRequest ([this, deadband, exponent, rotExp, rotDead]() -> auto&& {
                 return drive
-                    .WithVelocityX(-applyCurve(_sticks[0].GetHID().GetRawAxis(1), deadband, exponent) * MaxSpeed)
-                    .WithVelocityY(-applyCurve(_sticks[0].GetHID().GetRawAxis(0), deadband, exponent) * MaxSpeed)
-                    .WithRotationalRate(-applyCurve(_sticks[1].GetHID().GetRawAxis(0), deadband, exponent) * MaxAngularRate);
+                    .WithVelocityX(-applyCurve(
+                        _sticks[0].GetHID().GetRawAxis(1), deadband, exponent) * MaxSpeed)
+                    .WithVelocityY(-applyCurve(
+                        _sticks[0].GetHID().GetRawAxis(0), deadband, exponent) * MaxSpeed)
+                    .WithRotationalRate(-applyCurve(
+                        _sticks[1].GetHID().GetRawAxis(0), rotDead, rotExp) * MaxAngularRate);
             }));
 
         _sticks[0].Button(config::integer("heading_button_index")).OnTrue (

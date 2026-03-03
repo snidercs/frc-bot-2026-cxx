@@ -46,7 +46,7 @@ protected:
 
     /* Note: This must be constructed before the drivetrain, otherwise we need to
      *       define a destructor to un-register the telemetry from the drivetrain */
-    Telemetry logger { MaxSpeed };
+    Telemetry logger { TunerConstants::kSpeedAt12Volts };
 
 private:
     void configureBindingsInternal();

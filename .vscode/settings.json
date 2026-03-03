@@ -104,7 +104,22 @@
     "cinttypes": "cpp",
     "typeindex": "cpp",
     "valarray": "cpp",
-    "*.gradle": "groovy"
+    "*.gradle": "groovy",
+    "strstream": "cpp",
+    "charconv": "cpp",
+    "format": "cpp",
+    "shared_mutex": "cpp",
+    "stdfloat": "cpp",
+    "__bits": "cpp",
+    "__config": "cpp",
+    "__debug": "cpp",
+    "__errc": "cpp",
+    "__locale": "cpp",
+    "__mutex_base": "cpp",
+    "__nullptr": "cpp",
+    "__string": "cpp",
+    "__threading_support": "cpp",
+    "__tuple": "cpp"
   },
   "groovy.classpath": [
       "${workspaceFolder}/.gradle",

@@ -13,6 +13,12 @@
         {
           "type": "named",
           "data": {
+            "name": "intakeStart"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
             "name": "shooterOn"
           }
         },
@@ -26,6 +32,12 @@
           "type": "named",
           "data": {
             "name": "shooterOff"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeStop"
           }
         },
         {

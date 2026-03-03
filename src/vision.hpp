@@ -82,18 +82,18 @@ namespace vision {
         Index order: FL=0, FR=1, BL=2, BR=3
         Cameras are fixed to chassis (not turret), angled ~45° outward.
         
-        TODO: FL and BR cameras are not yet mounted — transforms are placeholders.
+        TODO: FR and BR cameras are not yet mounted — transforms are placeholders.
     */
     constexpr const std::array<frc::Transform3d, 4> kRobotToCamera = {
-        // Front-Left camera
-        frc::Transform3d{
-            frc::Translation3d{0.25_m, 0.25_m, 0.5_m},
-            frc::Rotation3d{0_deg, 0_deg, 45_deg}
-        },
-        // Front-Right camera: on front edge, 6cm from left side, 51cm high
+        // Front-Left camera: on front edge, 6cm from left side, 51cm high
         frc::Transform3d{
             frc::Translation3d{0.349_m, 0.289_m, 0.51_m},
             frc::Rotation3d{0_deg, 0_deg, 0_deg}
+        },
+        // Front-Right camera (not yet mounted — placeholder)
+        frc::Transform3d{
+            frc::Translation3d{0.25_m, -0.25_m, 0.5_m},
+            frc::Rotation3d{0_deg, 0_deg, -45_deg}
         },
         // Back-Left camera: 3.5cm past back edge, 37cm from right side, 41cm high
         frc::Transform3d{

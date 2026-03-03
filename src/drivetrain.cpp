@@ -14,7 +14,7 @@ void CommandSwerveDrivetrain::Periodic()
      * Otherwise, only check and apply the operator perspective if the DS is disabled.
      * This ensures driving behavior doesn't change until an explicit disable event occurs during testing.
      */
-    if (!m_hasAppliedOperatorPerspective || frc::DriverStation::IsDisabled()) {
+    if (!m_hasAppliedOperatorPerspective) {
         auto const allianceColor = frc::DriverStation::GetAlliance();
         if (allianceColor) {
             SetOperatorPerspectiveForward(

@@ -14,12 +14,8 @@
 #include "config.hpp"
 #include "container.hpp"
 #include "inpututil.hpp"
-#include "visiontest.hpp"
 
 using pathplanner::AutoBuilder;
-
-// enable to use single camera test command.
-#define BOT_VISION_SINGLE 1
 
 namespace bot {
 
@@ -84,12 +80,7 @@ protected:
             turret().manualRotateCommand([this, rotStick, rotIdx, rotGain] { 
                 return rotGain * _sticks[rotStick].GetHID().GetRawAxis(rotIdx); // Right stick X
             }));
-            
-#if BOT_VISION_SINGLE
-        // Vision tracking test
-        _sticks[0].Button(config::integer("turret_aim_button_index")).WhileTrue (
-            test::createVisionTrackingTest(&turret(), &vision()));
-#endif
+
         // clang-format on
     }
 
@@ -146,10 +137,7 @@ public:
         // Climber controls
         joystick.Button(config::integer("climber_climb_button_index")).WhileTrue (climber().climbCommand());
         joystick.Button(config::integer("climber_lower_button_index")).WhileTrue (climber().lowerCommand());
-        
-        // Vision tracking test - left trigger
-        joystick.LeftTrigger().WhileTrue (
-            test::createVisionTrackingTest(&turret(), &vision()));
+
         // clang-format on
     }
 
@@ -171,7 +159,7 @@ Container::Container()
     _intake = std::make_unique<subsystems::Intake>();
     _climber = std::make_unique<subsystems::Climber>();
     _turret = std::make_unique<subsystems::Turret>();
-    _vision = std::make_unique<VisionIOSingle>(config::str("vision_test_camera"));
+    _vision = std::make_unique<VisionMulti>();
 
     
     // Configure PathPlanner AutoBuilder for autonomous

@@ -22,6 +22,7 @@
 #include "config.hpp"
 #include "robot.hpp"
 #include "scripting.hpp"
+#include "vision.hpp"
 
 #include "luabot/luabot2.hpp"
 
@@ -71,13 +72,19 @@ void Robot::RobotInit()
 void Robot::RobotPeriodic()
 {
     frc2::CommandScheduler::GetInstance().Run();
-#if 0
-    // TODO: TEMPORARY — remove after determining correct Pigeon2 mounting offset.
-    // Point intake away from driver station, read "Pigeon2 Raw Yaw" from SmartDashboard.
-    // That value is your Blue alliance seed angle; Red = that value + 180°.
-    auto heading = _container->drivetrain().GetState().Pose.Rotation().Degrees();
-    SmartDashboard::PutNumber("Drivetrain Heading (deg)", heading.value());
-#endif
+
+    // Poll all cameras and fuse measurements into the drivetrain pose estimator
+    for (const auto& measurement : _container->vision().getMeasurements()) {
+        _container->drivetrain().AddVisionMeasurement(
+            measurement.pose,
+            measurement.timestamp,
+            measurement.stdDevs);
+    }
+
+    // Estimated distance from fused robot pose to the hub
+    auto robotPose = _container->drivetrain().GetState().Pose;
+    units::meter_t distanceToHub = robotPose.Translation().Distance(landmarks::hubPosition());
+    SmartDashboard::PutNumber("Robot/DistanceToHub (m)", distanceToHub.value());
 }
 
 void Robot::DisabledInit() {}

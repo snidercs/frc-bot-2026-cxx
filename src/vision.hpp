@@ -13,6 +13,7 @@
 #include <units/length.h>
 #include <units/time.h>
 #include <wpi/array.h>
+#include <frc/DriverStation.h>
 
 /** A single vision pose measurement from a camera.
  
@@ -130,3 +131,31 @@ namespace vision {
     */
     inline const std::vector<int> kGoalTagIds = {1, 2, 3, 4, 5, 6, 7, 8};
 }
+
+/** Fixed field landmark positions for the 2026 game.
+ 
+    Coordinates are in the WPILib field coordinate system (origin = blue
+    alliance wall, x+ toward red alliance, y+ toward the left side when
+    viewed from blue alliance).
+    
+    All positions sourced from the official 2026 field drawings.
+*/
+namespace landmarks {
+
+    /** Returns the hub (goal) position for the current alliance.
+     
+        The hub x-coordinate mirrors across the field centre depending on
+        alliance colour; the y-coordinate is always the same.
+        Defaults to the red alliance position when alliance is unknown.
+        
+        @return The hub centre as a 2D field translation
+    */
+    inline frc::Translation2d hubPosition() {
+        const auto alliance = frc::DriverStation::GetAlliance();
+        if (alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kBlue) {
+            return frc::Translation2d{182.105_in, 158.845_in};
+        }
+        return frc::Translation2d{469.115_in, 158.845_in};
+    }
+
+} // namespace landmarks

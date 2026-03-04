@@ -13,13 +13,19 @@
         {
           "type": "named",
           "data": {
+            "name": "intakeStart"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
             "name": "shooterOn"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 3.5
+            "waitTime": 12.0
           }
         },
         {
@@ -32,6 +38,12 @@
           "type": "named",
           "data": {
             "name": "turretStop"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeStop"
           }
         }
       ]

@@ -179,6 +179,7 @@ Container::Container()
             nc::registerCommand("shooterOff",  turret().shooterOffCommand());
             nc::registerCommand("turretStop",  turret().stopCommand());
             nc::registerCommand("intakeStart", intake().startCommand());
+            nc::registerCommand("intakeStutter", intake().stutterCommand());
             nc::registerCommand("intakeStop",  intake().stopCommand());
 
             _autoBuilder = AutoBuilder::buildAutoChooser (config::str ("auto_default_name"));

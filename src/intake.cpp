@@ -137,3 +137,14 @@ frc2::CommandPtr Intake::ejectCommand() {
         .WithName("Eject")
         .FinallyDo([this] { stop(); });
 }
+
+frc2::CommandPtr Intake::stutterCommand() {
+    return frc2::cmd::Sequence(
+               RunOnce([this] { setVoltage(kIntakeVoltage); }),
+               frc2::cmd::Wait(0.5_s),
+               RunOnce([this] { stop(); }),
+               frc2::cmd::Wait(0.5_s)
+           )
+        .Repeatedly()
+        .WithName("IntakeStutter");
+}

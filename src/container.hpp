@@ -31,6 +31,12 @@ public:
     auto& vision() noexcept { return *_vision; }
     frc2::CommandPtr GetAutonomousCommand();
 
+    /** Wiggles the robot back and forth (±2 in) to help seat game pieces in the intake.
+     *
+     *  @param leftToRight If true, jitters left/right (Y axis); otherwise front/back (X axis).
+     */
+    frc2::CommandPtr jitterCommand(bool leftToRight = false);
+
 protected:
     /** Override to configure controller bindings. */
     virtual void configureBindings() = 0;
@@ -41,6 +47,8 @@ protected:
     /* Setting up bindings for necessary control of the swerve drive platform */
     swerve::requests::FieldCentric drive = swerve::requests::FieldCentric {}
                                                .WithDriveRequestType (swerve::DriveRequestType::OpenLoopVoltage); // Use open-loop control for drive motors
+    swerve::requests::RobotCentric robotCentric = swerve::requests::RobotCentric {}
+                                               .WithDriveRequestType (swerve::DriveRequestType::OpenLoopVoltage);
     swerve::requests::SwerveDriveBrake brake {};
     swerve::requests::PointWheelsAt point {};
 

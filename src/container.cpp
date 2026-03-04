@@ -65,6 +65,10 @@ protected:
         _sticks[0].Button(config::integer("climber_lower_button_index")).WhileTrue (
             climber().lowerCommand());
 
+        // Drive jitter (intake agitator) - front/back on button 1, left/right on button 2
+        _sticks[0].Button(5).OnTrue(jitterCommand(false));
+        _sticks[0].Button(6).OnTrue(jitterCommand(true));
+
         // Disable climber soft limits while held; re-enable and zero position on release
         _sticks[1].Button(4).OnTrue(climber().disableSoftLimitsCommand())
                              .OnFalse(climber().enableSoftLimitsAndResetCommand());
@@ -181,6 +185,7 @@ Container::Container()
             nc::registerCommand("intakeStart", intake().startCommand());
             nc::registerCommand("intakeStutter", intake().stutterCommand());
             nc::registerCommand("intakeStop",  intake().stopCommand());
+            nc::registerCommand("driveJitter", jitterCommand());
 
             _autoBuilder = AutoBuilder::buildAutoChooser (config::str ("auto_default_name"));
             frc::SmartDashboard::PutData ("AutoChooser", &_autoBuilder.value());
@@ -189,6 +194,29 @@ Container::Container()
             std::cerr << "Autobuilder failed: " << e.what() << std::endl;
         }
     }
+}
+
+frc2::CommandPtr Container::jitterCommand(bool leftToRight)
+{
+    // Move ±2 inches (0.0508 m) at 0.3 m/s → each leg takes ~0.17 s
+    static constexpr units::meters_per_second_t kJitterSpeed = 0.3_mps;
+    static constexpr units::second_t kJitterDuration = 0.17_s;
+
+    auto neg = [this, leftToRight] { return leftToRight
+        ? robotCentric.WithVelocityY(-kJitterSpeed)
+        : robotCentric.WithVelocityX(-kJitterSpeed); };
+    auto pos = [this, leftToRight] { return leftToRight
+        ? robotCentric.WithVelocityY( kJitterSpeed)
+        : robotCentric.WithVelocityX( kJitterSpeed); };
+
+    return frc2::cmd::Sequence(
+               drivetrain().ApplyRequest(neg).WithTimeout(kJitterDuration),
+               drivetrain().ApplyRequest(pos).WithTimeout(kJitterDuration),
+               drivetrain().ApplyRequest(neg).WithTimeout(kJitterDuration),
+               drivetrain().ApplyRequest(pos).WithTimeout(kJitterDuration),
+               drivetrain().ApplyRequest([] { return swerve::requests::SwerveDriveBrake{}; }).WithTimeout(0.1_s)
+           )
+        .WithName("DriveJitter");
 }
 
 Container::~Container()

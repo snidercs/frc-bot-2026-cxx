@@ -75,12 +75,12 @@ void Robot::RobotPeriodic()
     frc2::CommandScheduler::GetInstance().Run();
 
     // Poll all cameras and fuse measurements into the drivetrain pose estimator
-    for (const auto& measurement : _container->vision().getMeasurements()) {
-        _container->drivetrain().AddVisionMeasurement(
-            measurement.pose,
-            measurement.timestamp,
-            measurement.stdDevs);
-    }
+    // for (const auto& measurement : _container->vision().getMeasurements()) {
+    //     _container->drivetrain().AddVisionMeasurement(
+    //         measurement.pose,
+    //         measurement.timestamp,
+    //         measurement.stdDevs);
+    // }
 
     // Estimated distance from fused robot pose to the hub
     auto robotPose = _container->drivetrain().GetState().Pose;

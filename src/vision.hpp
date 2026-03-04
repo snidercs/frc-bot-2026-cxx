@@ -45,9 +45,14 @@ public:
     
     /** Retrieves all available vision measurements from the last update cycle.
      
-        @return Vector of vision measurements that passed gating/validation
+        @warning Must be called **exactly once per periodic cycle**. Implementations
+        clear and refill an internal buffer on each call — calling it more than once
+        in the same cycle will return an empty vector on the second call, since the
+        underlying camera results are consumed (unread) on the first.
+     
+        @return Const reference to the internal measurement buffer; valid until the next call.
     */
-    virtual std::vector<VisionMeasurement> getMeasurements() = 0;
+    virtual const std::vector<VisionMeasurement>& getMeasurements() = 0;
     
     /** Gets a human-readable status string for debugging.
      

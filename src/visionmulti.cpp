@@ -12,10 +12,12 @@ VisionMulti::VisionMulti()
             vision::kRobotToCamera[i],
             _fieldLayout);
     }
+    // Reserve space for worst-case: 16 measurement per camera per cycle
+    _measurements.reserve(vision::kCameraNames.size() * 16);
 }
 
-std::vector<VisionMeasurement> VisionMulti::getMeasurements() {
-    std::vector<VisionMeasurement> measurements;
+const std::vector<VisionMeasurement>& VisionMulti::getMeasurements() {
+    _measurements.clear();
 
     // NOTE: _fieldLayout always uses the default blue-origin (kBlueAllianceWallRightSide).
     // WPILib's pose estimator (and CTRE's AddVisionMeasurement) always expect poses in
@@ -23,10 +25,11 @@ std::vector<VisionMeasurement> VisionMulti::getMeasurements() {
     // PhotonPoseEstimator to output red-relative poses (~0–2 m) that the drivetrain
     // would interpret as being near the blue wall (~16 m), corrupting the pose estimate.
 
-    for (auto& unit : _cameras) {
-        auto results = unit->camera.GetAllUnreadResults();
+    for (std::size_t i = 0; i < _cameras.size(); ++i) {
+        auto& unit = _cameras[i];
+        _rawResults[i] = unit->camera.GetAllUnreadResults();
 
-        for (auto& result : results) {
+        for (auto& result : _rawResults[i]) {
             if (!result.HasTargets()) {
                 _rejectedNoTargets++;
                 continue;
@@ -67,7 +70,7 @@ std::vector<VisionMeasurement> VisionMulti::getMeasurements() {
                 continue;
             }
 
-            measurements.push_back(VisionMeasurement{
+            _measurements.push_back(VisionMeasurement{
                 pose2d,
                 estimatedPose->timestamp,
                 computeStdDevs(distance),
@@ -87,7 +90,7 @@ std::vector<VisionMeasurement> VisionMulti::getMeasurements() {
     frc::SmartDashboard::PutNumber("Vision/Accepted", _acceptedCount);
     frc::SmartDashboard::PutNumber("Vision/Rejected OutOfBounds", _rejectedOutOfBounds);
 
-    return measurements;
+    return _measurements;
 }
 
 wpi::array<double, 3> VisionMulti::computeStdDevs(double distanceMeters) const {
@@ -108,12 +111,12 @@ std::string VisionMulti::getStatus() {
 
 std::string VisionMulti::getLastTargets() {
     std::string info;
-    for (auto& unit : _cameras) {
-        auto results = unit->camera.GetAllUnreadResults();
+    for (std::size_t i = 0; i < _cameras.size(); ++i) {
+        const auto& results = _rawResults[i];
         if (results.empty() || !results.back().HasTargets()) {
             continue;
         }
-        info += "[" + std::string(unit->camera.GetCameraName()) + "] ";
+        info += "[" + std::string(_cameras[i]->camera.GetCameraName()) + "] ";
         for (const auto& target : results.back().GetTargets()) {
             info += "ID=" + std::to_string(target.GetFiducialId()) + " ";
         }

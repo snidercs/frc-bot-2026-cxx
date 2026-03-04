@@ -18,7 +18,7 @@ public:
         _measurements.clear();
     }
 
-    std::vector<VisionMeasurement> getMeasurements() override {
+    const std::vector<VisionMeasurement>& getMeasurements() override {
         _callCount++;
         return _measurements;
     }
@@ -54,7 +54,7 @@ TEST(VisionTest, MockVisionIO) {
     MockVisionIO mockVision;
 
     // Initially empty
-    auto measurements = mockVision.getMeasurements();
+    const auto& measurements = mockVision.getMeasurements();
     EXPECT_EQ(measurements.size(), 0);
     EXPECT_EQ(mockVision.getCallCount(), 1);
 
@@ -67,9 +67,9 @@ TEST(VisionTest, MockVisionIO) {
     };
     mockVision.addMeasurement(m1);
 
-    measurements = mockVision.getMeasurements();
-    EXPECT_EQ(measurements.size(), 1);
-    EXPECT_EQ(measurements[0].source, "FR");
+    const auto& measurements2 = mockVision.getMeasurements();
+    EXPECT_EQ(measurements2.size(), 1);
+    EXPECT_EQ(measurements2[0].source, "FR");
     EXPECT_EQ(mockVision.getCallCount(), 2);
 
     // Add multiple measurements
@@ -81,14 +81,14 @@ TEST(VisionTest, MockVisionIO) {
     };
     mockVision.addMeasurement(m2);
 
-    measurements = mockVision.getMeasurements();
-    EXPECT_EQ(measurements.size(), 2);
-    EXPECT_EQ(measurements[1].source, "BL");
+    const auto& measurements3 = mockVision.getMeasurements();
+    EXPECT_EQ(measurements3.size(), 2);
+    EXPECT_EQ(measurements3[1].source, "BL");
 
     // Clear and verify
     mockVision.clearMeasurements();
-    measurements = mockVision.getMeasurements();
-    EXPECT_EQ(measurements.size(), 0);
+    const auto& measurements4 = mockVision.getMeasurements();
+    EXPECT_EQ(measurements4.size(), 0);
 }
 
 // Test vision constants

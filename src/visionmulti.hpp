@@ -6,6 +6,7 @@
 #include <frc/apriltag/AprilTagFieldLayout.h>
 #include <array>
 #include <memory>
+#include <vector>
 
 /** Multi-camera vision implementation using all four chassis-mounted cameras.
  
@@ -21,9 +22,9 @@ public:
 
     /** Returns all valid pose measurements from all cameras this cycle.
      
-        @return Vector of measurements that passed gating; may be empty.
+        @return Const reference to the internal measurements vector; valid until next call.
     */
-    std::vector<VisionMeasurement> getMeasurements() override;
+    const std::vector<VisionMeasurement>& getMeasurements() override;
 
     std::string getStatus() override;
     std::string getLastTargets() override;
@@ -49,6 +50,14 @@ private:
 
     frc::AprilTagFieldLayout _fieldLayout;
     std::array<std::unique_ptr<CameraUnit>, 4> _cameras;
+
+    // Pre-allocated measurement buffer — cleared and refilled each cycle
+    std::vector<VisionMeasurement> _measurements;
+
+    // Raw camera results cached by getMeasurements() — index matches _cameras.
+    // Other methods (getLastTargets, etc.) must read from here, never call
+    // GetAllUnreadResults() directly. Always call getMeasurements() first.
+    std::array<std::vector<photon::PhotonPipelineResult>, 4> _rawResults;
 
     // Rejection counters (across all cameras)
     int _rejectedNoTargets  = 0;

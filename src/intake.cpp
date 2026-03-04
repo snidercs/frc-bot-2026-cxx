@@ -1,4 +1,5 @@
 #include "intake.hpp"
+#include "units/time.h"
 #include <frc2/command/Commands.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/Timer.h>
@@ -139,15 +140,26 @@ frc2::CommandPtr Intake::ejectCommand() {
         .FinallyDo([this] { stop(); });
 }
 
-frc2::CommandPtr Intake::stutterCommand() {
-    // Run the intake in 0.5s on / 0.5s off cycles indefinitely.
-    // Because this uses Run(), it holds the Intake subsystem requirement,
-    // so intakeStop() (which also requires Intake) will cancel it cleanly.
-    return Run([this] {
+frc2::CommandPtr Intake::stutterCommand (units::time::second_t duration) {
+    // Run the intake in 0.25s on / 0.25s off cycles for 6 seconds then stop.
+    // Uses a captured start time to determine elapsed duration and self-terminate.
+    auto startTime = std::make_shared<units::second_t>(0_s);
+    if (duration <= 0_s)
+        duration = units::time::second_t (config::number ("intake_stutter_length"));
+
+    return RunOnce([startTime] {
+        *startTime = frc::Timer::GetFPGATimestamp();
+    })
+    .AndThen(Run([this, startTime] {
         double t = frc::Timer::GetFPGATimestamp().value();
-        if (std::fmod(t, 1.0) < 0.5)
+        if (std::fmod(t, 0.5) < 0.25)
             setVoltage(kIntakeVoltage);
         else
             stop();
-    }).WithName("IntakeStutter");
+    })
+    .Until([startTime, duration] {
+        return (frc::Timer::GetFPGATimestamp() - *startTime) >= duration;
+    }))
+    .FinallyDo([this] { stop(); })
+    .WithName("IntakeStutter");
 }

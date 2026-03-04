@@ -9,6 +9,36 @@
           "data": {
             "pathName": "Backup-Simple-Mid-00"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shooterOn"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeStutter"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeStop"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shooterOff"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "turretStop"
+          }
         }
       ]
     }

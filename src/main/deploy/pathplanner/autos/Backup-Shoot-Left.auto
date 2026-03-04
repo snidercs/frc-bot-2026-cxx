@@ -19,13 +19,13 @@
         {
           "type": "named",
           "data": {
-            "name": "intakeStart"
+            "name": "intakeStutter"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 6.0
+            "waitTime": 0.25
           }
         },
         {

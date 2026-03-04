@@ -18,7 +18,14 @@ public:
     frc2::CommandPtr stopCommand();
     frc2::CommandPtr intakeCommand();
     frc2::CommandPtr ejectCommand();
-    frc2::CommandPtr stutterCommand();
+
+
+    /** Runs the intake in 0.25s on / 0.25s off cycles, then stops.
+     
+        @param duration How long to run the stutter cycle before stopping.
+                        If <= 0, the duration is read from `intake_stutter_length` in config.lua.
+    */
+    frc2::CommandPtr stutterCommand(units::time::second_t duration = 0_s);
 
     // Manual control
     void setVoltage(units::volt_t voltage);

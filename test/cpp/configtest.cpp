@@ -105,6 +105,12 @@ TEST(ConfigTest, InvalidKeyReturnsInvalid) {
     EXPECT_FALSE(invalid.valid());
 }
 
+// Test intake stutter length is a valid duration (>= 0)
+TEST(ConfigTest, IntakeStutterLengthIsNonNegative) {
+    auto stutterLength = config::number("intake_stutter_length");
+    EXPECT_GE(stutterLength, 0.0);
+}
+
 // Test type conversion safety
 TEST(ConfigTest, TypeConversionSafety) {
     // Trying to get a string as an integer should return 0

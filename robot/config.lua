@@ -44,7 +44,9 @@ local config = {
     drive_deadband        = 0.05,  -- Raw axis deadband threshold [0, 1)
     drive_input_exponent  = 2.5,   -- Exponential curve exponent (1.0 = linear, 2.0 = quadratic)
     rotate_deadband       = 0.05,
-    rotate_input_exponent = 1.25
+    rotate_input_exponent = 1.25,
+
+    intake_stutter_length = 6.25  -- (seconds) How long to stutter the intake in static-shot auto's
 }
 
 return config

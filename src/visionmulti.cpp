@@ -1,5 +1,4 @@
 #include "visionmulti.hpp"
-#include <frc/DriverStation.h>
 #include <frc/Timer.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <units/math.h>
@@ -18,24 +17,11 @@ VisionMulti::VisionMulti()
 std::vector<VisionMeasurement> VisionMulti::getMeasurements() {
     std::vector<VisionMeasurement> measurements;
 
-    // Re-orient the field layout whenever the alliance changes so tag poses
-    // stay consistent with the WPILib blue-origin coordinate convention.
-    // This handles practice field flips without requiring a robot restart.
-    const auto alliance = frc::DriverStation::GetAlliance();
-    if (alliance != _lastAlliance) {
-        _lastAlliance = alliance;
-        const auto origin = (alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kRed)
-            ? frc::AprilTagFieldLayout::OriginPosition::kRedAllianceWallRightSide
-            : frc::AprilTagFieldLayout::OriginPosition::kBlueAllianceWallRightSide;
-        _fieldLayout.SetOrigin(origin);
-        // Push updated layout into each estimator by reconstructing them
-        for (std::size_t i = 0; i < _cameras.size(); ++i) {
-            _cameras[i] = std::make_unique<CameraUnit>(
-                vision::kCameraNames[i],
-                vision::kRobotToCamera[i],
-                _fieldLayout);
-        }
-    }
+    // NOTE: _fieldLayout always uses the default blue-origin (kBlueAllianceWallRightSide).
+    // WPILib's pose estimator (and CTRE's AddVisionMeasurement) always expect poses in
+    // the blue-origin frame regardless of alliance. Setting the origin to red would cause
+    // PhotonPoseEstimator to output red-relative poses (~0–2 m) that the drivetrain
+    // would interpret as being near the blue wall (~16 m), corrupting the pose estimate.
 
     for (auto& unit : _cameras) {
         auto results = unit->camera.GetAllUnreadResults();

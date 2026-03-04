@@ -4,10 +4,8 @@
 #include <photon/PhotonCamera.h>
 #include <photon/PhotonPoseEstimator.h>
 #include <frc/apriltag/AprilTagFieldLayout.h>
-#include <frc/DriverStation.h>
 #include <array>
 #include <memory>
-#include <optional>
 
 /** Multi-camera vision implementation using all four chassis-mounted cameras.
  
@@ -51,9 +49,6 @@ private:
 
     frc::AprilTagFieldLayout _fieldLayout;
     std::array<std::unique_ptr<CameraUnit>, 4> _cameras;
-
-    // Track last-seen alliance so we only call SetOrigin() when it changes
-    std::optional<frc::DriverStation::Alliance> _lastAlliance;
 
     // Rejection counters (across all cameras)
     int _rejectedNoTargets  = 0;

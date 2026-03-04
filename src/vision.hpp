@@ -88,22 +88,22 @@ namespace vision {
     constexpr const std::array<frc::Transform3d, 4> kRobotToCamera = {
         // Front-Left camera: on front edge, 6cm from left side, 51cm high
         frc::Transform3d{
-            frc::Translation3d{0.349_m, 0.289_m, 0.51_m},
+            frc::Translation3d{13.74_in, 11.38_in, 20.08_in},
             frc::Rotation3d{0_deg, 0_deg, 0_deg}
         },
         // Front-Right camera (not yet mounted — placeholder)
         frc::Transform3d{
-            frc::Translation3d{0.25_m, -0.25_m, 0.5_m},
+            frc::Translation3d{9.84_in, -9.84_in, 19.69_in},
             frc::Rotation3d{0_deg, 0_deg, -45_deg}
         },
         // Back-Left camera: 3.5cm past back edge, 37cm from right side, 41cm high
         frc::Transform3d{
-            frc::Translation3d{-0.384_m, 0.021_m, 0.41_m},
+            frc::Translation3d{-15.12_in, 0.83_in, 16.14_in},
             frc::Rotation3d{0_deg, 0_deg, 180_deg}
         },
         // Back-Right camera
         frc::Transform3d{
-            frc::Translation3d{-0.25_m, -0.25_m, 0.5_m},
+            frc::Translation3d{-9.84_in, -9.84_in, 19.69_in},
             frc::Rotation3d{0_deg, 0_deg, -135_deg}
         }
     };

@@ -1,6 +1,7 @@
 #include "intake.hpp"
 #include <frc2/command/Commands.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/Timer.h>
 
 using namespace subsystems;
 using namespace ctre::phoenix6;
@@ -139,12 +140,14 @@ frc2::CommandPtr Intake::ejectCommand() {
 }
 
 frc2::CommandPtr Intake::stutterCommand() {
-    return frc2::cmd::Sequence(
-               RunOnce([this] { setVoltage(kIntakeVoltage); }),
-               frc2::cmd::Wait(0.5_s),
-               RunOnce([this] { stop(); }),
-               frc2::cmd::Wait(0.5_s)
-           )
-        .Repeatedly()
-        .WithName("IntakeStutter");
+    // Run the intake in 0.5s on / 0.5s off cycles indefinitely.
+    // Because this uses Run(), it holds the Intake subsystem requirement,
+    // so intakeStop() (which also requires Intake) will cancel it cleanly.
+    return Run([this] {
+        double t = frc::Timer::GetFPGATimestamp().value();
+        if (std::fmod(t, 1.0) < 0.5)
+            setVoltage(kIntakeVoltage);
+        else
+            stop();
+    }).WithName("IntakeStutter");
 }

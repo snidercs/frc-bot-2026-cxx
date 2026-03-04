@@ -58,6 +58,7 @@ Robot::Robot()
 
 void Robot::RobotInit()
 {
+    frc::RobotController::SetBrownoutVoltage(6.0_V);
     SmartDashboard::PutString ("Controller",
                                config::boolean ("gamepad") ? "Gamepad" : "Flightsticks");
     detail::displayPaths();

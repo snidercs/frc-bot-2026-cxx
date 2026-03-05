@@ -73,19 +73,20 @@ void Robot::RobotInit()
 void Robot::RobotPeriodic()
 {
     frc2::CommandScheduler::GetInstance().Run();
-
+#if BOT_VISION
     // Poll all cameras and fuse measurements into the drivetrain pose estimator
-    // for (const auto& measurement : _container->vision().getMeasurements()) {
-    //     _container->drivetrain().AddVisionMeasurement(
-    //         measurement.pose,
-    //         measurement.timestamp,
-    //         measurement.stdDevs);
-    // }
+    for (const auto& measurement : _container->vision().getMeasurements()) {
+        _container->drivetrain().AddVisionMeasurement(
+            measurement.pose,
+            measurement.timestamp,
+            measurement.stdDevs);
+    }
 
     // Estimated distance from fused robot pose to the hub
     auto robotPose = _container->drivetrain().GetState().Pose;
     units::meter_t distanceToHub = robotPose.Translation().Distance(landmarks::hubPosition());
     SmartDashboard::PutNumber("Robot/DistanceToHub (m)", distanceToHub.value());
+#endif
 }
 
 void Robot::DisabledInit() {}

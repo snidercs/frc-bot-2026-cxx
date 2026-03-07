@@ -113,7 +113,7 @@ private:
     units::turn_t _holdPosition = 0_tr;
 
     // Constants
-    static constexpr units::turns_per_second_t kShooterVelocity = 55_tps;
+    static constexpr units::turns_per_second_t kShooterVelocity = 54_tps;
     static constexpr units::turns_per_second_t kShooterTolerance = 5_tps;
     static constexpr units::turns_per_second_t kUptakeVelocity = 100_tps;
     static constexpr units::degree_t kAngleTolerance = 2_deg;

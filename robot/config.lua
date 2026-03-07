@@ -20,7 +20,7 @@ local config = {
     climber_device_id = 1,
     climber_can_bus = "rio",
     climber_climb_button_index = 16,  -- Button to climb (move down)
-    climber_lower_button_index = 17,  -- Button to lower (move up)
+    climber_lower_button_index = 1,  -- Button to lower (move up)
 
     -- Turret shooter configuration
     turret_rotation_device_id = 19,
@@ -46,7 +46,7 @@ local config = {
     rotate_deadband       = 0.05,
     rotate_input_exponent = 1.25,
 
-    intake_stutter_length = 6.25  -- (seconds) How long to stutter the intake in static-shot auto's
+    intake_stutter_length = 9.25  -- (seconds) How long to stutter the intake in static-shot auto's
 }
 
 return config

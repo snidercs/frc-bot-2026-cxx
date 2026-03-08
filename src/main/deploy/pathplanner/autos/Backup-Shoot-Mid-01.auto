@@ -17,6 +17,12 @@
               {
                 "type": "named",
                 "data": {
+                  "name": "shooterOn"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
                   "name": "intakeStart"
                 }
               },

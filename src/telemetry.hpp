@@ -3,38 +3,13 @@
 #include "ctre/phoenix6/SignalLogger.hpp"
 #include <frc/smartdashboard/Mechanism2d.h>
 #include <frc/smartdashboard/MechanismLigament2d.h>
-#include <networktables/NetworkTableInstance.h>
-#include <networktables/DoubleArrayTopic.h>
-#include <networktables/DoubleTopic.h>
-#include <networktables/StringTopic.h>
-#include <networktables/StructArrayTopic.h>
-#include <networktables/StructTopic.h>
+#include <telemetrykit/TelemetryKit.h>
 
 #include "drivetrain.hpp"
 
 class Telemetry {
 private:
     units::meters_per_second_t MaxSpeed;
-
-    /* What to publish over networktables for telemetry */
-    nt::NetworkTableInstance inst = nt::NetworkTableInstance::GetDefault();
-
-    /* Robot swerve drive state */
-    std::shared_ptr<nt::NetworkTable> driveStateTable = inst.GetTable("DriveState");
-    nt::StructPublisher<frc::Pose2d> drivePose = driveStateTable->GetStructTopic<frc::Pose2d>("Pose").Publish();
-    nt::StructPublisher<frc::ChassisSpeeds> driveSpeeds = driveStateTable->GetStructTopic<frc::ChassisSpeeds>("Speeds").Publish();
-    nt::StructArrayPublisher<frc::SwerveModuleState> driveModuleStates = driveStateTable->GetStructArrayTopic<frc::SwerveModuleState>("ModuleStates").Publish();
-    nt::StructArrayPublisher<frc::SwerveModuleState> driveModuleTargets = driveStateTable->GetStructArrayTopic<frc::SwerveModuleState>("ModuleTargets").Publish();
-    nt::StructArrayPublisher<frc::SwerveModulePosition> driveModulePositions = driveStateTable->GetStructArrayTopic<frc::SwerveModulePosition>("ModulePositions").Publish();
-    nt::DoublePublisher driveTimestamp = driveStateTable->GetDoubleTopic("Timestamp").Publish();
-    nt::DoublePublisher driveOdometryFrequency = driveStateTable->GetDoubleTopic("OdometryFrequency").Publish();
-
-    /* Robot pose for field positioning */
-    std::shared_ptr<nt::NetworkTable> table = inst.GetTable("Pose");
-    nt::DoubleArrayPublisher fieldPub = table->GetDoubleArrayTopic("robotPose").Publish();
-    nt::StringPublisher fieldTypePub = table->GetStringTopic(".type").Publish();
-
-    /* Mechanisms to represent the swerve module states */
     std::array<frc::Mechanism2d, 4> m_moduleMechanisms{
         frc::Mechanism2d{1, 1},
         frc::Mechanism2d{1, 1},

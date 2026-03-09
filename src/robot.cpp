@@ -12,6 +12,7 @@
 #include <frc2/command/CommandScheduler.h>
 #include <hal/HALBase.h>
 
+#include <telemetrykit/TelemetryKit.h>
 #include <cameraserver/CameraServer.h>
 #if BOT_DUMB_CAMERA
     #include <opencv2/core/core.hpp>
@@ -53,6 +54,21 @@ static void displayPaths()
 Robot::Robot()
 {
     DriverStation::SilenceJoystickConnectionWarning (true);
+
+    auto& logger = tkit::Logger::GetInstance();
+    tkit::RecordOutput("Metadata/ProjectName", std::string("frc-bot-2026-cxx"));
+    tkit::RecordOutput("Metadata/ControllerType",
+        std::string(config::boolean("gamepad") ? "Gamepad" : "Flightsticks"));
+
+    if (frc::RobotBase::IsReal()) {
+        logger.AddReceiver(std::make_unique<tkit::WPILogWriter>("/U/logs"));
+        logger.AddReceiver(std::make_unique<tkit::NetworkTablesReceiver>());
+    } else {
+        logger.AddReceiver(std::make_unique<tkit::NetworkTablesReceiver>());
+    }
+
+    logger.Start();
+
     _container = Container::create();
 }
 
@@ -72,6 +88,7 @@ void Robot::RobotInit()
 
 void Robot::RobotPeriodic()
 {
+    tkit::Logger::GetInstance().Periodic();
     frc2::CommandScheduler::GetInstance().Run();
 #if BOT_VISION
     // Poll all cameras and fuse measurements into the drivetrain pose estimator
@@ -85,7 +102,7 @@ void Robot::RobotPeriodic()
     // Estimated distance from fused robot pose to the hub
     auto robotPose = _container->drivetrain().GetState().Pose;
     units::meter_t distanceToHub = robotPose.Translation().Distance(landmarks::hubPosition());
-    SmartDashboard::PutNumber("Robot/DistanceToHub (m)", distanceToHub.value());
+    tkit::RecordOutput("Robot/DistanceToHub", distanceToHub.value());
 #endif
 }
 

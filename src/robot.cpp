@@ -91,8 +91,6 @@ void Robot::RobotInit()
 
 void Robot::RobotPeriodic()
 {
-    tkit::Logger::GetInstance().Periodic();
-    frc2::CommandScheduler::GetInstance().Run();
 #if BOT_VISION
     if (frc::RobotBase::IsReal()) {
         // Poll all cameras and fuse measurements into the drivetrain pose estimator
@@ -109,6 +107,8 @@ void Robot::RobotPeriodic()
         tkit::RecordOutput("Robot/DistanceToHub", distanceToHub.value());
     }
 #endif
+    tkit::Logger::GetInstance().Periodic();
+    frc2::CommandScheduler::GetInstance().Run();
 }
 
 void Robot::DisabledInit() {}

@@ -1,4 +1,5 @@
 #include "telemetry.hpp"
+#include "ctre/phoenix6/SignalLogger.hpp"
 #include <frc/smartdashboard/SmartDashboard.h>
 
 #define BOT_SIGNAL_LOGGER 0
@@ -9,6 +10,11 @@ Telemetry::Telemetry(units::meters_per_second_t maxSpeed) : MaxSpeed{maxSpeed}
 {
 #if BOT_SIGNAL_LOGGER
     SignalLogger::Start();
+#else
+    /* Disable Phoenix 6 auto-logging — it starts automatically on enable/DS connect
+       unless explicitly told not to. We use TelemetryKit instead. */
+    SignalLogger::EnableAutoLogging(false);
+    SignalLogger::Stop();
 #endif
 
     /* Set up the module state Mechanism2d telemetry */

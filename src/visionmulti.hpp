@@ -36,15 +36,16 @@ private:
                    const frc::AprilTagFieldLayout& layout)
             : camera(std::string(name))
             , estimator(layout,
-                        photon::PoseStrategy::LOWEST_AMBIGUITY,
+                        photon::PoseStrategy::MULTI_TAG_PNP_ON_COPROCESSOR,
                         robotToCamera)
-        {}
+        {
+            // Fall back to single-tag solve when only one tag is visible
+            estimator.SetMultiTagFallbackStrategy(photon::PoseStrategy::LOWEST_AMBIGUITY);
+        }
     };
 
     frc::AprilTagFieldLayout _fieldLayout;
-    std::array<std::unique_ptr<CameraUnit>, 4> _cameras;
+    std::array<std::unique_ptr<CameraUnit>, 2> _cameras;
 
-    // Raw results cached each cycle so getLastTargets() can read without
-    // re-consuming them. Always call getMeasurements() first.
-    std::array<std::vector<photon::PhotonPipelineResult>, 4> _rawResults;
+    std::array<std::vector<photon::PhotonPipelineResult>, 2> _rawResults;
 };

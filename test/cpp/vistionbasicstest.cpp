@@ -93,27 +93,25 @@ TEST(VisionTest, MockVisionIO) {
 
 // Test vision constants
 TEST(VisionTest, CameraNames) {
-    EXPECT_EQ(vision::kCameraNames.size(), 4);
+    EXPECT_EQ(vision::kCameraNames.size(), 2);
     EXPECT_STREQ(vision::kCameraNames[0], "FL");
-    EXPECT_STREQ(vision::kCameraNames[1], "FR");
-    EXPECT_STREQ(vision::kCameraNames[2], "BL");
-    EXPECT_STREQ(vision::kCameraNames[3], "BR");
+    EXPECT_STREQ(vision::kCameraNames[1], "BL");
 }
 
 TEST(VisionTest, CameraTransforms) {
-    EXPECT_EQ(vision::kRobotToCamera.size(), 4);
-    
-    // Check FL camera is front-left
+    EXPECT_EQ(vision::kRobotToCamera.size(), 2);
+
+    // FL camera: forward, left, up
     const auto& flTransform = vision::kRobotToCamera[0];
     EXPECT_GT(flTransform.X().value(), 0.0);  // Forward
     EXPECT_GT(flTransform.Y().value(), 0.0);  // Left
     EXPECT_GT(flTransform.Z().value(), 0.0);  // Up
-    
-    // Check FR camera is front-right
-    const auto& frTransform = vision::kRobotToCamera[1];
-    EXPECT_GT(frTransform.X().value(), 0.0);  // Forward
-    EXPECT_LT(frTransform.Y().value(), 0.0);  // Right
-    EXPECT_GT(frTransform.Z().value(), 0.0);  // Up
+
+    // BL camera: backward, left, up
+    const auto& blTransform = vision::kRobotToCamera[1];
+    EXPECT_LT(blTransform.X().value(), 0.0);  // Backward
+    EXPECT_GT(blTransform.Y().value(), 0.0);  // Left
+    EXPECT_GT(blTransform.Z().value(), 0.0);  // Up
 }
 
 TEST(VisionTest, TurretPivot) {

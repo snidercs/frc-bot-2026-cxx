@@ -52,5 +52,5 @@ private:
 
     frc::AprilTagFieldLayout _fieldLayout;
     photon::VisionSystemSim _visionSim;
-    std::array<std::unique_ptr<CameraUnit>, 4> _cameras;
+    std::array<std::unique_ptr<CameraUnit>, 2> _cameras;
 };

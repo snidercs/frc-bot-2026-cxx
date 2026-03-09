@@ -87,8 +87,14 @@ public:
 
 protected:
     // ── Gating constants ────────────────────────────────────────────────────
-    static constexpr double          kMaxAmbiguity = 0.3;
+    // Single-tag ambiguity must be below this threshold.
+    // Multi-tag PNP results report ambiguity = -1 (not applicable) and bypass
+    // this check entirely — they are accepted if the pose is in-bounds.
+    static constexpr double          kMaxAmbiguity = 0.2;
     static constexpr units::second_t kMaxLatency   = 0.5_s;
+    // Require at least this many tags for a single-tag fallback to be accepted.
+    // Set to 2 to reject all single-tag solves and only accept multi-tag results.
+    static constexpr int             kMinTagsForSingleSolve = 2;
 
     // ── Shared measurement buffer (cleared + refilled each cycle) ───────────
     std::vector<VisionMeasurement> _measurements;
@@ -106,8 +112,9 @@ protected:
         @return [x, y, theta] standard deviations.
     */
     wpi::array<double, 3> computeStdDevs(double distanceMeters) const {
-        double xy    = 0.01 + (distanceMeters * 0.05);
-        double theta = 0.01 + (distanceMeters * 0.02);
+        double xy    = 0.1 + (distanceMeters * 0.05);
+        // theta: very high so vision never overrides the gyro heading
+        double theta = 9999.0;
         return {xy, xy, theta};
     }
 
@@ -139,9 +146,17 @@ protected:
                 continue;
             }
 
-            if (result.GetBestTarget().GetPoseAmbiguity() > kMaxAmbiguity) {
-                _rejectedAmbiguous++;
-                continue;
+            // Multi-tag PNP reports ambiguity = -1.  Single-tag solves report a
+            // real ambiguity value.  Reject single-tag solves outright: they can
+            // produce a 180° flipped pose that corrupts the odometry estimate.
+            double ambiguity = result.GetBestTarget().GetPoseAmbiguity();
+            bool isMultiTag  = (result.GetTargets().size() >= 2);
+            if (!isMultiTag) {
+                // Single-tag fallback: only accept if ambiguity is very low
+                if (ambiguity < 0 || ambiguity > kMaxAmbiguity) {
+                    _rejectedAmbiguous++;
+                    continue;
+                }
             }
 
             auto estimatedPose = estimator.Update(result);
@@ -171,9 +186,10 @@ protected:
                 cameraName
             });
 
-            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/X (m)",      pose2d.X().value());
-            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/Y (m)",      pose2d.Y().value());
-            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/Rot (deg)",  pose2d.Rotation().Degrees().value());
+            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/X (m)",        pose2d.X().value());
+            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/Y (m)",        pose2d.Y().value());
+            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/Rot (deg)",    pose2d.Rotation().Degrees().value());
+            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/Distance (m)", distance);
 
             _acceptedCount++;
         }
@@ -191,35 +207,23 @@ protected:
 */
 namespace vision {
     /** Camera names (must match PhotonVision configuration) */
-    constexpr const std::array<const char*, 4> kCameraNames = {"FL", "FR", "BL", "BR"};
-    
-    /** Camera mounting positions relative to robot center (measured in meters/degrees).
+    constexpr const std::array<const char*, 2> kCameraNames = {"FL", "BL"};
+
+    /** Camera mounting positions relative to robot center.
      
-        Index order: FL=0, FR=1, BL=2, BR=3
-        Cameras are fixed to chassis (not turret), angled ~45° outward.
-        
-        TODO: FR and BR cameras are not yet mounted — transforms are placeholders.
+        Index order: FL=0, BL=1
+        TODO: Add FR and BR once physically mounted and measured.
     */
-    constexpr const std::array<frc::Transform3d, 4> kRobotToCamera = {
-        // Front-Left camera: on front edge, 6cm from left side, 51cm high
+    constexpr const std::array<frc::Transform3d, 2> kRobotToCamera = {
+        // Front-Left: forward-left corner, facing straight forward
         frc::Transform3d{
             frc::Translation3d{13.74_in, 11.5_in, 15_in},
             frc::Rotation3d{0_deg, 0_deg, 0_deg}
         },
-        // Front-Right camera (not yet mounted — placeholder)
+        // Back-Left: rear-left corner, facing straight backward, pitched up 45°
         frc::Transform3d{
-            frc::Translation3d{9.84_in, -9.84_in, 19.69_in},
-            frc::Rotation3d{0_deg, 0_deg, -45_deg}
-        },
-        // Back-Left camera: 3.5cm past back edge, 37cm from right side, 41cm high
-        frc::Transform3d{
-            frc::Translation3d{-15.00_in, -12.25_in, 11.35_in},
-            frc::Rotation3d{0_deg, 0_deg, 180_deg}
-        },
-        // Back-Right camera
-        frc::Transform3d{
-            frc::Translation3d{-9.84_in, -9.84_in, 19.69_in},
-            frc::Rotation3d{0_deg, 0_deg, -135_deg}
+            frc::Translation3d{-13.74_in, 2.24_in, 11.35_in},
+            frc::Rotation3d{0_deg, -24_deg, 180_deg}
         }
     };
     

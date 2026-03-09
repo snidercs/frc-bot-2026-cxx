@@ -7,7 +7,7 @@ VisionSim::CameraUnit::CameraUnit(std::string_view name,
                                    const frc::AprilTagFieldLayout& layout,
                                    photon::VisionSystemSim& visionSim)
     : camera(std::string(name))
-    , estimator(layout, photon::PoseStrategy::LOWEST_AMBIGUITY, robotToCamera)
+    , estimator(layout, photon::PoseStrategy::MULTI_TAG_PNP_ON_COPROCESSOR, robotToCamera)
 {
     // ThriftyCam approximation: 70° diagonal FOV, 1280×720, ~50 ms latency
     props.SetCalibration(1280, 720, frc::Rotation2d{70_deg});
@@ -20,6 +20,9 @@ VisionSim::CameraUnit::CameraUnit(std::string_view name,
     cameraSim->EnableDrawWireframe(true);
 
     visionSim.AddCamera(cameraSim.get(), robotToCamera);
+
+    // Fall back to single-tag solve when only one tag is visible
+    estimator.SetMultiTagFallbackStrategy(photon::PoseStrategy::LOWEST_AMBIGUITY);
 }
 
 // ─── VisionSim ──────────────────────────────────────────────────────────────

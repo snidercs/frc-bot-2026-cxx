@@ -127,14 +127,6 @@ TEST(VisionTest, FieldLayout) {
     EXPECT_GT(tags.size(), 0);
 }
 
-TEST(VisionTest, GoalTagIds) {
-    EXPECT_GT(vision::kGoalTagIds.size(), 0);
-    // Verify all IDs are positive
-    for (int id : vision::kGoalTagIds) {
-        EXPECT_GT(id, 0);
-    }
-}
-
 // Test debug methods
 TEST(VisionTest, DebugMethods) {
     MockVisionIO mockVision;

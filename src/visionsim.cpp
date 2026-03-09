@@ -65,7 +65,7 @@ const std::vector<VisionMeasurement>& VisionSim::getMeasurements() {
 }
 
 std::string VisionSim::getStatus() {
-    return "VisionSim - " + std::to_string(_cameras.size()) + "/4 cameras simulated";
+    return "VisionSim - " + std::to_string(_cameras.size()) + "/2 cameras simulated";
 }
 
 std::string VisionSim::getLastTargets() {

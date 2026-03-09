@@ -23,6 +23,7 @@
 #include "config.hpp"
 #include "robot.hpp"
 #include "scripting.hpp"
+#include "turret.hpp"
 #include "vision.hpp"
 #include "visionsim.hpp"
 
@@ -166,11 +167,15 @@ void Robot::SimulationInit() {}
 
 void Robot::SimulationPeriodic()
 {
+    // Drive the shooter flywheel sim state so velocity tracks the setpoint.
+    // Without this, GetVelocity() always returns 0 in sim and isShooterReady()
+    // never becomes true, leaving shootAtDistanceCommand stuck in WaitUntil.
+    auto& shooterSim = _container->turret().shooterMotor().GetSimState();
+    shooterSim.SetSupplyVoltage(frc::RobotController::GetBatteryVoltage());
+    shooterSim.SetRotorVelocity(_container->turret().cachedShooterTarget());
+
 #if BOT_VISION
     // Advance the vision simulation with the current ground-truth drivetrain pose.
-    // VisionSim::update() feeds the pose into VisionSystemSim so that each
-    // PhotonCameraSim can project AprilTags for that cycle. getMeasurements()
-    // in RobotPeriodic then reads the results through the normal VisionIO path.
     if (auto* visionSim = dynamic_cast<VisionSim*>(&_container->vision())) {
         visionSim->update(_container->drivetrain().GetState().Pose);
     }

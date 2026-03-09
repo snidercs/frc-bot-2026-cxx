@@ -11,6 +11,9 @@ Telemetry::Telemetry(units::meters_per_second_t maxSpeed) : MaxSpeed{maxSpeed}
     SignalLogger::Start();
 #endif
 
+    /* Register the Field2d widget for robot pose visualization */
+    frc::SmartDashboard::PutData("Field", &m_field);
+
     /* Set up the module state Mechanism2d telemetry */
     for (size_t i = 0; i < m_moduleSpeeds.size(); ++i) {
         frc::SmartDashboard::PutData("Module " + std::to_string(i), &m_moduleMechanisms[i]);
@@ -50,9 +53,7 @@ void Telemetry::Telemeterize(subsystems::CommandSwerveDrivetrain::SwerveDriveSta
     tkit::RecordOutput("DriveState/OdometryFrequency", 1.0 / state.OdometryPeriod.value());
 
     /* Telemeterize the pose to a Field2d */
-    tkit::RecordOutput("Pose/robotPose/x",       state.Pose.X().value());
-    tkit::RecordOutput("Pose/robotPose/y",       state.Pose.Y().value());
-    tkit::RecordOutput("Pose/robotPose/degrees", state.Pose.Rotation().Degrees().value());
+    m_field.SetRobotPose(state.Pose);
 
     /* Telemeterize each module state to a Mechanism2d */
     for (size_t i = 0; i < m_moduleSpeeds.size(); ++i) {

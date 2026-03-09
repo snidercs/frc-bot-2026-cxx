@@ -28,6 +28,9 @@ VisionSim::VisionSim()
     : _fieldLayout(vision::getFieldLayout())
     , _visionSim("VisionSim")
 {
+    // No real coprocessor in sim — disable NT version checks to suppress warnings
+    photon::PhotonCamera::SetVersionCheckEnabled(false);
+
     _visionSim.AddAprilTags(_fieldLayout);
 
     for (std::size_t i = 0; i < vision::kCameraNames.size(); ++i) {

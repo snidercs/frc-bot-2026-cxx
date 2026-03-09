@@ -5,6 +5,7 @@
 #include <frc/geometry/Pose2d.h>
 #include <frc/geometry/Rotation2d.h>
 #include <units/angle.h>
+#include <units/length.h>
 #include <units/voltage.h>
 #include <units/current.h>
 #include "ctre/phoenix6/TalonFX.hpp"
@@ -35,13 +36,25 @@ public:
     frc2::CommandPtr aimAtTargetCommand(std::function<frc::Pose2d()> robotPoseSupplier,
                                         std::function<frc::Pose2d()> targetPoseSupplier);
     frc2::CommandPtr manualRotateCommand(std::function<double()> speedSupplier);
+
+    /** Spin up the shooter and run the uptake.
+     
+        @param distanceFn Optional supplier returning current distance to target (metres).
+                          When provided, shooter velocity tracks distance continuously.
+                          When null, falls back to `kShooterVelocity`.
+    */
+    frc2::CommandPtr shooterOnCommand(std::function<units::meter_t()> distanceFn = nullptr);
+    frc2::CommandPtr shooterOffCommand();
+
+    /** Teleop shoot command — continuously adjusts shooter speed as distance changes.
+     
+        @param distanceFn Supplier returning current distance to target (metres).
+    */
+    frc2::CommandPtr shootAtDistanceCommand(std::function<units::meter_t()> distanceFn);
+
     frc2::CommandPtr spinUpCommand();
     frc2::CommandPtr stopCommand();
-
-    frc2::CommandPtr shooterOnCommand();
-    frc2::CommandPtr shooterOffCommand();
     frc2::CommandPtr shootCommand();
-
     frc2::CommandPtr calibrateRotationZero();
 
     // Manual control
@@ -66,6 +79,12 @@ public:
 
     /** Returns the current shooter flywheel velocity from the cached sensor value. */
     units::turns_per_second_t getShooterVelocity() const;
+
+    /** Returns the last commanded shooter target velocity (for sim state feedback). */
+    units::turns_per_second_t cachedShooterTarget() const { return _cachedShooterTarget; }
+
+    /** Returns the shooter motor (for sim state access in SimulationPeriodic). */
+    ctre::phoenix6::hardware::TalonFX& shooterMotor() { return _shooterMotor; }
 
     /** Returns true if the turret rotation is within @c kAngleTolerance of the target angle. */
     bool isAtTarget() const;
@@ -104,6 +123,7 @@ private:
     // Cached sensor values (updated in Periodic to avoid redundant CAN reads)
     units::degree_t _cachedAngle = 0_deg;
     units::turns_per_second_t _cachedShooterVelocity = 0_tps;
+    units::turns_per_second_t _cachedShooterTarget = 0_tps;
     units::turns_per_second_t _cachedRotationVelocity = 0_tps;
     units::volt_t _cachedMotorVoltage = 0_V;
     units::ampere_t _cachedMotorCurrent = 0_A;
@@ -121,12 +141,22 @@ private:
     
     // Gear ratio from motor to turret (motor rotations per turret rotation)
     static constexpr double kRotationGearRatio = 100.0;  // TODO: measure actual ratio
-    
-    
 
     void configureMotors();
     units::degree_t computeAimAngle(const frc::Pose2d& robotPose, 
                                     const frc::Pose2d& targetPose) const;
+
+    /** Returns shooter flywheel velocity for a given distance to the hub.
+     
+        Linear interpolation between two measured calibration points:
+        - ~2.08 m (6 ft 10 in): 50 tps
+        - ~2.74 m (9 ft):       55 tps
+        Clamps to [50, 55] tps outside the calibrated range.
+
+        @param distance Distance from robot to hub in metres.
+        @return Target flywheel velocity in turns per second.
+    */
+    units::turns_per_second_t velocityFromDistance(units::meter_t distance) const;
 };
 
 } // namespace subsystems

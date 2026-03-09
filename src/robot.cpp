@@ -3,6 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 
 #include "container.hpp"
+#include "frc/RobotBase.h"
 #include <filesystem>
 #include <iostream>
 
@@ -93,18 +94,20 @@ void Robot::RobotPeriodic()
     tkit::Logger::GetInstance().Periodic();
     frc2::CommandScheduler::GetInstance().Run();
 #if BOT_VISION
-    // Poll all cameras and fuse measurements into the drivetrain pose estimator
-    for (const auto& measurement : _container->vision().getMeasurements()) {
-        _container->drivetrain().AddVisionMeasurement(
-            measurement.pose,
-            measurement.timestamp,
-            measurement.stdDevs);
-    }
+    if (frc::RobotBase::IsReal()) {
+        // Poll all cameras and fuse measurements into the drivetrain pose estimator
+        for (const auto& measurement : _container->vision().getMeasurements()) {
+            _container->drivetrain().AddVisionMeasurement(
+                measurement.pose,
+                measurement.timestamp,
+                measurement.stdDevs);
+        }
 
-    // Estimated distance from fused robot pose to the hub
-    auto robotPose = _container->drivetrain().GetState().Pose;
-    units::meter_t distanceToHub = robotPose.Translation().Distance(landmarks::hubPosition());
-    tkit::RecordOutput("Robot/DistanceToHub", distanceToHub.value());
+        // Estimated distance from fused robot pose to the hub
+        auto robotPose = _container->drivetrain().GetState().Pose;
+        units::meter_t distanceToHub = robotPose.Translation().Distance(landmarks::hubPosition());
+        tkit::RecordOutput("Robot/DistanceToHub", distanceToHub.value());
+    }
 #endif
 }
 

@@ -9,8 +9,12 @@
 #include <frc/geometry/Rotation3d.h>
 #include <frc/geometry/Transform3d.h>
 #include <frc/geometry/Translation2d.h>
+#include <frc/smartdashboard/SmartDashboard.h>
+#include <photon/PhotonPoseEstimator.h>
+#include <photon/targeting/PhotonPipelineResult.h>
 #include <units/angle.h>
 #include <units/length.h>
+#include <units/math.h>
 #include <units/time.h>
 #include <wpi/array.h>
 #include <frc/DriverStation.h>
@@ -38,11 +42,20 @@ struct VisionMeasurement {
  
     Provides a hardware abstraction layer for vision systems, allowing the
     same code to work with both PhotonVision cameras and simulation.
+
+    ## Extending VisionIO
+    Common pipeline logic lives here so subclasses stay thin. The only thing
+    a subclass must supply is *how to get raw results* for each camera — call
+    `processResults()` with those results and everything else (gating, std-dev
+    scaling, SmartDashboard publishing, rejection counting) is handled here.
+
+    To add new shared behaviour, add it here rather than duplicating it in
+    both `VisionMulti` and `VisionSim`.
 */
 class VisionIO {
 public:
     virtual ~VisionIO() = default;
-    
+
     /** Retrieves all available vision measurements from the last update cycle.
      
         @warning Must be called **exactly once per periodic cycle**. Implementations
@@ -53,24 +66,121 @@ public:
         @return Const reference to the internal measurement buffer; valid until the next call.
     */
     virtual const std::vector<VisionMeasurement>& getMeasurements() = 0;
-    
+
     /** Gets a human-readable status string for debugging.
      
         @return Status information about the vision system
     */
     virtual std::string getStatus() { return "VisionIO base class"; }
-    
+
     /** Gets the most recent target information from all cameras.
      
         @return String describing detected targets (tag IDs, distances, etc.)
     */
     virtual std::string getLastTargets() { return "No targets"; }
-    
+
     /** Gets counts of rejected measurements for debugging.
      
         @return String with rejection statistics (stale, ambiguous, etc.)
     */
-    virtual std::string getRejectedCounts() { return "No rejection data"; }
+    virtual std::string getRejectedCounts();
+
+protected:
+    // ── Gating constants ────────────────────────────────────────────────────
+    static constexpr double          kMaxAmbiguity = 0.3;
+    static constexpr units::second_t kMaxLatency   = 0.5_s;
+
+    // ── Shared measurement buffer (cleared + refilled each cycle) ───────────
+    std::vector<VisionMeasurement> _measurements;
+
+    // ── Rejection counters ──────────────────────────────────────────────────
+    int _rejectedNoTargets   = 0;
+    int _rejectedStale       = 0;
+    int _rejectedAmbiguous   = 0;
+    int _rejectedOutOfBounds = 0;
+    int _acceptedCount       = 0;
+
+    /** Scales pose std devs with distance: closer = more trusted.
+     
+        @param distanceMeters Distance from camera to best tag in metres.
+        @return [x, y, theta] standard deviations.
+    */
+    wpi::array<double, 3> computeStdDevs(double distanceMeters) const {
+        double xy    = 0.01 + (distanceMeters * 0.05);
+        double theta = 0.01 + (distanceMeters * 0.02);
+        return {xy, xy, theta};
+    }
+
+    /** Processes a batch of pipeline results from one camera.
+     
+        Applies latency, ambiguity, and field-bounds gating. Accepted poses are
+        appended to `_measurements` and published to SmartDashboard. Rejection
+        counters are updated for every rejected result.
+
+        Subclasses call this once per camera inside `getMeasurements()` after
+        fetching raw results — that is the *only* thing subclasses need to do.
+
+        @param cameraName  Display name of the source camera (e.g. "FL").
+        @param estimator   The `PhotonPoseEstimator` associated with this camera.
+        @param results     Raw pipeline results from `GetAllUnreadResults()`.
+    */
+    void processResults(const std::string& cameraName,
+                        photon::PhotonPoseEstimator& estimator,
+                        std::vector<photon::PhotonPipelineResult>& results)
+    {
+        for (auto& result : results) {
+            if (!result.HasTargets()) {
+                _rejectedNoTargets++;
+                continue;
+            }
+
+            if (result.GetLatency() > kMaxLatency) {
+                _rejectedStale++;
+                continue;
+            }
+
+            if (result.GetBestTarget().GetPoseAmbiguity() > kMaxAmbiguity) {
+                _rejectedAmbiguous++;
+                continue;
+            }
+
+            auto estimatedPose = estimator.Update(result);
+            if (!estimatedPose.has_value()) {
+                _rejectedNoTargets++;
+                continue;
+            }
+
+            auto bestTransform = result.GetBestTarget().GetBestCameraToTarget();
+            double distance = units::math::sqrt(
+                units::math::pow<2>(bestTransform.X()) +
+                units::math::pow<2>(bestTransform.Y()) +
+                units::math::pow<2>(bestTransform.Z())
+            ).value();
+
+            auto pose2d = estimatedPose->estimatedPose.ToPose2d();
+            if (pose2d.X() < 0_m || pose2d.X() > 16.46_m ||
+                pose2d.Y() < 0_m || pose2d.Y() > 8.21_m) {
+                _rejectedOutOfBounds++;
+                continue;
+            }
+
+            _measurements.push_back(VisionMeasurement{
+                pose2d,
+                estimatedPose->timestamp,
+                computeStdDevs(distance),
+                cameraName
+            });
+
+            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/X (m)",      pose2d.X().value());
+            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/Y (m)",      pose2d.Y().value());
+            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/Rot (deg)",  pose2d.Rotation().Degrees().value());
+
+            _acceptedCount++;
+        }
+
+        frc::SmartDashboard::PutNumber("Vision/Accepted",             _acceptedCount);
+        frc::SmartDashboard::PutNumber("Vision/Rejected OutOfBounds", _rejectedOutOfBounds);
+    }
 };
 
 /** Vision system configuration constants.

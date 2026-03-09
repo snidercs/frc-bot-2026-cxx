@@ -24,6 +24,7 @@
 #include "robot.hpp"
 #include "scripting.hpp"
 #include "vision.hpp"
+#include "visionsim.hpp"
 
 #include "luabot/luabot2.hpp"
 
@@ -162,7 +163,19 @@ void Robot::TestPeriodic() {}
 void Robot::TestExit() {}
 
 void Robot::SimulationInit() {}
-void Robot::SimulationPeriodic() {}
+
+void Robot::SimulationPeriodic()
+{
+#if BOT_VISION
+    // Advance the vision simulation with the current ground-truth drivetrain pose.
+    // VisionSim::update() feeds the pose into VisionSystemSim so that each
+    // PhotonCameraSim can project AprilTags for that cycle. getMeasurements()
+    // in RobotPeriodic then reads the results through the normal VisionIO path.
+    if (auto* visionSim = dynamic_cast<VisionSim*>(&_container->vision())) {
+        visionSim->update(_container->drivetrain().GetState().Pose);
+    }
+#endif
+}
 
 void Robot::cameraThread()
 {

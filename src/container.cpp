@@ -14,6 +14,8 @@
 #include "config.hpp"
 #include "container.hpp"
 #include "inpututil.hpp"
+#include "visionmulti.hpp"
+#include "visionsim.hpp"
 
 using pathplanner::AutoBuilder;
 
@@ -163,7 +165,14 @@ Container::Container()
     _intake = std::make_unique<subsystems::Intake>();
     _climber = std::make_unique<subsystems::Climber>();
     _turret = std::make_unique<subsystems::Turret>();
-    _vision = std::make_unique<VisionMulti>();
+
+#if BOT_VISION
+    if (frc::RobotBase::IsSimulation()) {
+        _vision = std::make_unique<VisionSim>();
+    } else {
+        _vision = std::make_unique<VisionMulti>();
+    }
+#endif
 
     
     // Configure PathPlanner AutoBuilder for autonomous

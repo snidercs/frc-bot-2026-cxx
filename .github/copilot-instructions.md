@@ -18,6 +18,15 @@ When working on vision or turret aiming systems, refer to `.github/prompts/visio
 - Turret aiming computed from fused robot pose + field geometry (not raw camera angles)
 - Design prioritizes continuous tracking, robustness to dropouts, and deterministic aiming
 
+### Vision Subsystem Pattern
+The vision system uses a `VisionIO` base class as a hardware abstraction layer with two concrete implementations:
+- `VisionMulti` — real hardware (4× PhotonVision cameras via PhotonLib)
+- `VisionSim` — simulation (PhotonVision `VisionSystemSim` / `PhotonCameraSim`)
+
+`Container` selects the right implementation at startup (`IsSimulation()`). `RobotPeriodic` only ever sees `VisionIO*` and calls `getMeasurements()` — no conditional code needed there.
+
+**Extending VisionIO**: All pipeline logic shared between real and sim lives in `VisionIO` (`processResults()`, `computeStdDevs()`, rejection counters, measurement buffer). Subclasses only supply *how to fetch raw results* for each camera, then call `processResults()`. When adding new shared vision behaviour, add it to `VisionIO` rather than duplicating it in both subclasses.
+
 ## Code Style Guidelines
 
 ### Naming Conventions

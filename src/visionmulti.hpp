@@ -15,26 +15,19 @@
     polled every cycle; results that pass gating (latency, ambiguity) are
     returned as individual `VisionMeasurement` entries for the pose estimator
     to fuse via `AddVisionMeasurement()`.
+
+    All measurement processing is handled by `VisionIO::processResults()`.
+    This class only owns the camera/estimator pairs and fetches raw results.
 */
 class VisionMulti : public VisionIO {
 public:
     VisionMulti();
 
-    /** Returns all valid pose measurements from all cameras this cycle.
-     
-        @return Const reference to the internal measurements vector; valid until next call.
-    */
     const std::vector<VisionMeasurement>& getMeasurements() override;
-
     std::string getStatus() override;
     std::string getLastTargets() override;
-    std::string getRejectedCounts() override;
 
 private:
-    static constexpr double kMaxAmbiguity = 0.3;
-    static constexpr units::second_t kMaxLatency = 0.5_s;
-
-    // One camera + estimator pair per physical camera
     struct CameraUnit {
         photon::PhotonCamera camera;
         photon::PhotonPoseEstimator estimator;
@@ -51,21 +44,7 @@ private:
     frc::AprilTagFieldLayout _fieldLayout;
     std::array<std::unique_ptr<CameraUnit>, 4> _cameras;
 
-    // Pre-allocated measurement buffer — cleared and refilled each cycle
-    std::vector<VisionMeasurement> _measurements;
-
-    // Raw camera results cached by getMeasurements() — index matches _cameras.
-    // Other methods (getLastTargets, etc.) must read from here, never call
-    // GetAllUnreadResults() directly. Always call getMeasurements() first.
+    // Raw results cached each cycle so getLastTargets() can read without
+    // re-consuming them. Always call getMeasurements() first.
     std::array<std::vector<photon::PhotonPipelineResult>, 4> _rawResults;
-
-    // Rejection counters (across all cameras)
-    int _rejectedNoTargets  = 0;
-    int _rejectedStale      = 0;
-    int _rejectedAmbiguous  = 0;
-    int _rejectedOutOfBounds = 0;
-    int _acceptedCount      = 0;
-
-    /** Scales pose std devs with distance: closer = more trusted. */
-    wpi::array<double, 3> computeStdDevs(double distanceMeters) const;
 };

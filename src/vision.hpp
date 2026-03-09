@@ -220,7 +220,7 @@ namespace vision {
             frc::Translation3d{13.74_in, 11.5_in, 15_in},
             frc::Rotation3d{0_deg, 0_deg, 0_deg}
         },
-        // Back-Left: rear-left corner, facing straight backward, pitched up 45°
+        // Back-Left: rear-left corner, facing straight backward, pitched up 10°
         frc::Transform3d{
             frc::Translation3d{-13.74_in, 2.24_in, 11.35_in},
             frc::Rotation3d{0_deg, -10_deg, 180_deg}

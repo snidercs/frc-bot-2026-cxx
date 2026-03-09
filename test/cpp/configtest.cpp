@@ -62,7 +62,7 @@ TEST(ConfigTest, GetButtonIndices) {
     EXPECT_EQ(climbButton, 16);
     
     auto lowerButton = config::integer("climber_lower_button_index");
-    EXPECT_EQ(lowerButton, 17);
+    EXPECT_EQ(lowerButton, 1);
     
     auto turretAimButton = config::integer("turret_aim_button_index");
     EXPECT_EQ(turretAimButton, 7);

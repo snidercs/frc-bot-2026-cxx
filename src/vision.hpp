@@ -150,7 +150,7 @@ protected:
             // real ambiguity value.  Reject single-tag solves outright: they can
             // produce a 180° flipped pose that corrupts the odometry estimate.
             double ambiguity = result.GetBestTarget().GetPoseAmbiguity();
-            bool isMultiTag  = (result.GetTargets().size() >= 2);
+            bool isMultiTag  = (result.GetTargets().size() >= kMinTagsForSingleSolve);
             if (!isMultiTag) {
                 // Single-tag fallback: only accept if ambiguity is very low
                 if (ambiguity < 0 || ambiguity > kMaxAmbiguity) {
@@ -223,7 +223,7 @@ namespace vision {
         // Back-Left: rear-left corner, facing straight backward, pitched up 45°
         frc::Transform3d{
             frc::Translation3d{-13.74_in, 2.24_in, 11.35_in},
-            frc::Rotation3d{0_deg, -24_deg, 180_deg}
+            frc::Rotation3d{0_deg, -10_deg, 180_deg}
         }
     };
     
@@ -242,13 +242,6 @@ namespace vision {
         // Load 2026 field layout
         return frc::AprilTagFieldLayout::LoadField(frc::AprilTagField::k2026RebuiltAndyMark);
     }
-    
-    /** Valid goal tag IDs that we're allowed to aim at.
-     
-        TODO: Update based on game rules and alliance strategy.
-        Example: For 2025 Reefscape, blue alliance scoring tags might be {1, 2, 3}
-    */
-    inline const std::vector<int> kGoalTagIds = {1, 2, 3, 4, 5, 6, 7, 8};
 }
 
 /** Fixed field landmark positions for the 2026 game.

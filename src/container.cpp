@@ -22,7 +22,7 @@
 
 using pathplanner::AutoBuilder;
 
-namespace bot {
+namespace indy {
 
 class JoystickContainer : public Container {
 public:
@@ -160,7 +160,7 @@ private:
 Container::Container()
 {
     // Construct drivetrain with 250 Hz odometry update frequency to prevent CAN stale errors
-    _drivetrain = std::make_unique<subsystems::CommandSwerveDrivetrain> (
+    _drivetrain = std::make_unique<indy::CommandSwerveDrivetrain> (
         TunerConstants::DrivetrainConstants,
         250_Hz,
         TunerConstants::FrontLeft,
@@ -168,9 +168,9 @@ Container::Container()
         TunerConstants::BackLeft,
         TunerConstants::BackRight);
 
-    _intake = std::make_unique<subsystems::Intake>();
-    _climber = std::make_unique<subsystems::Climber>();
-    _turret = std::make_unique<subsystems::Turret>();
+    _intake = std::make_unique<indy::Intake>();
+    _climber = std::make_unique<indy::Climber>();
+    _turret = std::make_unique<indy::Turret>();
 
 #if BOT_VISION
     if (frc::RobotBase::IsSimulation()) {

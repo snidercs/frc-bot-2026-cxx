@@ -8,6 +8,8 @@
 
 #include "drivetrain.hpp"
 
+namespace indy {
+
 class Telemetry {
 private:
     units::meters_per_second_t MaxSpeed;
@@ -46,5 +48,7 @@ public:
     Telemetry(units::meters_per_second_t maxSpeed);
 
     /** Accept the swerve drive state and telemeterize it to SmartDashboard and SignalLogger. */
-    void Telemeterize(subsystems::CommandSwerveDrivetrain::SwerveDriveState const &state);
+    void Telemeterize(indy::CommandSwerveDrivetrain::SwerveDriveState const &state);
 };
+
+}

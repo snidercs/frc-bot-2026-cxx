@@ -34,7 +34,7 @@
 
 using frc::DriverStation;
 using frc::SmartDashboard;
-using bot::Container;
+using indy::Container;
 
 namespace detail {
 /** Display engine and bot information banner. */
@@ -109,7 +109,7 @@ void Robot::RobotPeriodic()
 
         // Estimated distance from fused robot pose to the hub
         auto robotPose = _container->drivetrain().GetState().Pose;
-        units::meter_t distanceToHub = robotPose.Translation().Distance(landmarks::hubPosition());
+        units::meter_t distanceToHub = robotPose.Translation().Distance(indy::landmarks::hubPosition());
         tkit::RecordOutput("Robot/DistanceToHub", distanceToHub.value());
     }
 #endif
@@ -185,7 +185,7 @@ void Robot::SimulationPeriodic()
 
 #if BOT_VISION
     // Advance the vision simulation with the current ground-truth drivetrain pose.
-    if (auto* visionSim = dynamic_cast<VisionSim*>(&_container->vision())) {
+    if (auto* visionSim = dynamic_cast<indy::VisionSim*>(&_container->vision())) {
         visionSim->update(_container->drivetrain().GetState().Pose);
     }
 #endif

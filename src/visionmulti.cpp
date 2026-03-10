@@ -1,6 +1,8 @@
 #include "visionmulti.hpp"
 #include <frc/Timer.h>
 
+namespace indy {
+
 VisionMulti::VisionMulti()
     : _fieldLayout(vision::getFieldLayout())
 {
@@ -53,3 +55,4 @@ std::string VisionMulti::getLastTargets() {
     return info.empty() ? "No targets" : info;
 }
 
+}

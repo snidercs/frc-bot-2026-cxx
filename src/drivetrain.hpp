@@ -19,7 +19,7 @@
 
 using namespace ctre::phoenix6;
 
-namespace subsystems {
+namespace indy {
 
 /**
  * \brief Class that extends the Phoenix 6 SwerveDrivetrain class and implements

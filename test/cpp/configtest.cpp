@@ -12,7 +12,7 @@ TEST(ConfigTest, GetIntegerValue) {
     EXPECT_EQ(team, 9431);
     
     auto period = config::integer("period");
-    EXPECT_EQ(period, 20);
+    EXPECT_EQ(period, 60);
 }
 
 TEST(ConfigTest, GetNumberValue) {

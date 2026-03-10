@@ -4,13 +4,13 @@
 #include <frc/geometry/Rotation2d.h>
 
 /** Mock implementation of VisionIO for testing */
-class MockVisionIO : public VisionIO {
+class MockVisionIO : public indy::VisionIO {
 private:
-    std::vector<VisionMeasurement> _measurements;
+    std::vector<indy::VisionMeasurement> _measurements;
     int _callCount = 0;
 
 public:
-    void addMeasurement(const VisionMeasurement& measurement) {
+    void addMeasurement(const indy::VisionMeasurement& measurement) {
         _measurements.push_back(measurement);
     }
 
@@ -18,7 +18,7 @@ public:
         _measurements.clear();
     }
 
-    const std::vector<VisionMeasurement>& getMeasurements() override {
+    const std::vector<indy::VisionMeasurement>& getMeasurements() override {
         _callCount++;
         return _measurements;
     }
@@ -32,7 +32,7 @@ public:
 
 // Test VisionMeasurement struct creation
 TEST(VisionTest, MeasurementCreation) {
-    VisionMeasurement measurement{
+    indy::VisionMeasurement measurement{
         frc::Pose2d{1.0_m, 2.0_m, frc::Rotation2d{45_deg}},
         1.5_s,
         wpi::array<double, 3>{0.1, 0.1, 0.05},
@@ -59,7 +59,7 @@ TEST(VisionTest, MockVisionIO) {
     EXPECT_EQ(mockVision.getCallCount(), 1);
 
     // Add a measurement
-    VisionMeasurement m1{
+    indy::VisionMeasurement m1{
         frc::Pose2d{0.0_m, 0.0_m, frc::Rotation2d{0_deg}},
         1.0_s,
         wpi::array<double, 3>{0.5, 0.5, 0.1},
@@ -73,7 +73,7 @@ TEST(VisionTest, MockVisionIO) {
     EXPECT_EQ(mockVision.getCallCount(), 2);
 
     // Add multiple measurements
-    VisionMeasurement m2{
+    indy::VisionMeasurement m2{
         frc::Pose2d{1.0_m, 1.0_m, frc::Rotation2d{90_deg}},
         2.0_s,
         wpi::array<double, 3>{0.3, 0.3, 0.08},
@@ -93,22 +93,22 @@ TEST(VisionTest, MockVisionIO) {
 
 // Test vision constants
 TEST(VisionTest, CameraNames) {
-    EXPECT_EQ(vision::kCameraNames.size(), 2);
-    EXPECT_STREQ(vision::kCameraNames[0], "FL");
-    EXPECT_STREQ(vision::kCameraNames[1], "BL");
+    EXPECT_EQ(indy::vision::kCameraNames.size(), 2);
+    EXPECT_STREQ(indy::vision::kCameraNames[0], "FL");
+    EXPECT_STREQ(indy::vision::kCameraNames[1], "BL");
 }
 
 TEST(VisionTest, CameraTransforms) {
-    EXPECT_EQ(vision::kRobotToCamera.size(), 2);
+    EXPECT_EQ(indy::vision::kRobotToCamera.size(), 2);
 
     // FL camera: forward, left, up
-    const auto& flTransform = vision::kRobotToCamera[0];
+    const auto& flTransform = indy::vision::kRobotToCamera[0];
     EXPECT_GT(flTransform.X().value(), 0.0);  // Forward
     EXPECT_GT(flTransform.Y().value(), 0.0);  // Left
     EXPECT_GT(flTransform.Z().value(), 0.0);  // Up
 
     // BL camera: backward, left, up
-    const auto& blTransform = vision::kRobotToCamera[1];
+    const auto& blTransform = indy::vision::kRobotToCamera[1];
     EXPECT_LT(blTransform.X().value(), 0.0);  // Backward
     EXPECT_GT(blTransform.Y().value(), 0.0);  // Left
     EXPECT_GT(blTransform.Z().value(), 0.0);  // Up
@@ -116,12 +116,12 @@ TEST(VisionTest, CameraTransforms) {
 
 TEST(VisionTest, TurretPivot) {
     // Currently at origin (placeholder)
-    EXPECT_DOUBLE_EQ(vision::kTurretPivotInRobot.X().value(), 0.0);
-    EXPECT_DOUBLE_EQ(vision::kTurretPivotInRobot.Y().value(), 0.0);
+    EXPECT_DOUBLE_EQ(indy::vision::kTurretPivotInRobot.X().value(), 0.0);
+    EXPECT_DOUBLE_EQ(indy::vision::kTurretPivotInRobot.Y().value(), 0.0);
 }
 
 TEST(VisionTest, FieldLayout) {
-    auto layout = vision::getFieldLayout();
+    auto layout = indy::vision::getFieldLayout();
     // Field layout should have tags
     auto tags = layout.GetTags();
     EXPECT_GT(tags.size(), 0);

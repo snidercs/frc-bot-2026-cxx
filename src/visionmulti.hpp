@@ -8,6 +8,8 @@
 #include <memory>
 #include <vector>
 
+namespace indy {
+
 /** Multi-camera vision implementation using all four chassis-mounted cameras.
  
     Each camera has its own `PhotonPoseEstimator` seeded with the camera's
@@ -49,3 +51,5 @@ private:
 
     std::array<std::vector<photon::PhotonPipelineResult>, 2> _rawResults;
 };
+
+}

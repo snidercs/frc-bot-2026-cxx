@@ -6,7 +6,7 @@
 
 using namespace ctre::phoenix6;
 
-Telemetry::Telemetry(units::meters_per_second_t maxSpeed) : MaxSpeed{maxSpeed}
+indy::Telemetry::Telemetry(units::meters_per_second_t maxSpeed) : MaxSpeed{maxSpeed}
 {
 #if BOT_SIGNAL_LOGGER
     SignalLogger::Start();
@@ -26,7 +26,7 @@ Telemetry::Telemetry(units::meters_per_second_t maxSpeed) : MaxSpeed{maxSpeed}
     }
 }
 
-void Telemetry::Telemeterize(subsystems::CommandSwerveDrivetrain::SwerveDriveState const &state)
+void indy::Telemetry::Telemeterize(indy::CommandSwerveDrivetrain::SwerveDriveState const &state)
 {
     /* Telemeterize the swerve drive state — decompose structs into primitives */
     tkit::RecordOutput("DriveState/Pose/x",       state.Pose.X().value());

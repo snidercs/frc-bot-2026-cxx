@@ -1,6 +1,6 @@
 #include "vision.hpp"
 
-std::string VisionIO::getRejectedCounts() {
+std::string indy::VisionIO::getRejectedCounts() {
     return "Accepted: " + std::to_string(_acceptedCount)
          + " | Rejected: NoTargets=" + std::to_string(_rejectedNoTargets)
          + " Stale=" + std::to_string(_rejectedStale)

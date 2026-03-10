@@ -12,6 +12,8 @@
 #include <memory>
 #include <vector>
 
+namespace indy {
+
 /** Simulation-only vision implementation using PhotonVision's VisionSystemSim.
  
     Mirrors the four chassis-mounted cameras from `VisionMulti`, but drives them
@@ -54,3 +56,5 @@ private:
     photon::VisionSystemSim _visionSim;
     std::array<std::unique_ptr<CameraUnit>, 2> _cameras;
 };
+
+}

@@ -15,7 +15,7 @@
 #include "vision.hpp"
 #include "telemetry.hpp"
 
-namespace bot {
+namespace indy {
 
 class Container {
 public:
@@ -58,10 +58,10 @@ protected:
 
 private:
     void configureBindingsInternal();
-    std::unique_ptr<subsystems::CommandSwerveDrivetrain> _drivetrain;
-    std::unique_ptr<subsystems::Intake> _intake;
-    std::unique_ptr<subsystems::Climber> _climber;
-    std::unique_ptr<subsystems::Turret> _turret;
+    std::unique_ptr<indy::CommandSwerveDrivetrain> _drivetrain;
+    std::unique_ptr<indy::Intake> _intake;
+    std::unique_ptr<indy::Climber> _climber;
+    std::unique_ptr<indy::Turret> _turret;
     std::unique_ptr<VisionIO> _vision;
     std::optional<frc::SendableChooser<frc2::Command *>> _autoBuilder;
 };

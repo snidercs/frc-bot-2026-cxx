@@ -6,7 +6,7 @@
 
 using namespace ctre::phoenix6;
 
-namespace subsystems {
+namespace indy {
     /* Forward declaration */
     class CommandSwerveDrivetrain;
 }
@@ -189,7 +189,7 @@ public:
      * Creates a CommandSwerveDrivetrain instance.
      * This should only be called once in your robot program.
      */
-    static subsystems::CommandSwerveDrivetrain CreateDrivetrain();
+    static indy::CommandSwerveDrivetrain CreateDrivetrain();
 };
 
 

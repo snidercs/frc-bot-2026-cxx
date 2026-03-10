@@ -33,7 +33,7 @@ public:
 
 private:
     std::optional<frc2::CommandPtr> _autoCommand;
-    std::unique_ptr<bot::Container> _container;
+    std::unique_ptr<indy::Container> _container;
 
     static void cameraThread();
 };

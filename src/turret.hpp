@@ -19,7 +19,7 @@
 // 50 tps works at 6 ft 10 inches too.
 // 52 tps at 8ft dead on.
 
-namespace subsystems {
+namespace indy {
 
 /** Turret shooter subsystem with auto-aim capability.
  

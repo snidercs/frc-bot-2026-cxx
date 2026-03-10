@@ -98,7 +98,13 @@ void Robot::RobotInit()
 void Robot::RobotPeriodic()
 {
 #if BOT_VISION
-    if (frc::RobotBase::IsReal()) {
+    if (frc::RobotBase::IsReal() && (IsTeleop() || IsTest())) {
+        // Snap the drivetrain pose to the first valid vision measurement seen
+        // in teleop, then hand off to normal fused odometry.
+        if (!_poseReset.isDone() && frc::DriverStation::IsTeleop()) {
+            _poseReset.tryReset(_container->vision(), _container->drivetrain());
+        }
+
         // Poll all cameras and fuse measurements into the drivetrain pose estimator
         for (const auto& measurement : _container->vision().getMeasurements()) {
             _container->drivetrain().AddVisionMeasurement(
@@ -147,7 +153,13 @@ void Robot::AutonomousExit()
 void Robot::TeleopInit()
 {
     DriverStation::SilenceJoystickConnectionWarning (false);
-    
+
+    // Re-arm the vision pose reset so the first valid tag seen in teleop
+    // will snap the robot pose before normal odometry takes over.
+#if BOT_VISION
+    _poseReset.reset();
+#endif
+
     // This makes sure that the autonomous stops running when
     // teleop starts running.
     if (_autoCommand) {

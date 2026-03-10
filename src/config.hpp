@@ -12,7 +12,7 @@
 // Enable to put debug data in network tables for subsystems
 #define BOT_TRACE_SUBSYSTEMS 0
 // Enable to use vision features
-#define BOT_VISION 1
+#define BOT_VISION 0
 
 namespace config {
 

@@ -271,7 +271,9 @@ void Container::configureBindingsInternal()
                     })
             .IgnoringDisable (true));
 
-    drivetrain().RegisterTelemetry ([this] (auto const& state) { logger.Telemeterize (state); });
+    drivetrain().RegisterTelemetry ([this] (auto const& state) { 
+        logger.Telemeterize (state);
+    });
 }
 
 frc2::CommandPtr Container::GetAutonomousCommand()

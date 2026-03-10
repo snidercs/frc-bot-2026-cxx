@@ -1,4 +1,5 @@
 #include "visionmulti.hpp"
+#include "photon/PhotonPoseEstimator.h"
 #include <frc/Timer.h>
 
 namespace indy {
@@ -23,7 +24,6 @@ const std::vector<VisionMeasurement>& VisionMulti::getMeasurements() {
     // the blue-origin frame regardless of alliance. Setting the origin to red would cause
     // PhotonPoseEstimator to output red-relative poses (~0–2 m) that the drivetrain
     // would interpret as being near the blue wall (~16 m), corrupting the pose estimate.
-
     for (std::size_t i = 0; i < _cameras.size(); ++i) {
         _rawResults[i] = _cameras[i]->camera.GetAllUnreadResults();
         processResults(std::string(_cameras[i]->camera.GetCameraName()),

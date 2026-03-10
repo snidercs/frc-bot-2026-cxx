@@ -27,6 +27,10 @@ The vision system uses a `VisionIO` base class as a hardware abstraction layer w
 
 **Extending VisionIO**: All pipeline logic shared between real and sim lives in `VisionIO` (`processResults()`, `computeStdDevs()`, rejection counters, measurement buffer). Subclasses only supply *how to fetch raw results* for each camera, then call `processResults()`. When adding new shared vision behaviour, add it to `VisionIO` rather than duplicating it in both subclasses.
 
+**`getMeasurements()` is NOT a cached read.** Every call clears `_measurements`, calls `GetAllUnreadResults()` (which dequeues and consumes frames from the PhotonVision NT ringbuffer), and refills the buffer. **Call it exactly once per periodic cycle.** Calling it a second time in the same cycle will clear the buffer and return empty — any work done with the first call's results is the only opportunity to act on those frames.
+
+**`PoseResetOnce::tryReset()` calls `getMeasurements()` internally.** If `tryReset()` and the vision fuse loop both run in the same `RobotPeriodic`, that is two calls to `getMeasurements()` in one cycle. The fuse loop call will get an empty buffer. Structure the periodic code so `getMeasurements()` is called once, its results are stored in a local, and both `tryReset` and the fuse loop operate on that same local.
+
 ## Code Style Guidelines
 
 ### Naming Conventions

@@ -2,8 +2,9 @@
 #include <frc/RobotController.h>
 #include <frc/DriverStation.h>
 
-using namespace subsystems;
 using namespace pathplanner;
+
+namespace indy {
 
 void CommandSwerveDrivetrain::Periodic()
 {
@@ -73,4 +74,6 @@ void CommandSwerveDrivetrain::ConfigurePathPlanner()
         },
         this // drivetrain subsystem requirements
     );
+}
+
 }

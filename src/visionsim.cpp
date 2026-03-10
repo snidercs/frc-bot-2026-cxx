@@ -1,5 +1,7 @@
 #include "visionsim.hpp"
 
+namespace indy {
+
 // ─── CameraUnit ─────────────────────────────────────────────────────────────
 
 VisionSim::CameraUnit::CameraUnit(std::string_view name,
@@ -71,3 +73,5 @@ std::string VisionSim::getStatus() {
 std::string VisionSim::getLastTargets() {
     return "See SmartDashboard Vision/* entries";
 }
+
+} // namespace indy

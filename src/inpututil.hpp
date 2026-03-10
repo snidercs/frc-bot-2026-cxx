@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-namespace bot {
+namespace indy {
 
 /** Applies a normalized exponential curve to a raw joystick axis value.
  

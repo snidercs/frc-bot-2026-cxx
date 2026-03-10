@@ -5,7 +5,7 @@
 #include "ctre/phoenix6/TalonFX.hpp"
 #include "config.hpp"
 
-namespace subsystems {
+namespace indy {
 
 class Intake : public frc2::SubsystemBase {
 public:

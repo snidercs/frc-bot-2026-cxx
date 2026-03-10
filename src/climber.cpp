@@ -2,8 +2,9 @@
 #include <frc2/command/Commands.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 
-using namespace subsystems;
 using namespace ctre::phoenix6;
+
+namespace indy {
 
 Climber::Climber() {
     SetName("Climber");
@@ -111,4 +112,6 @@ frc2::CommandPtr Climber::enableSoftLimitsAndResetCommand() {
                 .WithReverseSoftLimitThreshold(kReverseSoftLimit)
         );
     }).WithName("EnableSoftLimitsAndReset");
+}
+
 }

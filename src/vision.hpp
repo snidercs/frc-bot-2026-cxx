@@ -19,6 +19,8 @@
 #include <wpi/array.h>
 #include <frc/DriverStation.h>
 
+namespace indy {
+
 /** A single vision pose measurement from a camera.
  
     Contains the estimated robot pose, timestamp, standard deviations for
@@ -271,3 +273,4 @@ namespace landmarks {
     }
 
 } // namespace landmarks
+}

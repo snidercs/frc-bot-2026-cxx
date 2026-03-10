@@ -4,8 +4,9 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <numbers>
 
-using namespace subsystems;
 using namespace ctre::phoenix6;
+
+namespace indy {
 
 Turret::Turret() {
     SetName("Turret");
@@ -410,4 +411,6 @@ frc2::CommandPtr Turret::calibrateRotationZero() {
         _rotationMotor.SetPosition(_holdPosition);
         _isHoldingPosition = true;
     }).WithName("ZeroRotation");
+}
+
 }

@@ -4,8 +4,9 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/Timer.h>
 
-using namespace subsystems;
 using namespace ctre::phoenix6;
+
+namespace indy {
 
 Intake::Intake()
     : kIntakeVoltage {config::number("intake_voltage") * 1.0_V}
@@ -162,4 +163,6 @@ frc2::CommandPtr Intake::stutterCommand (units::time::second_t duration) {
     }))
     .FinallyDo([this] { stop(); })
     .WithName("IntakeStutter");
+}
+
 }

@@ -1,7 +1,5 @@
 #include "visionmulti.hpp"
 #include <frc/Timer.h>
-#include <frc/smartdashboard/SmartDashboard.h>
-#include <units/math.h>
 
 VisionMulti::VisionMulti()
     : _fieldLayout(vision::getFieldLayout())
@@ -12,7 +10,6 @@ VisionMulti::VisionMulti()
             vision::kRobotToCamera[i],
             _fieldLayout);
     }
-    // Reserve space for worst-case: 16 measurement per camera per cycle
     _measurements.reserve(vision::kCameraNames.size() * 16);
 }
 
@@ -26,96 +23,28 @@ const std::vector<VisionMeasurement>& VisionMulti::getMeasurements() {
     // would interpret as being near the blue wall (~16 m), corrupting the pose estimate.
 
     for (std::size_t i = 0; i < _cameras.size(); ++i) {
-        auto& unit = _cameras[i];
-        _rawResults[i] = unit->camera.GetAllUnreadResults();
-
-        for (auto& result : _rawResults[i]) {
-            if (!result.HasTargets()) {
-                _rejectedNoTargets++;
-                continue;
-            }
-
-            // Gate on latency
-            if (result.GetLatency() > kMaxLatency) {
-                _rejectedStale++;
-                continue;
-            }
-
-            // Gate on best-target ambiguity
-            if (result.GetBestTarget().GetPoseAmbiguity() > kMaxAmbiguity) {
-                _rejectedAmbiguous++;
-                continue;
-            }
-
-            // Let PhotonPoseEstimator do the heavy lifting
-            auto estimatedPose = unit->estimator.Update(result);
-            if (!estimatedPose.has_value()) {
-                _rejectedNoTargets++;
-                continue;
-            }
-
-            // Compute rough distance to best tag for std dev scaling
-            auto bestTransform = result.GetBestTarget().GetBestCameraToTarget();
-            double distance = units::math::sqrt(
-                units::math::pow<2>(bestTransform.X()) +
-                units::math::pow<2>(bestTransform.Y()) +
-                units::math::pow<2>(bestTransform.Z())
-            ).value();
-
-            // Sanity gate: reject poses outside field boundaries (16.46m x 8.21m)
-            auto pose2d = estimatedPose->estimatedPose.ToPose2d();
-            if (pose2d.X() < 0_m || pose2d.X() > 16.46_m ||
-                pose2d.Y() < 0_m || pose2d.Y() > 8.21_m) {
-                _rejectedOutOfBounds++;
-                continue;
-            }
-
-            _measurements.push_back(VisionMeasurement{
-                pose2d,
-                estimatedPose->timestamp,
-                computeStdDevs(distance),
-                std::string(unit->camera.GetCameraName())
-            });
-
-            // Telemetry: log each accepted pose so we can spot wrong-alliance measurements
-            auto camName = std::string(unit->camera.GetCameraName());
-            frc::SmartDashboard::PutNumber("Vision/" + camName + "/X (m)",  pose2d.X().value());
-            frc::SmartDashboard::PutNumber("Vision/" + camName + "/Y (m)",  pose2d.Y().value());
-            frc::SmartDashboard::PutNumber("Vision/" + camName + "/Rot (deg)", pose2d.Rotation().Degrees().value());
-
-            _acceptedCount++;
-        }
+        _rawResults[i] = _cameras[i]->camera.GetAllUnreadResults();
+        processResults(std::string(_cameras[i]->camera.GetCameraName()),
+                       _cameras[i]->estimator,
+                       _rawResults[i]);
     }
-
-    frc::SmartDashboard::PutNumber("Vision/Accepted", _acceptedCount);
-    frc::SmartDashboard::PutNumber("Vision/Rejected OutOfBounds", _rejectedOutOfBounds);
 
     return _measurements;
 }
 
-wpi::array<double, 3> VisionMulti::computeStdDevs(double distanceMeters) const {
-    double xy    = 0.01 + (distanceMeters * 0.05);   // 1 cm base + 5 cm/m
-    double theta = 0.01 + (distanceMeters * 0.02);   // 0.01 rad base + 0.02/m
-    return {xy, xy, theta};
-}
-
 std::string VisionMulti::getStatus() {
-    int activeCameras = 0;
+    int active = 0;
     for (auto& unit : _cameras) {
-        if (unit->camera.IsConnected()) {
-            activeCameras++;
-        }
+        if (unit->camera.IsConnected()) active++;
     }
-    return "VisionMulti - " + std::to_string(activeCameras) + "/4 cameras connected";
+    return "VisionMulti - " + std::to_string(active) + "/4 cameras connected";
 }
 
 std::string VisionMulti::getLastTargets() {
     std::string info;
     for (std::size_t i = 0; i < _cameras.size(); ++i) {
         const auto& results = _rawResults[i];
-        if (results.empty() || !results.back().HasTargets()) {
-            continue;
-        }
+        if (results.empty() || !results.back().HasTargets()) continue;
         info += "[" + std::string(_cameras[i]->camera.GetCameraName()) + "] ";
         for (const auto& target : results.back().GetTargets()) {
             info += "ID=" + std::to_string(target.GetFiducialId()) + " ";
@@ -124,10 +53,3 @@ std::string VisionMulti::getLastTargets() {
     return info.empty() ? "No targets" : info;
 }
 
-std::string VisionMulti::getRejectedCounts() {
-    return "Accepted: " + std::to_string(_acceptedCount)
-         + " | Rejected: NoTargets=" + std::to_string(_rejectedNoTargets)
-         + " Stale=" + std::to_string(_rejectedStale)
-         + " Ambiguous=" + std::to_string(_rejectedAmbiguous)
-         + " OutOfBounds=" + std::to_string(_rejectedOutOfBounds);
-}

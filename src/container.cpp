@@ -5,15 +5,20 @@
 #include <iostream>
 
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/RobotBase.h>
 #include <frc2/command/Commands.h>
 #include <frc2/command/button/RobotModeTriggers.h>
 #include <frc2/command/button/CommandJoystick.h>
+
 #include <pathplanner/lib/commands/PathPlannerAuto.h>
 #include <pathplanner/lib/auto/NamedCommands.h>
 
 #include "config.hpp"
 #include "container.hpp"
 #include "inpututil.hpp"
+#include "vision.hpp"
+#include "visionmulti.hpp"
+#include "visionsim.hpp"
 
 using pathplanner::AutoBuilder;
 
@@ -57,7 +62,10 @@ protected:
         
         // Shooter Control
         _sticks[1].Button(config::integer("turret_shoot_button_index")).WhileTrue (
-            turret().shootCommand());
+            turret().shootAtDistanceCommand([this] {
+                return drivetrain().GetState().Pose.Translation()
+                           .Distance(landmarks::hubPosition());
+            }));
 
         // Climber control
         _sticks[0].Button(config::integer("climber_climb_button_index")).WhileTrue (
@@ -163,7 +171,14 @@ Container::Container()
     _intake = std::make_unique<subsystems::Intake>();
     _climber = std::make_unique<subsystems::Climber>();
     _turret = std::make_unique<subsystems::Turret>();
-    _vision = std::make_unique<VisionMulti>();
+
+#if BOT_VISION
+    if (frc::RobotBase::IsSimulation()) {
+        _vision = std::make_unique<VisionSim>();
+    } else {
+        _vision = std::make_unique<VisionMulti>();
+    }
+#endif
 
     
     // Configure PathPlanner AutoBuilder for autonomous
@@ -179,7 +194,10 @@ Container::Container()
     if (pathPlannerConfigured) {
         try {
             using nc = pathplanner::NamedCommands;
-            nc::registerCommand("shooterOn",   turret().shooterOnCommand());
+            nc::registerCommand("shooterOn", turret().shooterOnCommand([this] {
+                return drivetrain().GetState().Pose.Translation()
+                           .Distance(landmarks::hubPosition());
+            }));
             nc::registerCommand("shooterOff",  turret().shooterOffCommand());
             nc::registerCommand("turretStop",  turret().stopCommand());
             nc::registerCommand("intakeStart", intake().startCommand());

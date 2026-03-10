@@ -3,6 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 
 #include "container.hpp"
+#include "frc/RobotBase.h"
 #include <filesystem>
 #include <iostream>
 
@@ -23,7 +24,9 @@
 #include "config.hpp"
 #include "robot.hpp"
 #include "scripting.hpp"
+#include "turret.hpp"
 #include "vision.hpp"
+#include "visionsim.hpp"
 
 #include "luabot/luabot2.hpp"
 
@@ -89,22 +92,24 @@ void Robot::RobotInit()
 
 void Robot::RobotPeriodic()
 {
+#if BOT_VISION
+    if (frc::RobotBase::IsReal()) {
+        // Poll all cameras and fuse measurements into the drivetrain pose estimator
+        for (const auto& measurement : _container->vision().getMeasurements()) {
+            _container->drivetrain().AddVisionMeasurement(
+                measurement.pose,
+                measurement.timestamp,
+                measurement.stdDevs);
+        }
+
+        // Estimated distance from fused robot pose to the hub
+        auto robotPose = _container->drivetrain().GetState().Pose;
+        units::meter_t distanceToHub = robotPose.Translation().Distance(landmarks::hubPosition());
+        tkit::RecordOutput("Robot/DistanceToHub", distanceToHub.value());
+    }
+#endif
     tkit::Logger::GetInstance().Periodic();
     frc2::CommandScheduler::GetInstance().Run();
-#if BOT_VISION
-    // Poll all cameras and fuse measurements into the drivetrain pose estimator
-    for (const auto& measurement : _container->vision().getMeasurements()) {
-        _container->drivetrain().AddVisionMeasurement(
-            measurement.pose,
-            measurement.timestamp,
-            measurement.stdDevs);
-    }
-
-    // Estimated distance from fused robot pose to the hub
-    auto robotPose = _container->drivetrain().GetState().Pose;
-    units::meter_t distanceToHub = robotPose.Translation().Distance(landmarks::hubPosition());
-    tkit::RecordOutput("Robot/DistanceToHub", distanceToHub.value());
-#endif
 }
 
 void Robot::DisabledInit() {}
@@ -163,7 +168,23 @@ void Robot::TestPeriodic() {}
 void Robot::TestExit() {}
 
 void Robot::SimulationInit() {}
-void Robot::SimulationPeriodic() {}
+
+void Robot::SimulationPeriodic()
+{
+    // Drive the shooter flywheel sim state so velocity tracks the setpoint.
+    // Without this, GetVelocity() always returns 0 in sim and isShooterReady()
+    // never becomes true, leaving shootAtDistanceCommand stuck in WaitUntil.
+    auto& shooterSim = _container->turret().shooterMotor().GetSimState();
+    shooterSim.SetSupplyVoltage(frc::RobotController::GetBatteryVoltage());
+    shooterSim.SetRotorVelocity(_container->turret().cachedShooterTarget());
+
+#if BOT_VISION
+    // Advance the vision simulation with the current ground-truth drivetrain pose.
+    if (auto* visionSim = dynamic_cast<VisionSim*>(&_container->vision())) {
+        visionSim->update(_container->drivetrain().GetState().Pose);
+    }
+#endif
+}
 
 void Robot::cameraThread()
 {

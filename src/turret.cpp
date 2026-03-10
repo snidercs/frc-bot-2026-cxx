@@ -141,18 +141,19 @@ void Turret::Periodic() {
     _cachedRotationVelocity = _rotationMotor.GetVelocity().GetValue();
     _cachedMotorVoltage = _rotationMotor.GetMotorVoltage().GetValue();
     _cachedMotorCurrent = _rotationMotor.GetSupplyCurrent().GetValue();
-    
+
+    // Always-on: key shooter values for tuning
+    frc::SmartDashboard::PutNumber("Turret/Shooter Velocity (tps)", _cachedShooterVelocity.value());
+    frc::SmartDashboard::PutBoolean("Turret/Shooter Ready", isShooterReady());
+    frc::SmartDashboard::PutNumber("Turret/Shooter Target (tps)", _cachedShooterTarget.value());
+
 #if BOT_TRACE_SUBSYSTEMS
-    // Telemetry (all values from cache — no additional CAN reads)
+    // Verbose telemetry (all values from cache — no additional CAN reads)
     frc::SmartDashboard::PutBoolean("Turret/Auto Aim Enabled", _autoAimEnabled);
     frc::SmartDashboard::PutNumber("Turret/Current Angle (deg)", _cachedAngle.value());
     frc::SmartDashboard::PutNumber("Turret/Target Angle (deg)", _targetAngle.value());
     frc::SmartDashboard::PutNumber("Turret/Rotation Velocity (rps)", _cachedRotationVelocity.value());
-    frc::SmartDashboard::PutNumber("Turret/Shooter Velocity (rps)", _cachedShooterVelocity.value());
     frc::SmartDashboard::PutBoolean("Turret/At Target", isAtTarget());
-    frc::SmartDashboard::PutBoolean("Turret/Shooter Ready", isShooterReady());
-    
-    // Debug: Motor status
     frc::SmartDashboard::PutNumber("Turret/Motor Voltage", _cachedMotorVoltage.value());
     frc::SmartDashboard::PutNumber("Turret/Motor Current", _cachedMotorCurrent.value());
     frc::SmartDashboard::PutNumber("Turret/Motor Position", _rotationMotor.GetPosition().GetValue().value());
@@ -209,6 +210,7 @@ void Turret::updateRotationControl(double operatorCommand) {
 }
 
 void Turret::setShooterVelocity(units::turns_per_second_t velocity) {
+    _cachedShooterTarget = velocity;
     _shooterMotor.SetControl(_shooterVelocityRequest.WithVelocity(velocity));
 }
 
@@ -260,7 +262,7 @@ bool Turret::isAtTarget() const {
 }
 
 bool Turret::isShooterReady() const {
-    auto velocityError = units::math::abs(getShooterVelocity() - kShooterVelocity);
+    auto velocityError = units::math::abs(getShooterVelocity() - _cachedShooterTarget);
     return velocityError < kShooterTolerance;
 }
 
@@ -318,18 +320,38 @@ frc2::CommandPtr Turret::stopCommand() {
         .WithName("StopTurret");
 }
 
-frc2::CommandPtr Turret::shooterOnCommand() {
-    // Warm: already at speed, go straight to uptake
-    // Cold: spin up first, wait until ready, then uptake
+units::turns_per_second_t Turret::velocityFromDistance(units::meter_t distance) const {
+    // Two measured calibration points (from comments at top of file):
+    //   2.08 m (6 ft 10 in) → 50 tps
+    //   2.74 m (9 ft)       → 55 tps
+    constexpr units::meter_t kNearDist  = 2.08_m;
+    constexpr units::meter_t kFarDist   = 2.74_m;
+    constexpr double         kNearSpeed = 50.0;
+    constexpr double         kFarSpeed  = 65.0;
+
+    double t = (distance - kNearDist) / (kFarDist - kNearDist);
+    t = std::clamp(t, 0.0, 1.0);
+    return units::turns_per_second_t{kNearSpeed + t * (kFarSpeed - kNearSpeed)};
+}
+
+frc2::CommandPtr Turret::shooterOnCommand(std::function<units::meter_t()> distanceFn) {
+    // Resolve velocity: use distance supplier when available, else fixed constant.
+    auto targetVelocity = [this, distanceFn]() -> units::turns_per_second_t {
+        return distanceFn ? velocityFromDistance(distanceFn()) : kShooterVelocity;
+    };
+
+    // Warm path: already at speed → start uptake immediately.
+    // Cold path: spin up, wait until ready, then start uptake.
+    // Either way, the flywheel keeps tracking distance while the command runs.
     auto warm = frc2::cmd::Sequence(
-        RunOnce([this] { setShooterVelocity(kShooterVelocity); }),
+        RunOnce([this, targetVelocity] { setShooterVelocity(targetVelocity()); }),
         RunOnce([this] {
             _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
         })
     );
 
     auto cold = frc2::cmd::Sequence(
-        RunOnce([this] { setShooterVelocity(kShooterVelocity); }),
+        RunOnce([this, targetVelocity] { setShooterVelocity(targetVelocity()); }),
         frc2::cmd::WaitUntil([this] { return isShooterReady(); }),
         RunOnce([this] {
             _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
@@ -341,6 +363,24 @@ frc2::CommandPtr Turret::shooterOnCommand() {
         std::move(cold),
         [this] { return isShooterReady(); }
     ).WithName("ShooterOn");
+}
+
+frc2::CommandPtr Turret::shootAtDistanceCommand(std::function<units::meter_t()> distanceFn) {
+    return frc2::cmd::Sequence(
+        // Spin up with initial distance-based speed, wait until ready
+        RunOnce([this, distanceFn] { setShooterVelocity(velocityFromDistance(distanceFn())); }),
+        frc2::cmd::WaitUntil([this] { return isShooterReady(); }),
+        // Once ready: continuously track distance and run uptake
+        Run([this, distanceFn] {
+            setShooterVelocity(velocityFromDistance(distanceFn()));
+            _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
+        })
+    )
+    .FinallyDo([this] {
+        stopUptake();
+        stopShooter();
+    })
+    .WithName("ShootAtDistance");
 }
 
 frc2::CommandPtr Turret::shooterOffCommand() {

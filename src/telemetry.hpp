@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ctre/phoenix6/SignalLogger.hpp"
+#include <frc/smartdashboard/Field2d.h>
 #include <frc/smartdashboard/Mechanism2d.h>
 #include <frc/smartdashboard/MechanismLigament2d.h>
 #include <telemetrykit/TelemetryKit.h>
@@ -10,6 +11,7 @@
 class Telemetry {
 private:
     units::meters_per_second_t MaxSpeed;
+    frc::Field2d m_field{};
     std::array<frc::Mechanism2d, 4> m_moduleMechanisms{
         frc::Mechanism2d{1, 1},
         frc::Mechanism2d{1, 1},

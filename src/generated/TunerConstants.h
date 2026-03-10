@@ -81,7 +81,26 @@ private:
 
     static constexpr units::scalar_t kDriveGearRatio = 7.03125;
     static constexpr units::scalar_t kSteerGearRatio = 26.09090909090909;
-    static constexpr units::inch_t kWheelRadius = 2_in;
+
+    // Wheel radius calibration from straight-line odometry test:
+    // Configured wheel radius: 2.00 in
+    // Reported pose X: 1.00395 m
+    // Measured real travel: 0.95 m (robot stopped about 5 cm short of 1 meter)
+    //
+    // Odometry scale factor:
+    //   1.00395 / 0.95 = 1.05679
+    //
+    // Since odometry reported more distance than the robot actually traveled,
+    // the configured wheel radius is too large and should be reduced
+    // proportionally:
+    //
+    //   newWheelRadius = oldWheelRadius / scaleFactor
+    //                  = 2.00 in / 1.05679
+    //                  ≈ 1.893 in
+    //
+    // Suggested next trial value:
+    //   static constexpr units::inch_t kWheelRadius = 1.893_in;
+    static constexpr units::inch_t kWheelRadius = 1.893_in;
 
     static constexpr bool kInvertLeftSide = true;
     static constexpr bool kInvertRightSide = false;

@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include <frc/DriverStation.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/RobotBase.h>
 #include <frc2/command/Commands.h>
@@ -83,7 +84,7 @@ protected:
 
         // Zero turret rotation position
         _sticks[1].Button(3).OnTrue(turret().calibrateRotationZero());
-        
+            
         // Manual turret rotation
         const auto rotStick = config::integer("turret_rotation_axis_stick");
         const auto rotIdx = config::integer("turret_rotation_axis_index");
@@ -92,6 +93,22 @@ protected:
             turret().manualRotateCommand([this, rotStick, rotIdx, rotGain] { 
                 return rotGain * _sticks[rotStick].GetHID().GetRawAxis(rotIdx); // Right stick X
             }));
+        
+        _sticks[0].Button(4).OnTrue(
+            drivetrain().RunOnce([this] {
+                static constexpr units::meter_t kCornerOffset = 0.44_m;
+                static constexpr units::meter_t kFieldHeight = 8.069_m;
+                static constexpr units::meter_t kFieldLength = 16.535_m; // 2026 Rebuilt field
+
+                auto alliance = frc::DriverStation::GetAlliance();
+                if (alliance && alliance.value() == frc::DriverStation::Alliance::kRed) {
+                    drivetrain().ResetPose(
+                        frc::Pose2d{kFieldLength - kCornerOffset, kCornerOffset, 180_deg});
+                } else {
+                    drivetrain().ResetPose(
+                        frc::Pose2d{kCornerOffset, kCornerOffset, 0_deg});
+                }
+        }));
 
         // clang-format on
     }

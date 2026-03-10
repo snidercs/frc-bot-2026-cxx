@@ -111,14 +111,15 @@ void Robot::RobotPeriodic()
                 measurement.pose,
                 measurement.timestamp,
                 measurement.stdDevs);
-        }
-
-        // Estimated distance from fused robot pose to the hub
-        auto robotPose = _container->drivetrain().GetState().Pose;
-        units::meter_t distanceToHub = robotPose.Translation().Distance(indy::landmarks::hubPosition());
-        tkit::RecordOutput("Robot/DistanceToHub", distanceToHub.value());
+        }    
     }
 #endif
+
+    // Estimated distance from fused robot pose to the hub
+    auto robotPose = _container->drivetrain().GetState().Pose;
+    units::meter_t distanceToHub = robotPose.Translation().Distance(indy::landmarks::hubPosition());
+    tkit::RecordOutput("Robot/DistanceToHub", distanceToHub.value());
+
     tkit::Logger::GetInstance().Periodic();
     frc2::CommandScheduler::GetInstance().Run();
 }

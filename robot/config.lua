@@ -1,7 +1,14 @@
 local config = {
     robot_name  = "Indy",       -- Robot name
     team        = 9431,         -- FRC team number
-    period      = 20,           -- in milliseconds
+    period      = 60.0,         -- in FPS, frames per second
+                                -- 120fps =  8.333 ms
+                                -- 60fps  = 16.667 ms
+                                -- 50fps  = 20.000 ms
+                                -- 48fps  = 20.833 ms
+                                -- 30fps  = 33.334 ms
+                                -- 25fps  = 40.000 ms
+                                -- 24fps  = 41.667 ms
 
     gamepad     = false,        -- Control robot with gamepad
     

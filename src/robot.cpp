@@ -4,7 +4,9 @@
 
 #include "container.hpp"
 #include "frc/RobotBase.h"
+#include "frc/TimedRobot.h"
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
 
 #include <frc/DriverStation.h>
@@ -39,9 +41,6 @@ namespace detail {
 static void displayBanner()
 {
     lua::printVersion();
-    std::cout << "Engine running at "
-              << config::num<int> ("period")
-              << " ms" << std::endl;
     std::clog.flush();
     std::cout.flush();
     std::cerr.flush();
@@ -55,6 +54,8 @@ static void displayPaths()
 } // namespace detail
 
 Robot::Robot()
+    : frc::TimedRobot(units::millisecond_t (
+        1000.0 / config::number ("period")))
 {
     DriverStation::SilenceJoystickConnectionWarning (true);
 
@@ -88,6 +89,10 @@ void Robot::RobotInit()
     std::thread vision (cameraThread);
     vision.detach();
 #endif
+
+    auto periodMs = units::millisecond_t(GetPeriod()).value();
+    std::cout << "[bot] running at " << config::number("period") << " fps"
+              << " (" << std::fixed << std::setprecision(3) << periodMs << " ms)" << std::endl;
 }
 
 void Robot::RobotPeriodic()

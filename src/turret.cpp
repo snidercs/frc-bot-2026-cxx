@@ -327,7 +327,7 @@ units::turns_per_second_t Turret::velocityFromDistance(units::meter_t distance) 
     constexpr units::meter_t kNearDist  = 2.08_m;
     constexpr units::meter_t kFarDist   = 2.74_m;
     constexpr double         kNearSpeed = 50.0;
-    constexpr double         kFarSpeed  = 58.0;
+    constexpr double         kFarSpeed  = 65.0;
 
     double t = (distance - kNearDist) / (kFarDist - kNearDist);
     t = std::clamp(t, 0.0, 1.0);

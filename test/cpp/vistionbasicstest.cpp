@@ -6,7 +6,6 @@
 /** Mock implementation of VisionIO for testing */
 class MockVisionIO : public indy::VisionIO {
 private:
-    std::vector<indy::VisionMeasurement> _measurements;
     int _callCount = 0;
 
 public:
@@ -123,7 +122,7 @@ TEST(VisionTest, TurretPivot) {
 }
 
 TEST(VisionTest, FieldLayout) {
-    auto layout = indy::vision::getFieldLayout();
+    auto layout = indy::vision::fieldLayout();
     // Field layout should have tags
     auto tags = layout.GetTags();
     EXPECT_GT(tags.size(), 0);

@@ -5,7 +5,7 @@
 namespace indy {
 
 VisionMulti::VisionMulti()
-    : _fieldLayout(vision::getFieldLayout())
+    : _fieldLayout(vision::fieldLayout())
 {
     for (std::size_t i = 0; i < vision::kCameraNames.size(); ++i) {
         _cameras[i] = std::make_unique<CameraUnit>(
@@ -13,7 +13,6 @@ VisionMulti::VisionMulti()
             vision::kRobotToCamera[i],
             _fieldLayout);
     }
-    _measurements.reserve(vision::kCameraNames.size() * 16);
 }
 
 const std::vector<VisionMeasurement>& VisionMulti::getMeasurements(

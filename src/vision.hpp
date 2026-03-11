@@ -57,17 +57,15 @@ struct VisionMeasurement {
 */
 class VisionIO {
 public:
+    VisionIO();
     virtual ~VisionIO() = default;
 
-    /** Retrieves all available vision measurements from the last update cycle.
-     
-        @warning Must be called **exactly once per periodic cycle**. Implementations
-        clear and refill an internal buffer on each call — calling it more than once
-        in the same cycle will return an empty vector on the second call, since the
-        underlying camera results are consumed (unread) on the first.
-     
-        @return Const reference to the internal measurement buffer; valid until the next call.
-    */
+    struct Candidate {
+        VisionMeasurement measurement;
+        int    tagCount;
+        double distance;
+    };
+    
     /** Retrieves all available vision measurements from the last update cycle.
      
         @warning Must be called **exactly once per periodic cycle**. Implementations
@@ -114,6 +112,7 @@ protected:
 
     // ── Shared measurement buffer (cleared + refilled each cycle) ───────────
     std::vector<VisionMeasurement> _measurements;
+    std::vector<Candidate> _candidates;
 
     // ── Rejection counters ──────────────────────────────────────────────────
     int _rejectedNoTargets   = 0;
@@ -199,7 +198,7 @@ namespace vision {
         Loads the standard field layout from WPILib resources.
         Returns empty layout if load fails (caller should handle).
     */
-    inline frc::AprilTagFieldLayout getFieldLayout() {
+    inline frc::AprilTagFieldLayout fieldLayout() {
         // Load 2026 field layout
         return frc::AprilTagFieldLayout::LoadField(frc::AprilTagField::k2026RebuiltAndyMark);
     }

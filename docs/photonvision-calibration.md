@@ -89,7 +89,7 @@ In **Settings → AprilTag Field Layout**, confirm it is set to:
 ```
 
 This must match `frc::AprilTagField::k2026RebuiltAndyMark` used in the
-RoboRIO code (`vision.hpp` → `getFieldLayout()`).
+RoboRIO code (`vision.hpp` → `fieldLayout()`).
 
 ### 7. Confirm Robot-to-Camera Transform
 

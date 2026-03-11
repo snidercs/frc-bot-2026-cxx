@@ -30,7 +30,7 @@ VisionSim::CameraUnit::CameraUnit(std::string_view name,
 // ─── VisionSim ──────────────────────────────────────────────────────────────
 
 VisionSim::VisionSim()
-    : _fieldLayout(vision::getFieldLayout())
+    : _fieldLayout(vision::fieldLayout())
     , _visionSim("VisionSim")
 {
     // No real coprocessor in sim — disable NT version checks to suppress warnings
@@ -45,8 +45,6 @@ VisionSim::VisionSim()
             _fieldLayout,
             _visionSim);
     }
-
-    _measurements.reserve(vision::kCameraNames.size() * 16);
 }
 
 void VisionSim::update(const frc::Pose2d& robotPose) {

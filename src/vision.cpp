@@ -2,6 +2,11 @@
 
 namespace indy {
 
+VisionIO::VisionIO() {
+    _measurements.reserve(vision::kCameraNames.size() * 16);
+    _candidates.reserve(16);
+}
+
 std::string VisionIO::getRejectedCounts() {
     return "Accepted: " + std::to_string(_acceptedCount)
          + " | Rejected: NoTargets=" + std::to_string(_rejectedNoTargets)
@@ -15,14 +20,7 @@ void VisionIO::processResults(const std::string& cameraName,
                         std::vector<photon::PhotonPipelineResult>& results,
                         const frc::Pose2d& currentPose)
     {
-        // Collect all candidates that pass image-level and residual gates this
-        // cycle. We'll pick the single best one at the end.
-        struct Candidate {
-            VisionMeasurement measurement;
-            int    tagCount;
-            double distance;
-        };
-        std::vector<Candidate> candidates;
+        _candidates.clear();
 
         for (auto& result : results) {
             if (!result.HasTargets()) {
@@ -83,7 +81,7 @@ void VisionIO::processResults(const std::string& cameraName,
                 continue;
             }
 
-            candidates.push_back(Candidate{
+            _candidates.push_back(Candidate{
                 VisionMeasurement{
                     pose2d,
                     estimatedPose->timestamp,
@@ -97,8 +95,8 @@ void VisionIO::processResults(const std::string& cameraName,
 
         // Pick the single best candidate: prefer more tags, then closer distance.
         // Fusing more than one measurement per cycle per camera adds noise.
-        if (!candidates.empty()) {
-            auto best = std::max_element(candidates.begin(), candidates.end(),
+        if (!_candidates.empty()) {
+            auto best = std::max_element(_candidates.begin(), _candidates.end(),
                 [](const Candidate& a, const Candidate& b) {
                     if (a.tagCount != b.tagCount)
                         return a.tagCount < b.tagCount;

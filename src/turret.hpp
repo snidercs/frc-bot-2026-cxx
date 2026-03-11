@@ -143,8 +143,9 @@ private:
     static constexpr double kRotationGearRatio = 100.0;  // TODO: measure actual ratio
 
     void configureMotors();
-    units::degree_t computeAimAngle(const frc::Pose2d& robotPose, 
-                                    const frc::Pose2d& targetPose) const;
+    void setTargetPosition(units::turn_t position);
+    units::turn_t computeAimPosition(const frc::Pose2d& robotPose, 
+                                     const frc::Pose2d& targetPose) const;
 
     /** Returns shooter flywheel velocity for a given distance to the hub.
      

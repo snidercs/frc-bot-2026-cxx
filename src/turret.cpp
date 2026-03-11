@@ -239,14 +239,23 @@ void Turret::enableAutoAim() {
 
 void Turret::disableAutoAim() {
     _autoAimEnabled = false;
+    // Force position-hold to re-latch from actual motor position when manual control resumes,
+    // rather than snapping back to wherever the hold was last set during auto-aim.
+    _isHoldingPosition = false;
 }
 
 void Turret::setTargetAngle(units::degree_t angle) {
-    _targetAngle = angle;
-    // Convert degrees to rotations for position control
-    // units::turn_t{degree_t} performs automatic unit conversion (90_deg → 0.25_tr)
-    units::turn_t targetRotations{angle};
-    _rotationMotor.SetControl(_positionRequest.WithPosition(targetRotations));
+    // Convert to turns and forward to position control
+    setTargetPosition(units::turn_t{angle});
+}
+
+void Turret::setTargetPosition(units::turn_t position) {
+    _targetAngle = units::degree_t{position};
+    // Clamp to soft limit window before commanding
+    constexpr units::turn_t kMinPos = -0.05542_tr;
+    constexpr units::turn_t kMaxPos =  0.25_tr;
+    position = units::math::max(kMinPos, units::math::min(kMaxPos, position));
+    _rotationMotor.SetControl(_positionRequest.WithPosition(position));
 }
 
 units::degree_t Turret::getCurrentAngle() const {
@@ -267,36 +276,63 @@ bool Turret::isShooterReady() const {
     return velocityError < kShooterTolerance;
 }
 
-units::degree_t Turret::computeAimAngle(const frc::Pose2d& robotPose, 
-                                         const frc::Pose2d& targetPose) const {
-    // Get target position in field coordinates
-    auto targetTranslation = targetPose.Translation();
-    
-    // Transform target to robot frame
-    auto robotToTarget = targetTranslation - robotPose.Translation();
+units::turn_t Turret::computeAimPosition(const frc::Pose2d& robotPose, 
+                                          const frc::Pose2d& targetPose) const {
+    // Transform target into robot frame
+    auto robotToTarget = targetPose.Translation() - robotPose.Translation();
     auto robotToTargetInRobotFrame = robotToTarget.RotateBy(-robotPose.Rotation());
-    
-    // Subtract turret pivot offset (from vision constants)
+
+    // Subtract turret pivot offset
     auto turretPivot = vision::kTurretPivotInRobot;
     auto pivotToTarget = robotToTargetInRobotFrame - turretPivot;
-    
-    // Calculate angle using atan2
-    auto angleRad = units::radian_t{std::atan2(pivotToTarget.Y().value(), pivotToTarget.X().value())};
-    return units::degree_t{angleRad};
+
+    // atan2 gives angle from robot forward (+X).
+    // Range: [-0.5_tr, +0.5_tr]  (i.e. -180° to +180°)
+    // Motor calibration:
+    //   0_tr    = back  (-X, atan2 = ±0.5_tr)
+    //  +0.25_tr = left  (+Y, atan2 = +0.25_tr)
+    //  -0.05_tr = right (-Y, atan2 = -0.25_tr, clamped)
+    //
+    // Mapping: motorPos = 0.5_tr - |atan2_turns| ... no.
+    // Direct: atan2_turns(back) = ±0.5, we want 0.
+    //         atan2_turns(left) = +0.25, we want +0.25.
+    // So: motorPos = atan2_turns - 0.5  (then wrap and clamp)
+    //   back:  0.5 - 0.5 =  0    ✓
+    //   left: 0.25 - 0.5 = -0.25 ✗  (want +0.25)
+    //
+    // Try: motorPos = 0.5 - atan2_turns
+    //   back (atan2=+0.5):  0.5 - 0.5  =  0    ✓
+    //   left (atan2=+0.25): 0.5 - 0.25 = +0.25 ✓
+    //   right(atan2=-0.25): 0.5 - (-0.25) = 0.75 → wraps to -0.25 (outside limit, clamped) ✓
+    double atan2Turns = std::atan2(pivotToTarget.Y().value(), pivotToTarget.X().value())
+                        / (2.0 * std::numbers::pi);
+    units::turn_t motorPos{0.5 - atan2Turns};
+
+    // Wrap into (-0.5, +0.5]
+    while (motorPos >  0.5_tr) motorPos -= 1.0_tr;
+    while (motorPos < -0.5_tr) motorPos += 1.0_tr;
+
+    // Telemetry
+    frc::SmartDashboard::PutNumber("Turret/AimAngle Raw (turns)", atan2Turns);
+    frc::SmartDashboard::PutNumber("Turret/AimAngle Motor (turns)", motorPos.value());
+
+    return motorPos;
 }
 
 // Command factories
 frc2::CommandPtr Turret::aimAtTargetCommand(std::function<frc::Pose2d()> robotPoseSupplier,
                                               std::function<frc::Pose2d()> targetPoseSupplier) {
-    return Run([this, robotPoseSupplier, targetPoseSupplier] {
-        if (_autoAimEnabled) {
-            auto robotPose = robotPoseSupplier();
-            auto targetPose = targetPoseSupplier();
-            auto aimAngle = computeAimAngle(robotPose, targetPose);
-            setTargetAngle(aimAngle);
-        }
-    })
-    .WithName("AimAtTarget");
+    return RunOnce([this] { enableAutoAim(); })
+        .AndThen(
+            Run([this, robotPoseSupplier, targetPoseSupplier] {
+                auto robotPose = robotPoseSupplier();
+                auto targetPose = targetPoseSupplier();
+                auto aimPos = computeAimPosition(robotPose, targetPose);
+                setTargetPosition(aimPos);
+            })
+        )
+        .FinallyDo([this] { disableAutoAim(); })
+        .WithName("AimAtTarget");
 }
 
 frc2::CommandPtr Turret::manualRotateCommand(std::function<double()> speedSupplier) {

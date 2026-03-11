@@ -115,7 +115,7 @@ void VisionIO::processResults(const std::string& cameraName,
             frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/Tags",         best->tagCount);
 #endif
         }
-#if BOT_TRACE_VISION
+#if 1 //BOT_TRACE_VISION
         frc::SmartDashboard::PutNumber("Vision/Accepted",          _acceptedCount);
         frc::SmartDashboard::PutNumber("Vision/Rejected Residual", _rejectedResidual);
         frc::SmartDashboard::PutNumber("Vision/Rejected OutOfBounds", _rejectedOutOfBounds);

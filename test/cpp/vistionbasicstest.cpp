@@ -18,7 +18,8 @@ public:
         _measurements.clear();
     }
 
-    const std::vector<indy::VisionMeasurement>& getMeasurements() override {
+    const std::vector<indy::VisionMeasurement>& getMeasurements(
+            const frc::Pose2d& /*currentPose*/) override {
         _callCount++;
         return _measurements;
     }
@@ -52,9 +53,10 @@ TEST(VisionTest, MeasurementCreation) {
 // Test VisionIO interface with mock
 TEST(VisionTest, MockVisionIO) {
     MockVisionIO mockVision;
+    const frc::Pose2d anyPose{};  // pose doesn't matter for mock — gating is bypassed
 
     // Initially empty
-    const auto& measurements = mockVision.getMeasurements();
+    const auto& measurements = mockVision.getMeasurements(anyPose);
     EXPECT_EQ(measurements.size(), 0);
     EXPECT_EQ(mockVision.getCallCount(), 1);
 
@@ -67,7 +69,7 @@ TEST(VisionTest, MockVisionIO) {
     };
     mockVision.addMeasurement(m1);
 
-    const auto& measurements2 = mockVision.getMeasurements();
+    const auto& measurements2 = mockVision.getMeasurements(anyPose);
     EXPECT_EQ(measurements2.size(), 1);
     EXPECT_EQ(measurements2[0].source, "FR");
     EXPECT_EQ(mockVision.getCallCount(), 2);
@@ -81,13 +83,13 @@ TEST(VisionTest, MockVisionIO) {
     };
     mockVision.addMeasurement(m2);
 
-    const auto& measurements3 = mockVision.getMeasurements();
+    const auto& measurements3 = mockVision.getMeasurements(anyPose);
     EXPECT_EQ(measurements3.size(), 2);
     EXPECT_EQ(measurements3[1].source, "BL");
 
     // Clear and verify
     mockVision.clearMeasurements();
-    const auto& measurements4 = mockVision.getMeasurements();
+    const auto& measurements4 = mockVision.getMeasurements(anyPose);
     EXPECT_EQ(measurements4.size(), 0);
 }
 

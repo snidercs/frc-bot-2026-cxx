@@ -53,14 +53,16 @@ void VisionSim::update(const frc::Pose2d& robotPose) {
     _visionSim.Update(frc::Pose3d{robotPose});
 }
 
-const std::vector<VisionMeasurement>& VisionSim::getMeasurements() {
+const std::vector<VisionMeasurement>& VisionSim::getMeasurements(
+    const frc::Pose2d& currentPose) {
     _measurements.clear();
 
     for (auto& unit : _cameras) {
         auto results = unit->camera.GetAllUnreadResults();
         processResults(std::string(unit->camera.GetCameraName()),
                        unit->estimator,
-                       results);
+                       results,
+                       currentPose);
     }
 
     return _measurements;

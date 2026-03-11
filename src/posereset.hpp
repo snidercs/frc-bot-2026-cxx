@@ -38,16 +38,20 @@ public:
         measurement buffer from @p vision and, on the first entry found, calls
         `drivetrain.ResetPose()` and latches.
 
-        @param vision     The active VisionIO source.
-        @param drivetrain The swerve drivetrain whose pose will be reset.
+        @param vision      The active VisionIO source.
+        @param drivetrain  The swerve drivetrain whose pose will be reset.
+        @param currentPose The current drivetrain pose, forwarded to
+                           `getMeasurements()` for residual gating.
         @return true if a reset was performed on this call, false otherwise.
     */
-    bool tryReset(VisionIO& vision, CommandSwerveDrivetrain& drivetrain)
+    bool tryReset(VisionIO& vision,
+                  CommandSwerveDrivetrain& drivetrain,
+                  const frc::Pose2d& currentPose)
     {
         if (_done)
             return false;
 
-        for (const auto& m : vision.getMeasurements()) {
+        for (const auto& m : vision.getMeasurements(currentPose)) {
             drivetrain.ResetPose(m.pose);
             _done = true;
             return true;

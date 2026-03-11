@@ -25,7 +25,8 @@ class VisionMulti : public VisionIO {
 public:
     VisionMulti();
 
-    const std::vector<VisionMeasurement>& getMeasurements() override;
+    const std::vector<VisionMeasurement>& getMeasurements(
+        const frc::Pose2d& currentPose) override;
     std::string getStatus() override;
     std::string getLastTargets() override;
 

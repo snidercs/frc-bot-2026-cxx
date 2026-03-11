@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <algorithm>
 
 #include <frc/apriltag/AprilTagFieldLayout.h>
 #include <frc/geometry/Pose2d.h>
@@ -56,18 +57,32 @@ struct VisionMeasurement {
 */
 class VisionIO {
 public:
+    VisionIO();
     virtual ~VisionIO() = default;
 
+    struct Candidate {
+        VisionMeasurement measurement;
+        int    tagCount;
+        double distance;
+    };
+    
     /** Retrieves all available vision measurements from the last update cycle.
      
         @warning Must be called **exactly once per periodic cycle**. Implementations
         clear and refill an internal buffer on each call — calling it more than once
         in the same cycle will return an empty vector on the second call, since the
         underlying camera results are consumed (unread) on the first.
+
+        @param currentPose The drivetrain's current fused pose. Used for residual
+               gating — any candidate more than `kMaxResidual` from this pose is
+               rejected before it can reach `AddVisionMeasurement()`. Get this
+               from `drivetrain.GetState().Pose` before calling.
      
-        @return Const reference to the internal measurement buffer; valid until the next call.
+        @return Const reference to the internal measurement buffer (0 or 1 entries);
+                valid until the next call.
     */
-    virtual const std::vector<VisionMeasurement>& getMeasurements() = 0;
+    virtual const std::vector<VisionMeasurement>& getMeasurements(
+        const frc::Pose2d& currentPose) = 0;
 
     /** Gets a human-readable status string for debugging.
      
@@ -89,32 +104,35 @@ public:
 
 protected:
     // ── Gating constants ────────────────────────────────────────────────────
-    // Single-tag ambiguity must be below this threshold.
-    // Multi-tag PNP results report ambiguity = -1 (not applicable) and bypass
-    // this check entirely — they are accepted if the pose is in-bounds.
-    static constexpr double          kMaxAmbiguity = 0.2;
-    static constexpr units::second_t kMaxLatency   = 0.5_s;
-    // Require at least this many tags for a single-tag fallback to be accepted.
-    // Set to 2 to reject all single-tag solves and only accept multi-tag results.
+    static constexpr double          kMaxAmbiguity          = 0.2;
+    static constexpr units::second_t kMaxLatency            = 0.25_s;
     static constexpr int             kMinTagsForSingleSolve = 2;
+    static constexpr double          kMaxTagDistance        = 4.0;  // metres
+    static constexpr units::meter_t  kMaxResidual           = 0.6_m;
 
     // ── Shared measurement buffer (cleared + refilled each cycle) ───────────
     std::vector<VisionMeasurement> _measurements;
+    std::vector<Candidate> _candidates;
 
     // ── Rejection counters ──────────────────────────────────────────────────
     int _rejectedNoTargets   = 0;
     int _rejectedStale       = 0;
     int _rejectedAmbiguous   = 0;
     int _rejectedOutOfBounds = 0;
+    int _rejectedResidual    = 0;
     int _acceptedCount       = 0;
 
-    /** Scales pose std devs with distance: closer = more trusted.
+    /** Scales pose std devs by distance and tag count: closer + more tags = more trusted.
      
-        @param distanceMeters Distance from camera to best tag in metres.
+        @param distanceMeters Distance from camera to nearest tag in metres.
+        @param tagCount       Number of tags used in the PNP solve.
         @return [x, y, theta] standard deviations.
     */
-    wpi::array<double, 3> computeStdDevs(double distanceMeters) const {
-        double xy    = 0.1 + (distanceMeters * 0.05);
+    wpi::array<double, 3> computeStdDevs(double distanceMeters, int tagCount) const {
+        // Conservative base: further away = less trust
+        double xy = 0.2 + (distanceMeters * 0.07);
+        // Reward good multi-tag geometry
+        if (tagCount > 2) xy *= 0.75;
         // theta: very high so vision never overrides the gyro heading
         double theta = 9999.0;
         return {xy, xy, theta};
@@ -122,9 +140,10 @@ protected:
 
     /** Processes a batch of pipeline results from one camera.
      
-        Applies latency, ambiguity, and field-bounds gating. Accepted poses are
-        appended to `_measurements` and published to SmartDashboard. Rejection
-        counters are updated for every rejected result.
+        Applies latency, tag-count, distance, field-bounds, and odometry-residual
+        gating. Candidates that survive all checks are compared against each other
+        and the single best one (most tags, then shortest distance) is appended to
+        `_measurements`. Rejection counters are updated for every rejected result.
 
         Subclasses call this once per camera inside `getMeasurements()` after
         fetching raw results — that is the *only* thing subclasses need to do.
@@ -132,73 +151,12 @@ protected:
         @param cameraName  Display name of the source camera (e.g. "FL").
         @param estimator   The `PhotonPoseEstimator` associated with this camera.
         @param results     Raw pipeline results from `GetAllUnreadResults()`.
+        @param currentPose The drivetrain's current fused pose for residual gating.
     */
     void processResults(const std::string& cameraName,
                         photon::PhotonPoseEstimator& estimator,
-                        std::vector<photon::PhotonPipelineResult>& results)
-    {
-        for (auto& result : results) {
-            if (!result.HasTargets()) {
-                _rejectedNoTargets++;
-                continue;
-            }
-
-            if (result.GetLatency() > kMaxLatency) {
-                _rejectedStale++;
-                continue;
-            }
-
-            // Multi-tag PNP reports ambiguity = -1.  Single-tag solves report a
-            // real ambiguity value.  Reject single-tag solves outright: they can
-            // produce a 180° flipped pose that corrupts the odometry estimate.
-            double ambiguity = result.GetBestTarget().GetPoseAmbiguity();
-            bool isMultiTag  = (result.GetTargets().size() >= kMinTagsForSingleSolve);
-            if (!isMultiTag) {
-                // Single-tag fallback: only accept if ambiguity is very low
-                if (ambiguity < 0 || ambiguity > kMaxAmbiguity) {
-                    _rejectedAmbiguous++;
-                    continue;
-                }
-            }
-
-            auto estimatedPose = estimator.Update(result);
-            if (!estimatedPose.has_value()) {
-                _rejectedNoTargets++;
-                continue;
-            }
-
-            auto bestTransform = result.GetBestTarget().GetBestCameraToTarget();
-            double distance = units::math::sqrt(
-                units::math::pow<2>(bestTransform.X()) +
-                units::math::pow<2>(bestTransform.Y()) +
-                units::math::pow<2>(bestTransform.Z())
-            ).value();
-
-            auto pose2d = estimatedPose->estimatedPose.ToPose2d();
-            if (pose2d.X() < 0_m || pose2d.X() > 16.46_m ||
-                pose2d.Y() < 0_m || pose2d.Y() > 8.21_m) {
-                _rejectedOutOfBounds++;
-                continue;
-            }
-
-            _measurements.push_back(VisionMeasurement{
-                pose2d,
-                estimatedPose->timestamp,
-                computeStdDevs(distance),
-                cameraName
-            });
-
-            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/X (m)",        pose2d.X().value());
-            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/Y (m)",        pose2d.Y().value());
-            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/Rot (deg)",    pose2d.Rotation().Degrees().value());
-            frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/Distance (m)", distance);
-
-            _acceptedCount++;
-        }
-
-        frc::SmartDashboard::PutNumber("Vision/Accepted",             _acceptedCount);
-        frc::SmartDashboard::PutNumber("Vision/Rejected OutOfBounds", _rejectedOutOfBounds);
-    }
+                        std::vector<photon::PhotonPipelineResult>& results,
+                        const frc::Pose2d& currentPose);
 };
 
 /** Vision system configuration constants.
@@ -240,7 +198,7 @@ namespace vision {
         Loads the standard field layout from WPILib resources.
         Returns empty layout if load fails (caller should handle).
     */
-    inline frc::AprilTagFieldLayout getFieldLayout() {
+    inline frc::AprilTagFieldLayout fieldLayout() {
         // Load 2026 field layout
         return frc::AprilTagFieldLayout::LoadField(frc::AprilTagField::k2026RebuiltAndyMark);
     }

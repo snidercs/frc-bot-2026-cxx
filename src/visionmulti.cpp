@@ -5,7 +5,7 @@
 namespace indy {
 
 VisionMulti::VisionMulti()
-    : _fieldLayout(vision::getFieldLayout())
+    : _fieldLayout(vision::fieldLayout())
 {
     for (std::size_t i = 0; i < vision::kCameraNames.size(); ++i) {
         _cameras[i] = std::make_unique<CameraUnit>(
@@ -13,22 +13,18 @@ VisionMulti::VisionMulti()
             vision::kRobotToCamera[i],
             _fieldLayout);
     }
-    _measurements.reserve(vision::kCameraNames.size() * 16);
 }
 
-const std::vector<VisionMeasurement>& VisionMulti::getMeasurements() {
+const std::vector<VisionMeasurement>& VisionMulti::getMeasurements(
+    const frc::Pose2d& currentPose) {
     _measurements.clear();
 
-    // NOTE: _fieldLayout always uses the default blue-origin (kBlueAllianceWallRightSide).
-    // WPILib's pose estimator (and CTRE's AddVisionMeasurement) always expect poses in
-    // the blue-origin frame regardless of alliance. Setting the origin to red would cause
-    // PhotonPoseEstimator to output red-relative poses (~0–2 m) that the drivetrain
-    // would interpret as being near the blue wall (~16 m), corrupting the pose estimate.
     for (std::size_t i = 0; i < _cameras.size(); ++i) {
         _rawResults[i] = _cameras[i]->camera.GetAllUnreadResults();
         processResults(std::string(_cameras[i]->camera.GetCameraName()),
                        _cameras[i]->estimator,
-                       _rawResults[i]);
+                       _rawResults[i],
+                       currentPose);
     }
 
     return _measurements;

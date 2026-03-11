@@ -100,6 +100,7 @@ protected:
                 static constexpr units::meter_t kFieldHeight = 8.069_m;
                 static constexpr units::meter_t kFieldLength = 16.535_m; // 2026 Rebuilt field
 
+#if 0
                 auto alliance = frc::DriverStation::GetAlliance();
                 if (alliance && alliance.value() == frc::DriverStation::Alliance::kRed) {
                     drivetrain().ResetPose(
@@ -108,6 +109,17 @@ protected:
                     drivetrain().ResetPose(
                         frc::Pose2d{kCornerOffset, kCornerOffset, 0_deg});
                 }
+#else
+                // Back-left corner on blue / back-right corner on red
+                auto alliance = frc::DriverStation::GetAlliance();
+                if (alliance && alliance.value() == frc::DriverStation::Alliance::kRed) {
+                    drivetrain().ResetPose(
+                        frc::Pose2d{kFieldLength - kCornerOffset, kFieldHeight - kCornerOffset, 180_deg});
+                } else {
+                    drivetrain().ResetPose(
+                        frc::Pose2d{kCornerOffset, kFieldHeight - kCornerOffset, 0_deg});
+                }
+#endif
         }));
 
         // clang-format on

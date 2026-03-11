@@ -148,17 +148,15 @@ protected:
                 continue;
             }
 
-            // Multi-tag PNP reports ambiguity = -1.  Single-tag solves report a
-            // real ambiguity value.  Reject single-tag solves outright: they can
-            // produce a 180° flipped pose that corrupts the odometry estimate.
-            double ambiguity = result.GetBestTarget().GetPoseAmbiguity();
-            bool isMultiTag  = (result.GetTargets().size() >= kMinTagsForSingleSolve);
-            if (!isMultiTag) {
-                // Single-tag fallback: only accept if ambiguity is very low
-                if (ambiguity < 0 || ambiguity > kMaxAmbiguity) {
-                    _rejectedAmbiguous++;
-                    continue;
-                }
+            // Only accept multi-tag PNP solves (≥2 tags visible).
+            // Single-tag solves have an inherent 180° pose ambiguity — even
+            // the "best" solution alternates between two valid poses at
+            // moderate distances, causing drastic jumps in the field widget.
+            // LOWEST_AMBIGUITY fallback is configured on the estimator but we
+            // gate it out here so it never reaches AddVisionMeasurement().
+            if (result.GetTargets().size() < static_cast<size_t>(kMinTagsForSingleSolve)) {
+                _rejectedAmbiguous++;
+                continue;
             }
 
             auto estimatedPose = estimator.Update(result);
@@ -174,9 +172,22 @@ protected:
                 units::math::pow<2>(bestTransform.Z())
             ).value();
 
+            // Reject solves from tags that are too far away — geometry becomes
+            // unreliable past ~5 m and produces large position jumps.
+            static constexpr double kMaxTagDistance = 5.0; // metres
+            if (distance > kMaxTagDistance) {
+                _rejectedOutOfBounds++;
+                continue;
+            }
+
             auto pose2d = estimatedPose->estimatedPose.ToPose2d();
-            if (pose2d.X() < 0_m || pose2d.X() > 16.46_m ||
-                pose2d.Y() < 0_m || pose2d.Y() > 8.21_m) {
+            // Field bounds: 2026 Rebuilt AndyMark = 16.535 × 8.069 m
+            // Add a small margin (0.5 m) so a measurement just outside the
+            // painted line doesn't get dropped — the estimator will pull it
+            // back in bounds. Tight bounds caused red-side poses (X ≈ 16 m)
+            // to be silently rejected.
+            if (pose2d.X() < -0.5_m || pose2d.X() > 17.035_m ||
+                pose2d.Y() < -0.5_m || pose2d.Y() > 8.569_m) {
                 _rejectedOutOfBounds++;
                 continue;
             }

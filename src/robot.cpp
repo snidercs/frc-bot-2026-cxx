@@ -101,17 +101,17 @@ void Robot::RobotPeriodic()
     if (frc::RobotBase::IsReal() && (IsTeleop() || IsTest())) {
         // Snap the drivetrain pose to the first valid vision measurement seen
         // in teleop, then hand off to normal fused odometry.
-        if (!_poseReset.isDone() && frc::DriverStation::IsTeleop()) {
+        if (false) { //(!_poseReset.isDone() && frc::DriverStation::IsTeleop()) {
             _poseReset.tryReset(_container->vision(), _container->drivetrain());
+        } else {
+            // Poll all cameras and fuse measurements into the drivetrain pose estimator
+            for (const auto& measurement : _container->vision().getMeasurements()) {
+                _container->drivetrain().AddVisionMeasurement(
+                    measurement.pose,
+                    measurement.timestamp,
+                    measurement.stdDevs);
+            }
         }
-
-        // Poll all cameras and fuse measurements into the drivetrain pose estimator
-        for (const auto& measurement : _container->vision().getMeasurements()) {
-            _container->drivetrain().AddVisionMeasurement(
-                measurement.pose,
-                measurement.timestamp,
-                measurement.stdDevs);
-        }    
     }
 #endif
 

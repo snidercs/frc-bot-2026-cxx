@@ -191,7 +191,7 @@ namespace vision {
      
         TODO: Measure and update with actual turret mounting location
     */
-    constexpr const frc::Translation2d kTurretPivotInRobot{0.0_m, 0.0_m};
+    constexpr const frc::Translation2d kTurretPivotInRobot{-7.5_in, 0.75_in};
     
     /** AprilTag field layout for the current season.
      

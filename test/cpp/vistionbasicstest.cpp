@@ -116,9 +116,9 @@ TEST(VisionTest, CameraTransforms) {
 }
 
 TEST(VisionTest, TurretPivot) {
-    // Currently at origin (placeholder)
-    EXPECT_DOUBLE_EQ(indy::vision::kTurretPivotInRobot.X().value(), 0.0);
-    EXPECT_DOUBLE_EQ(indy::vision::kTurretPivotInRobot.Y().value(), 0.0);
+    // -7.5 in, 0.75 in from robot centre (measured turret pivot location)
+    EXPECT_NEAR(indy::vision::kTurretPivotInRobot.X().value(), -7.5 * 0.0254, 1e-6);
+    EXPECT_NEAR(indy::vision::kTurretPivotInRobot.Y().value(),  0.75 * 0.0254, 1e-6);
 }
 
 TEST(VisionTest, FieldLayout) {

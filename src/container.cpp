@@ -82,6 +82,15 @@ protected:
         _sticks[1].Button(4).OnTrue(climber().disableSoftLimitsCommand())
                              .OnFalse(climber().enableSoftLimitsAndResetCommand());
 
+        // Auto-aim: hold button 17 to track hub with turret rotation.
+        // Interrupts manualRotateCommand for as long as button is held;
+        // releases back to manual on button release.
+        _sticks[0].Button(17).WhileTrue(
+            turret().aimAtTargetCommand(
+                [this] { return drivetrain().GetState().Pose; },
+                [this] { return frc::Pose2d{landmarks::hubPosition(), frc::Rotation2d{}}; }
+            ));
+
         // Zero turret rotation position
         _sticks[1].Button(3).OnTrue(turret().calibrateRotationZero());
             

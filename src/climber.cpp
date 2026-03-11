@@ -33,7 +33,7 @@ void Climber::configureMotor() {
         )
         .WithFeedback(
             ctre::phoenix6::configs::FeedbackConfigs{}
-                .WithSensorToMechanismRatio(180.0)
+                .WithSensorToMechanismRatio(25.0)
         )
         .WithSoftwareLimitSwitch(
             ctre::phoenix6::configs::SoftwareLimitSwitchConfigs{}

@@ -237,6 +237,11 @@ Container::Container()
                            .Distance(landmarks::hubPosition());
             }));
             nc::registerCommand("shooterOff",  turret().shooterOffCommand());
+            nc::registerCommand("turretAim", turret().aimAtTargetCommand(
+                [this] { return drivetrain().GetState().Pose; },
+                [this] { return frc::Pose2d{landmarks::hubPosition(), frc::Rotation2d{}}; }
+            ));
+            
             nc::registerCommand("turretStop",  turret().stopCommand());
             nc::registerCommand("intakeStart", intake().startCommand());
             nc::registerCommand("intakeStutter", intake().stutterCommand());

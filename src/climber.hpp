@@ -37,7 +37,7 @@ private:
     static constexpr double kClimbDutyCycle = 0.99;   // Positive = down/climbing
     static constexpr double kLowerDutyCycle = -0.99;  // Negative = up/lowering
     static constexpr units::turn_t kForwardSoftLimit = 0.0_tr;
-    static constexpr units::turn_t kReverseSoftLimit = -0.4318_tr;
+    static constexpr units::turn_t kReverseSoftLimit = -3.089355_tr;
 
     void configureMotor();
 };

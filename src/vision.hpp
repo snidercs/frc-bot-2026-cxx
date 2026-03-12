@@ -1,9 +1,9 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <array>
-#include <algorithm>
 
 #include <frc/apriltag/AprilTagFieldLayout.h>
 #include <frc/geometry/Pose2d.h>
@@ -122,6 +122,8 @@ protected:
     int _rejectedOutOfBounds = 0;
     int _rejectedResidual    = 0;
     int _acceptedCount       = 0;
+    
+    uint32_t _dropouts            = 0;
 
     /** Scales pose std devs by distance and tag count: closer + more tags = more trusted.
      

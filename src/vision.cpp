@@ -1,4 +1,5 @@
 #include "vision.hpp"
+#include "frc/smartdashboard/SmartDashboard.h"
 
 namespace indy {
 
@@ -74,7 +75,8 @@ void VisionIO::processResults(const std::string& cameraName,
             // the solve is probably bad. Don't let it corrupt the estimator.
             units::meter_t residual = pose2d.Translation().Distance(
                 currentPose.Translation());
-            if (residual > kMaxResidual) {
+            const auto residualLimit = _dropouts > 10 ? kLooseResidual : kMaxResidual;
+            if (residual > residualLimit) {
                 _rejectedResidual++;
                 frc::SmartDashboard::PutNumber(
                     "Vision/" + cameraName + "/Residual (m)", residual.value());
@@ -114,6 +116,14 @@ void VisionIO::processResults(const std::string& cameraName,
             frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/Distance (m)", best->distance);
             frc::SmartDashboard::PutNumber("Vision/" + cameraName + "/Tags",         best->tagCount);
 #endif
+        }
+
+        // update num dropouts
+        if (_measurements.empty()) {
+            ++_dropouts;
+            frc::SmartDashboard::PutNumber("Vision/Dropouts", (int)_dropouts);
+        } else {
+            _dropouts = 0;
         }
 #if 1 //BOT_TRACE_VISION
         frc::SmartDashboard::PutNumber("Vision/Accepted",          _acceptedCount);

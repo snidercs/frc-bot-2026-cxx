@@ -109,6 +109,7 @@ protected:
     static constexpr int             kMinTagsForSingleSolve = 2;
     static constexpr double          kMaxTagDistance        = 4.0;  // metres
     static constexpr units::meter_t  kMaxResidual           = 0.6_m;
+    static constexpr units::meter_t  kLooseResidual         = 1.5_m;
 
     // ── Shared measurement buffer (cleared + refilled each cycle) ───────────
     std::vector<VisionMeasurement> _measurements;
@@ -224,10 +225,9 @@ namespace landmarks {
     */
     inline frc::Translation2d hubPosition() {
         const auto alliance = frc::DriverStation::GetAlliance();
-        if (alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kBlue) {
-            return frc::Translation2d{182.105_in, 158.845_in};
-        }
-        return frc::Translation2d{469.115_in, 158.845_in};
+        return (alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kBlue)
+            ? frc::Translation2d{182.11_in, 158.84_in}
+            : frc::Translation2d{469.11_in, 158.84_in};
     }
 
 } // namespace landmarks

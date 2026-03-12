@@ -49,7 +49,7 @@ local config = {
 
     -- Drive input shaping
     drive_deadband        = 0.05,  -- Raw axis deadband threshold [0, 1)
-    drive_input_exponent  = 2.7,   -- Exponential curve exponent (1.0 = linear, 2.0 = quadratic)
+    drive_input_exponent  = 3.0,   -- Exponential curve exponent (1.0 = linear, 2.0 = quadratic)
     rotate_deadband       = 0.05,
     rotate_input_exponent = 1.25,
 

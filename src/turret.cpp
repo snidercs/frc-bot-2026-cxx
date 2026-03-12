@@ -358,9 +358,6 @@ frc2::CommandPtr Turret::stopCommand() {
 }
 
 units::turns_per_second_t Turret::velocityFromDistance(units::meter_t distance) const {
-    // Two measured calibration points (from comments at top of file):
-    //   2.08 m (6 ft 10 in) → 50 tps
-    //   2.74 m (9 ft)       → 55 tps
     constexpr units::meter_t kNearDist  = 2.378_m;
     constexpr units::meter_t kFarDist   = 5_m;
     constexpr double         kNearSpeed = 45.0;

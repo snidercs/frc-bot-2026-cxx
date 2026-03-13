@@ -41,11 +41,11 @@ void Turret::configureMotors() {
                 .WithNeutralMode(signals::NeutralModeValue::Brake)
     
         ).WithFeedback(
-            ctre::phoenix6::configs::FeedbackConfigs{}
+            ::configs::FeedbackConfigs{}
                 .WithSensorToMechanismRatio(10.0)
         )
         .WithSoftwareLimitSwitch(
-            ctre::phoenix6::configs::SoftwareLimitSwitchConfigs{}
+            ::configs::SoftwareLimitSwitchConfigs{}
                 .WithForwardSoftLimitEnable(true)
                 .WithForwardSoftLimitThreshold(0.25_tr)
                 .WithReverseSoftLimitEnable(true)
@@ -111,7 +111,7 @@ void Turret::configureMotors() {
     
     // Apply configs
     _rotationMotor.GetConfigurator().Apply(rotationConfig);
-    _rotationMotor.SetNeutralMode(ctre::phoenix6::signals::NeutralModeValue::Brake);
+    _rotationMotor.SetNeutralMode(::signals::NeutralModeValue::Brake);
     _rotationMotor.SetPosition(0.25_tr);
 
     _shooterMotor.GetConfigurator().Apply(shooterConfig);

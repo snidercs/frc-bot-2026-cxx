@@ -17,6 +17,7 @@
 #include "config.hpp"
 #include "container.hpp"
 #include "inpututil.hpp"
+#include "shaker.hpp"
 #include "vision.hpp"
 #include "visionmulti.hpp"
 #include "visionsim.hpp"
@@ -93,7 +94,10 @@ protected:
 
         // Zero turret rotation position
         _sticks[1].Button(3).OnTrue(turret().calibrateRotationZero());
-            
+
+        // Shaker: toggle stick 1 button 17 to oscillate forward/reverse
+        _sticks[1].Button(17).ToggleOnTrue(shaker().oscillateCommand(0.4));
+
         // Manual turret rotation
         const auto rotStick = config::integer("turret_rotation_axis_stick");
         const auto rotIdx = config::integer("turret_rotation_axis_index");
@@ -209,6 +213,7 @@ Container::Container()
     _intake = std::make_unique<indy::Intake>();
     _climber = std::make_unique<indy::Climber>();
     _turret = std::make_unique<indy::Turret>();
+    _shaker = std::make_unique<indy::Shaker>();
 
 #if BOT_VISION
     if (frc::RobotBase::IsSimulation()) {

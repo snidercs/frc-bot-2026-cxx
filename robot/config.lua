@@ -53,7 +53,10 @@ local config = {
     rotate_deadband       = 0.05,
     rotate_input_exponent = 1.25,
 
-    intake_stutter_length = 9.25  -- (seconds) How long to stutter the intake in static-shot auto's
+    intake_stutter_length = 9.25,  -- (seconds) How long to stutter the intake in static-shot auto's
+
+    shaker_device_id = 35,
+    shaker_can_bus = "rio"
 }
 
 return config

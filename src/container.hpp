@@ -12,6 +12,7 @@
 #include "intake.hpp"
 #include "climber.hpp"
 #include "turret.hpp"
+#include "shaker.hpp"
 #include "vision.hpp"
 #include "telemetry.hpp"
 
@@ -28,6 +29,7 @@ public:
     auto& intake() noexcept { return *_intake; }
     auto& climber() noexcept { return *_climber; }
     auto& turret() noexcept { return *_turret; }
+    auto& shaker() noexcept { return *_shaker; }
     auto& vision() noexcept { return *_vision; }
     frc2::CommandPtr GetAutonomousCommand();
 
@@ -62,6 +64,7 @@ private:
     std::unique_ptr<indy::Intake> _intake;
     std::unique_ptr<indy::Climber> _climber;
     std::unique_ptr<indy::Turret> _turret;
+    std::unique_ptr<indy::Shaker> _shaker;
     std::unique_ptr<VisionIO> _vision;
     std::optional<frc::SendableChooser<frc2::Command *>> _autoBuilder;
 };

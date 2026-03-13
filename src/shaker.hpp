@@ -36,7 +36,7 @@ public:
         @param dutyCycle Duty cycle magnitude [0, 1].
         @param period    Time spent in each direction before switching.
     */
-    frc2::CommandPtr oscillateCommand(double dutyCycle, units::second_t period = 0.24_s);
+    frc2::CommandPtr oscillateCommand(double dutyCycle, units::second_t period = 0.12_s);
 
 private:
     ctre::phoenix6::hardware::TalonFX _motor{

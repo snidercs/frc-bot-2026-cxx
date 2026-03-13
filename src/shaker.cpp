@@ -48,8 +48,11 @@ frc2::CommandPtr Shaker::oscillateCommand(double dutyCycle, units::second_t peri
     return frc2::cmd::Sequence(
         RunOnce([this, dutyCycle] { spin(dutyCycle);  }),
         frc2::cmd::Wait(period),
+        RunOnce([this] { stop(); }),
+        frc2::cmd::Wait(period),
         RunOnce([this, dutyCycle] { spin(-dutyCycle); }),
-        frc2::cmd::Wait(period / 2.0)
+        frc2::cmd::Wait(period),
+        RunOnce([this] { stop(); })
     )
     .Repeatedly()
     .FinallyDo([this] { stop(); })

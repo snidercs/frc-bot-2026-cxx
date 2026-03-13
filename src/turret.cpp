@@ -168,10 +168,10 @@ void Turret::setRotationVelocity(units::turns_per_second_t velocity) {
 void Turret::setRotationDutyCycle(double dutyCycle) {
     // Clamp to safe range for testing
     dutyCycle = std::clamp(dutyCycle, -0.1, 0.1);
-    
+#if BOT_TRACE_SUBSYSTEMS
     // Debug output
     frc::SmartDashboard::PutNumber("Turret/Commanded Duty Cycle", dutyCycle);
-    
+#endif    
     _rotationMotor.SetControl(_dutyCycleRequest.WithOutput(dutyCycle));
 }
 

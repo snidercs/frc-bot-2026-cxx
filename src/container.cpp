@@ -58,16 +58,17 @@ protected:
 
         // Intake control
         _sticks[0].Button(config::integer("intake_trigger_index")).WhileTrue (
-            intake().intakeCommand());
+            intake().intakeCommand()
+                .AlongWith(shaker().spinCommand(0.1).AsProxy()));
         _sticks[1].Button(config::integer("intake_eject_index")).WhileTrue (
             intake().ejectCommand());
         
-        // Shooter Control
+        // Shooter Control — run shaker in parallel to agitate while shooting
         _sticks[1].Button(config::integer("turret_shoot_button_index")).WhileTrue (
             turret().shootAtDistanceCommand([this] {
                 return drivetrain().GetState().Pose.Translation()
                            .Distance(landmarks::hubPosition());
-            }));
+            }).AlongWith(shaker().spinCommand(0.3).AsProxy()));
 
         // Climber control
         _sticks[0].Button(config::integer("climber_climb_button_index")).WhileTrue (

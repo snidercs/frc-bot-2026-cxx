@@ -377,17 +377,19 @@ frc2::CommandPtr Turret::shooterOnCommand(std::function<units::meter_t()> distan
     // Warm path: already at speed → start uptake immediately.
     // Cold path: spin up, wait until ready, then start uptake.
     // Either way, the flywheel keeps tracking distance while the command runs.
+    // NOTE: frc2::cmd::RunOnce/Run (free functions, no subsystem requirement) are used
+    // intentionally so that these commands do NOT interrupt aimAtTargetCommand.
     auto warm = frc2::cmd::Sequence(
-        RunOnce([this, targetVelocity] { setShooterVelocity(targetVelocity()); }),
-        RunOnce([this] {
+        frc2::cmd::RunOnce([this, targetVelocity] { setShooterVelocity(targetVelocity()); }),
+        frc2::cmd::RunOnce([this] {
             _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
         })
     );
 
     auto cold = frc2::cmd::Sequence(
-        RunOnce([this, targetVelocity] { setShooterVelocity(targetVelocity()); }),
+        frc2::cmd::RunOnce([this, targetVelocity] { setShooterVelocity(targetVelocity()); }),
         frc2::cmd::WaitUntil([this] { return isShooterReady(); }),
-        RunOnce([this] {
+        frc2::cmd::RunOnce([this] {
             _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
         })
     );
@@ -402,10 +404,12 @@ frc2::CommandPtr Turret::shooterOnCommand(std::function<units::meter_t()> distan
 frc2::CommandPtr Turret::shootAtDistanceCommand(std::function<units::meter_t()> distanceFn) {
     return frc2::cmd::Sequence(
         // Spin up with initial distance-based speed, wait until ready
-        RunOnce([this, distanceFn] { setShooterVelocity(velocityFromDistance(distanceFn())); }),
+        // NOTE: frc2::cmd::RunOnce/Run (free functions, no subsystem requirement) are used
+        // intentionally so that this command does NOT interrupt aimAtTargetCommand.
+        frc2::cmd::RunOnce([this, distanceFn] { setShooterVelocity(velocityFromDistance(distanceFn())); }),
         frc2::cmd::WaitUntil([this] { return isShooterReady(); }),
         // Once ready: continuously track distance and run uptake
-        Run([this, distanceFn] {
+        frc2::cmd::Run([this, distanceFn] {
             setShooterVelocity(velocityFromDistance(distanceFn()));
             _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
         })
@@ -418,7 +422,7 @@ frc2::CommandPtr Turret::shootAtDistanceCommand(std::function<units::meter_t()> 
 }
 
 frc2::CommandPtr Turret::shooterOffCommand() {
-    return RunOnce([this] {
+    return frc2::cmd::RunOnce([this] {
         stopUptake();
         stopShooter();
     }).WithName("ShooterOff");

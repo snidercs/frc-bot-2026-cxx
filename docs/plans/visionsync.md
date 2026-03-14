@@ -78,30 +78,35 @@ drifted for a different reason (bad odometry, not obstruction)
 
 ---
 
-### Option E — Velocity Gate on Accepted Measurements
+### Option E — Velocity Gate on Accepted Measurements ✅ IMPLEMENTED
 
 Reject a measurement if the implied velocity between the *last accepted pose*
 and this one is physically impossible. This catches "slow" bad solves that
 slip past the residual gate because odometry has already drifted to meet them.
 
-**Implementation sketch (inside `processResults()`):**
+**Implementation (inside `processResults()`, after residual gate):**
 ```cpp
-// After residual gate passes, before pushing to _candidates:
-if (_lastAcceptedTime > 0_s) {
-    auto dt = estimatedPose->timestamp - _lastAcceptedTime;
-    auto displacement = pose2d.Translation().Distance(_lastAcceptedPose.Translation());
-    auto impliedVelocity = displacement / dt;
-    if (impliedVelocity > kMaxImpliedVelocity) {  // e.g. 5.0_mps
-        _rejectedVelocity++;
-        continue;
+auto& camState = _cameraState[cameraName];
+if (camState.lastTime > 0_s) {
+    auto dt = estimatedPose->timestamp - camState.lastTime;
+    if (dt > 0_s) {
+        auto displacement = pose2d.Translation().Distance(camState.lastPose.Translation());
+        auto impliedVelocity = displacement / dt;
+        if (impliedVelocity > kMaxImpliedVelocity) {  // kMaxImpliedVelocity = 5.0_mps
+            _rejectedVelocity++;
+            continue;
+        }
     }
 }
-_lastAcceptedPose = pose2d;
-_lastAcceptedTime = estimatedPose->timestamp;
+// State updated only after best candidate wins (not here) to avoid
+// poisoning the next cycle with a superseded candidate.
 ```
 
+Per-camera state lives in `VisionIO::_cameraState` (`std::unordered_map<std::string, CameraGateState>`).
+State is committed only when a candidate is accepted as the best — never mid-loop.
+
 **Pros:** No latency added; catches a failure mode the residual gate misses  
-**Cons:** Requires storing `_lastAcceptedPose` and `_lastAcceptedTime` per camera
+**Cons:** First measurement per camera per boot cycle is always passed (cold start)
 
 ---
 
@@ -175,9 +180,7 @@ only blocks *half* the cameras at most.
 **Short term: Option B ✅ done** — residual gate loosens after 10 dropout cycles.
 Already live in `VisionIO::processResults()`.
 
-**Next up: Option E** — velocity gate on accepted measurements. A ~10-line addition
-to `processResults()` that catches bad solves the residual gate misses. No latency,
-no new abstractions.
+**Next up: Option E ✅ done** — velocity gate on accepted measurements is live in `VisionIO::processResults()`.
 
 **Also consider: Option F** — adaptive `stdDevs` scaling. Complements both B and E:
 measurements that slip through the gates but are inconsistent get down-weighted

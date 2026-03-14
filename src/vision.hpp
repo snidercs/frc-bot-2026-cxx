@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <unordered_map>
 
 #include <frc/apriltag/AprilTagFieldLayout.h>
 #include <frc/geometry/Pose2d.h>
@@ -17,6 +18,7 @@
 #include <units/length.h>
 #include <units/math.h>
 #include <units/time.h>
+#include <units/velocity.h>
 #include <wpi/array.h>
 #include <frc/DriverStation.h>
 
@@ -110,6 +112,9 @@ protected:
     static constexpr double          kMaxTagDistance        = 4.0;  // metres
     static constexpr units::meter_t  kMaxResidual           = 0.6_m;
     static constexpr units::meter_t  kLooseResidual         = 1.5_m;
+    // Maximum physically plausible robot speed between two accepted vision poses.
+    // Any implied velocity above this is treated as a bad solve and rejected.
+    static constexpr units::meters_per_second_t kMaxImpliedVelocity = 5.0_mps;
 
     // ── Shared measurement buffer (cleared + refilled each cycle) ───────────
     std::vector<VisionMeasurement> _measurements;
@@ -121,9 +126,24 @@ protected:
     int _rejectedAmbiguous   = 0;
     int _rejectedOutOfBounds = 0;
     int _rejectedResidual    = 0;
+    int _rejectedVelocity    = 0;
     int _acceptedCount       = 0;
-    
-    uint32_t _dropouts            = 0;
+
+    uint32_t _dropouts = 0;
+
+    // ── Per-camera velocity gate state ───────────────────────────────────────
+    // Tracks the last committed accepted pose and its timestamp for each camera
+    // so the velocity gate can reject solves that imply physically impossible motion.
+    //
+    // TODO(next-year): All gate state, constants, and processResults() logic are
+    // good candidates to factor out into a shared TelemetryKit / VisionUtils library
+    // so they can be reused across seasons without copying this file. The natural
+    // boundary is a composable VisionGate interface with per-gate state encapsulation.
+    struct CameraGateState {
+        frc::Pose2d     lastPose{};
+        units::second_t lastTime{ 0_s };
+    };
+    std::unordered_map<std::string, CameraGateState> _cameraState;
 
     /** Scales pose std devs by distance and tag count: closer + more tags = more trusted.
      

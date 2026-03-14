@@ -13,7 +13,8 @@ std::string VisionIO::getRejectedCounts() {
          + " | Rejected: NoTargets=" + std::to_string(_rejectedNoTargets)
          + " Stale=" + std::to_string(_rejectedStale)
          + " Ambiguous=" + std::to_string(_rejectedAmbiguous)
-         + " OutOfBounds=" + std::to_string(_rejectedOutOfBounds);
+         + " OutOfBounds=" + std::to_string(_rejectedOutOfBounds)
+         + " Velocity=" + std::to_string(_rejectedVelocity);
 }
 
 void VisionIO::processResults(const std::string& cameraName,
@@ -83,6 +84,23 @@ void VisionIO::processResults(const std::string& cameraName,
                 continue;
             }
 
+            // Velocity gate — reject solves that imply physically impossible robot motion.
+            // Compares this pose against the last *committed* accepted pose for this camera.
+            // State is updated only when a candidate actually wins (below), not here, so
+            // a superseded candidate from the same cycle never poisons the next cycle's check.
+            auto& camState = _cameraState[cameraName];
+            if (camState.lastTime > 0_s) {
+                auto dt = estimatedPose->timestamp - camState.lastTime;
+                if (dt > 0_s) {
+                    auto displacement = pose2d.Translation().Distance(camState.lastPose.Translation());
+                    auto impliedVelocity = displacement / dt;
+                    if (impliedVelocity > kMaxImpliedVelocity) {
+                        _rejectedVelocity++;
+                        continue;
+                    }
+                }
+            }
+
             _candidates.push_back(Candidate{
                 VisionMeasurement{
                     pose2d,
@@ -107,6 +125,10 @@ void VisionIO::processResults(const std::string& cameraName,
 
             _measurements.push_back(best->measurement);
             _acceptedCount++;
+
+            // Commit this pose as the velocity gate baseline for the next cycle.
+            _cameraState[cameraName].lastPose = best->measurement.pose;
+            _cameraState[cameraName].lastTime = best->measurement.timestamp;
 
 #if BOT_TRACE_VISION
             const auto& pose2d = best->measurement.pose;

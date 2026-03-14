@@ -54,22 +54,29 @@ static void displayPaths()
 } // namespace detail
 
 Robot::Robot()
-    : frc::TimedRobot(units::millisecond_t (
-        1000.0 / config::number ("period")))
+    : frc::TimedRobot (units::millisecond_t (
+          1000.0 / config::number ("period")))
 {
     DriverStation::SilenceJoystickConnectionWarning (true);
 
     auto& logger = tkit::Logger::GetInstance();
 
-    tkit::RecordOutput("Metadata/ProjectName", std::string("frc-bot-2026-cxx"));
-    tkit::RecordOutput("Metadata/ControllerType",
-        std::string(config::boolean("gamepad") ? "Gamepad" : "Flightsticks"));
+    tkit::RecordOutput ("Metadata/ProjectName", std::string ("frc-bot-2026-cxx"));
+    tkit::RecordOutput ("Metadata/ControllerType",
+                        std::string (config::boolean ("gamepad") ? "Gamepad" : "Flightsticks"));
 
     try {
         if (frc::RobotBase::IsReal()) {
-            const std::string logPath = std::filesystem::exists ("/u")
-                                            ? "/u/logs"
-                                            : "/home/lvuser/logs";
+            std::string base;
+
+            if (std::filesystem::is_directory ("/media/sda1"))
+                base = "/media/sda1";
+            else if (std::filesystem::is_directory ("/run/media/sda1"))
+                base = "/run/media/sda1";
+            else
+                base = "/home/lvuser";
+
+            std::string logPath = base + "/logs";
             std::filesystem::create_directories (logPath);
             logger.AddReceiver (std::make_unique<tkit::WPILogWriter> (logPath));
             logger.AddReceiver (std::make_unique<tkit::NetworkTablesReceiver>());
@@ -86,7 +93,7 @@ Robot::Robot()
 
 void Robot::RobotInit()
 {
-    frc::RobotController::SetBrownoutVoltage(6.0_V);
+    frc::RobotController::SetBrownoutVoltage (6.0_V);
     SmartDashboard::PutString ("Controller",
                                config::boolean ("gamepad") ? "Gamepad" : "Flightsticks");
     detail::displayPaths();
@@ -97,9 +104,9 @@ void Robot::RobotInit()
     vision.detach();
 #endif
 
-    auto periodMs = units::millisecond_t(GetPeriod()).value();
-    std::cout << "[bot] running at " << config::number("period") << " fps"
-              << " (" << std::fixed << std::setprecision(3) << periodMs << " ms)" << std::endl;
+    auto periodMs = units::millisecond_t (GetPeriod()).value();
+    std::cout << "[bot] running at " << config::number ("period") << " fps"
+              << " (" << std::fixed << std::setprecision (3) << periodMs << " ms)" << std::endl;
 }
 
 void Robot::RobotPeriodic()
@@ -115,8 +122,8 @@ void Robot::RobotPeriodic()
         // Poll all cameras, apply all gates (latency, tag count, distance,
         // field bounds, odometry residual), and fuse the single best candidate.
         for (const auto& measurement :
-                _container->vision().getMeasurements(currentPose)) {
-            _container->drivetrain().AddVisionMeasurement(
+             _container->vision().getMeasurements (currentPose)) {
+            _container->drivetrain().AddVisionMeasurement (
                 measurement.pose,
                 measurement.timestamp,
                 measurement.stdDevs);
@@ -126,8 +133,8 @@ void Robot::RobotPeriodic()
 
     // Estimated distance from fused robot pose to the hub
     auto robotPose = _container->drivetrain().GetState().Pose;
-    units::meter_t distanceToHub = robotPose.Translation().Distance(indy::landmarks::hubPosition());
-    tkit::RecordOutput("Robot/DistanceToHub", distanceToHub.value());
+    units::meter_t distanceToHub = robotPose.Translation().Distance (indy::landmarks::hubPosition());
+    tkit::RecordOutput ("Robot/DistanceToHub", distanceToHub.value());
 
     tkit::Logger::GetInstance().Periodic();
     frc2::CommandScheduler::GetInstance().Run();
@@ -146,7 +153,7 @@ void Robot::AutonomousInit()
 
     if (_autoCommand) {
         std::cout << "AutonomousInit: Scheduling autonomous command" << std::endl;
-        frc2::CommandScheduler::GetInstance().Schedule(*_autoCommand);
+        frc2::CommandScheduler::GetInstance().Schedule (*_autoCommand);
     } else {
         std::cerr << "AutonomousInit: No autonomous command returned!" << std::endl;
     }
@@ -202,13 +209,13 @@ void Robot::SimulationPeriodic()
     // Without this, GetVelocity() always returns 0 in sim and isShooterReady()
     // never becomes true, leaving shootAtDistanceCommand stuck in WaitUntil.
     auto& shooterSim = _container->turret().shooterMotor().GetSimState();
-    shooterSim.SetSupplyVoltage(frc::RobotController::GetBatteryVoltage());
-    shooterSim.SetRotorVelocity(_container->turret().cachedShooterTarget());
+    shooterSim.SetSupplyVoltage (frc::RobotController::GetBatteryVoltage());
+    shooterSim.SetRotorVelocity (_container->turret().cachedShooterTarget());
 
 #if BOT_VISION
     // Advance the vision simulation with the current ground-truth drivetrain pose.
-    if (auto* visionSim = dynamic_cast<indy::VisionSim*>(&_container->vision())) {
-        visionSim->update(_container->drivetrain().GetState().Pose);
+    if (auto* visionSim = dynamic_cast<indy::VisionSim*> (&_container->vision())) {
+        visionSim->update (_container->drivetrain().GetState().Pose);
     }
 #endif
 }
@@ -225,8 +232,8 @@ void Robot::cameraThread()
     const auto fps = 20;
 
     // Only start the camera if a USB device is actually present
-    CS_Status status  { 0 };
-    if (cs::EnumerateUsbCameras(&status).empty()) {
+    CS_Status status { 0 };
+    if (cs::EnumerateUsbCameras (&status).empty()) {
         std::cout << "[camera] no USB cameras found, exiting camera thread\n";
         return;
     }
@@ -306,7 +313,7 @@ int main()
     // Bypass C++ static destructors to avoid a crash in PathPlanner's
     // PPHolonomicDriveController destructor trying to access an already-
     // destroyed wpi::SendableRegistry mutex (static destruction order issue).
-    _Exit(result);
+    _Exit (result);
 }
     #endif
 #endif

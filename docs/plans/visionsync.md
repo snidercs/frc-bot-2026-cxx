@@ -55,7 +55,7 @@ and the estimator still drifts during the gap before vision recovers
 
 ---
 
-### Option B — Loosen the Residual Gate During Obstruction
+### Option B — Loosen the Residual Gate During Obstruction ✅ IMPLEMENTED
 
 The residual gate in `processResults()` currently hard-rejects any vision pose
 more than `kMaxResidual = 0.6m` from current odometry. If odometry has already
@@ -67,13 +67,68 @@ measurements for more than ~10 consecutive cycles (`_acceptedCount` staying at 0
 temporarily widen `kMaxResidual` to e.g. 1.5m to let vision "snap" the pose back.
 
 ```cpp
-// In processResults() / getMeasurements():
-auto effectiveResidual = (_consecutiveDropouts > 10) ? 1.5_m : kMaxResidual;
+// In processResults() — already live:
+const auto residualLimit = _dropouts > 10 ? kLooseResidual : kMaxResidual;
+// kMaxResidual = 0.6m, kLooseResidual = 1.5m
 ```
 
 **Pros:** Simple, contained change inside `VisionIO`  
 **Cons:** A wider residual gate can let bad measurements through if the pose
 drifted for a different reason (bad odometry, not obstruction)
+
+---
+
+### Option E — Velocity Gate on Accepted Measurements
+
+Reject a measurement if the implied velocity between the *last accepted pose*
+and this one is physically impossible. This catches "slow" bad solves that
+slip past the residual gate because odometry has already drifted to meet them.
+
+**Implementation sketch (inside `processResults()`):**
+```cpp
+// After residual gate passes, before pushing to _candidates:
+if (_lastAcceptedTime > 0_s) {
+    auto dt = estimatedPose->timestamp - _lastAcceptedTime;
+    auto displacement = pose2d.Translation().Distance(_lastAcceptedPose.Translation());
+    auto impliedVelocity = displacement / dt;
+    if (impliedVelocity > kMaxImpliedVelocity) {  // e.g. 5.0_mps
+        _rejectedVelocity++;
+        continue;
+    }
+}
+_lastAcceptedPose = pose2d;
+_lastAcceptedTime = estimatedPose->timestamp;
+```
+
+**Pros:** No latency added; catches a failure mode the residual gate misses  
+**Cons:** Requires storing `_lastAcceptedPose` and `_lastAcceptedTime` per camera
+
+---
+
+### Option F — Adaptive `stdDevs` Based on Measurement Consistency
+
+Rather than filtering the pose directly, inflate the `stdDevs` passed to
+`AddVisionMeasurement()` when recent measurements have been inconsistent.
+This keeps the Kalman filter in control — instead of rejecting outright,
+it just trusts the measurement less, allowing gradual convergence rather
+than a hard jump or hard reject.
+
+**Implementation sketch:**
+```cpp
+// Track a rolling variance of recent accepted X/Y.
+// If variance is high (measurements are jumping around), scale up stdDevs:
+double consistencyScale = std::clamp(recentVariance / kVarianceThreshold, 1.0, 4.0);
+double xy = (0.2 + distanceMeters * 0.07) * consistencyScale;
+```
+
+**Pros:**
+- No latency; Kalman filter does the gradual convergence naturally
+- High-jitter camera still contributes, just with reduced weight
+- Complements Option B — even a measurement that passes the loose residual
+  gate gets appropriately down-weighted if it's inconsistent
+
+**Cons:** Requires a small rolling history buffer per camera; adds complexity
+to `computeStdDevs()`
 
 ---
 
@@ -117,9 +172,17 @@ only blocks *half* the cameras at most.
 
 ## Recommendation
 
-**Short term: Option B** — loosen the residual gate after a dropout streak.
-It's a 5-line change inside `VisionIO::processResults()`, is self-contained,
-and directly targets the self-reinforcing rejection cycle.
+**Short term: Option B ✅ done** — residual gate loosens after 10 dropout cycles.
+Already live in `VisionIO::processResults()`.
+
+**Next up: Option E** — velocity gate on accepted measurements. A ~10-line addition
+to `processResults()` that catches bad solves the residual gate misses. No latency,
+no new abstractions.
+
+**Also consider: Option F** — adaptive `stdDevs` scaling. Complements both B and E:
+measurements that slip through the gates but are inconsistent get down-weighted
+naturally by the Kalman filter rather than hard-rejected. Good follow-on once E
+is validated.
 
 **Medium term: Option A** — velocity discrepancy detection. Catches obstruction
 before the pose drifts enough to trigger the rejection cycle in the first place.

@@ -65,15 +65,22 @@ Robot::Robot()
     tkit::RecordOutput("Metadata/ControllerType",
         std::string(config::boolean("gamepad") ? "Gamepad" : "Flightsticks"));
 
-    if (frc::RobotBase::IsReal()) {
-        logger.AddReceiver(std::make_unique<tkit::WPILogWriter>("/home/lvuser/logs"));
-        logger.AddReceiver(std::make_unique<tkit::NetworkTablesReceiver>());
-    } else {
-        logger.AddReceiver(std::make_unique<tkit::NetworkTablesReceiver>());
+    try {
+        if (frc::RobotBase::IsReal()) {
+            const std::string logPath = std::filesystem::exists ("/u")
+                                            ? "/u/logs"
+                                            : "/home/lvuser/logs";
+            std::filesystem::create_directories (logPath);
+            logger.AddReceiver (std::make_unique<tkit::WPILogWriter> (logPath));
+            logger.AddReceiver (std::make_unique<tkit::NetworkTablesReceiver>());
+        } else {
+            logger.AddReceiver (std::make_unique<tkit::NetworkTablesReceiver>());
+        }
+
+        logger.Start();
+    } catch (const std::exception& e) {
+        std::cerr << "[bot] could not start TK logger: " << e.what() << std::endl;
     }
-
-    logger.Start();
-
     _container = Container::create();
 }
 

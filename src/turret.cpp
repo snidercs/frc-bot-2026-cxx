@@ -204,10 +204,11 @@ void Turret::updateRotationControl(double operatorCommand) {
         // This resists drift from gravity/momentum
         _rotationMotor.SetControl(_positionRequest.WithPosition(_holdPosition));
     }
-    
+#if BOT_TRACE_SUBSYSTEMS
     // Telemetry for debugging
     frc::SmartDashboard::PutBoolean("Turret/Holding Position", _isHoldingPosition);
     frc::SmartDashboard::PutNumber("Turret/Hold Position (turns)", _holdPosition.value());
+#endif
 }
 
 void Turret::setShooterVelocity(units::turns_per_second_t velocity) {
@@ -311,11 +312,11 @@ units::turn_t Turret::computeAimPosition(const frc::Pose2d& robotPose,
     // Wrap into (-0.5, +0.5]
     while (motorPos >  0.5_tr) motorPos -= 1.0_tr;
     while (motorPos < -0.5_tr) motorPos += 1.0_tr;
-
+#if BOT_TRACE_SUBSYSTEMS
     // Telemetry
     frc::SmartDashboard::PutNumber("Turret/AimAngle Raw (turns)", atan2Turns);
     frc::SmartDashboard::PutNumber("Turret/AimAngle Motor (turns)", motorPos.value());
-
+#endif
     return motorPos;
 }
 

@@ -38,6 +38,8 @@ thinking through or actively working on.
 - [`plans/lifterhoming.md`](./plans/lifterhoming.md) — lifter homing behavior, assumptions, and implementation direction
 - [`plans/turrentrange.md`](./plans/turrentrange.md) — turret rotation range thoughts and possible update work
 - [`plans/visionsync.md`](./plans/visionsync.md) — ideas around vision sync, correction behavior, and estimator tuning
+- [`plans/realtime-performance.md`](./plans/realtime-performance.md) — known hot-path performance concerns and optimisation areas in the vision pipeline
+- [`plans/logging-strategy.md`](./plans/logging-strategy.md) — async & RT-safe logging: does SmartDashboard cost you loop time? migration path to DataLog
 
 ## How to use this folder
 

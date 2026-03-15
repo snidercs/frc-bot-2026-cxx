@@ -168,7 +168,7 @@ protected:
         // Reward good multi-tag geometry
         if (tagCount > 2) xy *= 0.75;
 #if BOT_ADAPTIVE_STDDEVS
-        // Option F: inflate stdDevs when recent measurements have been inconsistent.
+        // Inflate stdDevs when recent measurements have been inconsistent.
         // kVarianceThreshold is the m² spread that begins scaling. kMaxScale caps it.
         static constexpr double kVarianceThreshold = 0.05;
         static constexpr double kMaxScale          = 3.0;

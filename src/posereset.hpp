@@ -44,15 +44,13 @@ public:
                            `getMeasurements()` for residual gating.
         @return true if a reset was performed on this call, false otherwise.
     */
-    bool tryReset(VisionIO& vision,
-                  CommandSwerveDrivetrain& drivetrain,
-                  const frc::Pose2d& currentPose)
+    bool tryReset (VisionIO& vision, CommandSwerveDrivetrain& drivetrain)
     {
         if (_done)
             return false;
 
-        for (const auto& m : vision.getMeasurements(currentPose)) {
-            drivetrain.ResetPose(m.pose);
+        for (const auto& m : vision.measurements()) {
+            drivetrain.ResetPose (m.pose);
             _done = true;
             return true;
         }

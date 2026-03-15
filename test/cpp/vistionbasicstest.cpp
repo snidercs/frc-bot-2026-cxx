@@ -3,24 +3,27 @@
 #include <frc/geometry/Pose2d.h>
 #include <frc/geometry/Rotation2d.h>
 
-/** Mock implementation of VisionIO for testing */
+/** Mock implementation of VisionIO for testing.
+ 
+    Implements the `readMeasurements()` hook so tests can pre-load measurements
+    via `addMeasurement()` and then drive the pipeline through `read()` /
+    `measurements()` exactly as production code does.
+*/
 class MockVisionIO : public indy::VisionIO {
 private:
     int _callCount = 0;
+    std::vector<indy::VisionMeasurement> _pending;
 
 public:
+    /** Stage a measurement to be returned on the next `read()` call. */
     void addMeasurement(const indy::VisionMeasurement& measurement) {
-        _measurements.push_back(measurement);
+        _pending.push_back(measurement);
     }
 
+    /** Clear all staged and committed measurements. */
     void clearMeasurements() {
+        _pending.clear();
         _measurements.clear();
-    }
-
-    const std::vector<indy::VisionMeasurement>& getMeasurements(
-            const frc::Pose2d& /*currentPose*/) override {
-        _callCount++;
-        return _measurements;
     }
 
     std::string getStatus() override {
@@ -28,6 +31,15 @@ public:
     }
 
     int getCallCount() const { return _callCount; }
+
+protected:
+    /** Satisfies the pure-virtual hook. Moves staged measurements into the
+        shared `_measurements` buffer that `read()` exposes via `measurements()`. */
+    void readMeasurements(const frc::Pose2d& /*currentPose*/) override {
+        _callCount++;
+        _measurements = _pending;
+        _pending.clear();
+    }
 };
 
 // Test VisionMeasurement struct creation
@@ -55,11 +67,11 @@ TEST(VisionTest, MockVisionIO) {
     const frc::Pose2d anyPose{};  // pose doesn't matter for mock — gating is bypassed
 
     // Initially empty
-    const auto& measurements = mockVision.getMeasurements(anyPose);
-    EXPECT_EQ(measurements.size(), 0);
+    mockVision.read(anyPose);
+    EXPECT_EQ(mockVision.measurements().size(), 0);
     EXPECT_EQ(mockVision.getCallCount(), 1);
 
-    // Add a measurement
+    // Add a measurement and read it
     indy::VisionMeasurement m1{
         frc::Pose2d{0.0_m, 0.0_m, frc::Rotation2d{0_deg}},
         1.0_s,
@@ -68,28 +80,29 @@ TEST(VisionTest, MockVisionIO) {
     };
     mockVision.addMeasurement(m1);
 
-    const auto& measurements2 = mockVision.getMeasurements(anyPose);
-    EXPECT_EQ(measurements2.size(), 1);
-    EXPECT_EQ(measurements2[0].source, "FR");
+    mockVision.read(anyPose);
+    EXPECT_EQ(mockVision.measurements().size(), 1);
+    EXPECT_EQ(mockVision.measurements()[0].source, "FR");
     EXPECT_EQ(mockVision.getCallCount(), 2);
 
-    // Add multiple measurements
+    // Stage two measurements and read them
     indy::VisionMeasurement m2{
         frc::Pose2d{1.0_m, 1.0_m, frc::Rotation2d{90_deg}},
         2.0_s,
         wpi::array<double, 3>{0.3, 0.3, 0.08},
         "BL"
     };
+    mockVision.addMeasurement(m1);
     mockVision.addMeasurement(m2);
 
-    const auto& measurements3 = mockVision.getMeasurements(anyPose);
-    EXPECT_EQ(measurements3.size(), 2);
-    EXPECT_EQ(measurements3[1].source, "BL");
+    mockVision.read(anyPose);
+    EXPECT_EQ(mockVision.measurements().size(), 2);
+    EXPECT_EQ(mockVision.measurements()[1].source, "BL");
 
     // Clear and verify
     mockVision.clearMeasurements();
-    const auto& measurements4 = mockVision.getMeasurements(anyPose);
-    EXPECT_EQ(measurements4.size(), 0);
+    mockVision.read(anyPose);
+    EXPECT_EQ(mockVision.measurements().size(), 0);
 }
 
 // Test vision constants

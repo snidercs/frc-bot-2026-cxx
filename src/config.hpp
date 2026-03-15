@@ -8,13 +8,15 @@
 // Enable to luanch a native Lua version of the robot code.
 #define LUABOT_NATIVE   0
 // Enable to run the dumb camera in background thread
-#define BOT_DUMB_CAMERA 1
+#define BOT_DUMB_CAMERA 0
 // Enable to put debug data in network tables for subsystems
 #define BOT_TRACE_SUBSYSTEMS 0
 // Enable to use vision features
 #define BOT_VISION 1
 // Trace Vision in NT
-#define BOT_TRACE_VISION 1
+#define BOT_TRACE_VISION 0
+// Trace Residual vision reads
+#define BOT_TRACE_RESIDUAL 1
 // Enable Adaptive stdDevs scaling based on rolling measurement variance.
 // Off by default — requires post-competition tuning of kVarianceThreshold.
 #define BOT_ADAPTIVE_STDDEVS 1

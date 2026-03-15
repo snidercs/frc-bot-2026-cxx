@@ -15,10 +15,7 @@ VisionMulti::VisionMulti()
     }
 }
 
-const std::vector<VisionMeasurement>& VisionMulti::getMeasurements(
-    const frc::Pose2d& currentPose) {
-    _measurements.clear();
-
+void VisionMulti::readMeasurements (const frc::Pose2d& currentPose) {
     for (std::size_t i = 0; i < _cameras.size(); ++i) {
         _rawResults[i] = _cameras[i]->camera.GetAllUnreadResults();
         processResults(std::string(_cameras[i]->camera.GetCameraName()),
@@ -26,8 +23,6 @@ const std::vector<VisionMeasurement>& VisionMulti::getMeasurements(
                        _rawResults[i],
                        currentPose);
     }
-
-    return _measurements;
 }
 
 std::string VisionMulti::getStatus() {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sol/sol.hpp"
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -67,24 +68,32 @@ public:
         int    tagCount;
         double distance;
     };
-    
-    /** Retrieves all available vision measurements from the last update cycle.
-     
-        @warning Must be called **exactly once per periodic cycle**. Implementations
-        clear and refill an internal buffer on each call — calling it more than once
-        in the same cycle will return an empty vector on the second call, since the
-        underlying camera results are consumed (unread) on the first.
 
-        @param currentPose The drivetrain's current fused pose. Used for residual
-               gating — any candidate more than `kMaxResidual` from this pose is
-               rejected before it can reach `AddVisionMeasurement()`. Get this
-               from `drivetrain.GetState().Pose` before calling.
+    /** Returns the measurement buffer populated by the last call to `read()`.
      
-        @return Const reference to the internal measurement buffer (0 or 1 entries);
-                valid until the next call.
+        Does **not** poll cameras or mutate any state — safe to call multiple
+        times per cycle. The buffer is valid until the next `read()` call.
+
+        @return Const reference to the internal measurement buffer.
     */
-    virtual const std::vector<VisionMeasurement>& getMeasurements(
-        const frc::Pose2d& currentPose) = 0;
+    const std::vector<VisionMeasurement>& measurements() const noexcept { return _measurements; }
+
+    /** Polls all cameras for this cycle and fills the measurement buffer.
+     
+        @warning Call **exactly once per periodic cycle**. Each call clears the
+        internal buffer and consumes all unread frames from the PhotonVision NT
+        ringbuffer — a second call in the same cycle will return an empty buffer.
+
+        After this returns, iterate results via `measurements()`. Both
+        `RobotPeriodic` and `PoseResetOnce::tryReset()` must share the same
+        call — do not call `read()` in both places.
+
+        @param currentPose The drivetrain's current fused pose, already clamped
+               to field bounds if needed. Used by `processResults()` for residual
+               gating — any candidate further than `kMaxResidual` from this pose
+               is rejected before it can reach `AddVisionMeasurement()`.
+    */
+    void read (const frc::Pose2d& currentPose);
 
     /** Gets a human-readable status string for debugging.
      
@@ -179,6 +188,23 @@ protected:
         double theta = 9999.0;
         return {xy, xy, theta};
     }
+
+    /** Retrieves all available vision measurements from the last update cycle.
+     
+        @warning Must be called **exactly once per periodic cycle**. Implementations
+        clear and refill an internal buffer on each call — calling it more than once
+        in the same cycle will return an empty vector on the second call, since the
+        underlying camera results are consumed (unread) on the first.
+
+        @param currentPose The drivetrain's current fused pose. Used for residual
+               gating — any candidate more than `kMaxResidual` from this pose is
+               rejected before it can reach `AddVisionMeasurement()`. Get this
+               from `drivetrain.GetState().Pose` before calling.
+     
+        @return Const reference to the internal measurement buffer (0 or 1 entries);
+                valid until the next call.
+    */
+    virtual void readMeasurements(const frc::Pose2d& currentPose) = 0;
 
     /** Processes a batch of pipeline results from one camera.
      

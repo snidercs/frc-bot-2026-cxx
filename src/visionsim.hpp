@@ -35,8 +35,7 @@ public:
     */
     void update(const frc::Pose2d& robotPose);
 
-    const std::vector<VisionMeasurement>& getMeasurements(
-        const frc::Pose2d& currentPose) override;
+    void readMeasurements(const frc::Pose2d& currentPose) override;
     std::string getStatus() override;
     std::string getLastTargets() override;
 

@@ -112,39 +112,46 @@ void Robot::RobotInit()
 
 void Robot::RobotPeriodic()
 {
+    auto& drive (_container->drivetrain());
+    auto& vision (_container->vision());
+
 #if BOT_VISION
     if (frc::RobotBase::IsReal() && (IsTeleop() || IsTest())) {
-        // Option C — Field Boundary Clamping.
+        // Field Boundary Clamping.
         // Must run BEFORE the currentPose snapshot so the residual gate in
         // processResults() sees the corrected pose, not the drifted one.
         // Only fires when the pose is clearly wrong (> kClampMargin outside
         // the physical field boundary), not on normal sensor noise.
+        // Read pose once — reused for both field clamping and residual gating.
+        // ResetPose() may mutate odometry state, so a second GetState().Pose
+        // call after clamping could return a different value.
+        frc::Pose2d currentPose = drive.GetState().Pose;
+
         {
             static constexpr units::meter_t kFieldLength = 16.535_m;
-            static constexpr units::meter_t kFieldWidth  = 8.069_m;
+            static constexpr units::meter_t kFieldWidth = 8.069_m;
             static constexpr units::meter_t kClampMargin = 0.75_m;
 
-            const auto p = _container->drivetrain().GetState().Pose;
-            if (indy::math::isPoseOutOfBounds(p, kFieldLength, kFieldWidth, kClampMargin)) {
-                _container->drivetrain().ResetPose(
-                    indy::math::clampPoseToField(p, kFieldLength, kFieldWidth));
-                frc::SmartDashboard::PutBoolean("Vision/PoseClamped", true);
+            if (indy::math::isPoseOutOfBounds (currentPose, kFieldLength, kFieldWidth, kClampMargin)) {
+                currentPose = indy::math::clampPoseToField (currentPose, kFieldLength, kFieldWidth);
+                drive.ResetPose (currentPose);
+    #if BOT_TRACE_VISION
+                frc::SmartDashboard::PutBoolean ("Vision/PoseClamped", true);
+    #endif
             } else {
-                frc::SmartDashboard::PutBoolean("Vision/PoseClamped", false);
+    #if BOT_TRACE_VISION
+
+                frc::SmartDashboard::PutBoolean ("Vision/PoseClamped", false);
+    #endif
             }
         }
 
-        // Snapshot drivetrain pose first — passed to getMeasurements() so
-        // processResults() can gate out any vision pose too far from current
-        // odometry (residual gate). Must be read before getMeasurements() clears
-        // and refills the internal buffer.
-        const frc::Pose2d currentPose = _container->drivetrain().GetState().Pose;
-
         // Poll all cameras, apply all gates (latency, tag count, distance,
         // field bounds, odometry residual), and fuse the single best candidate.
-        for (const auto& measurement :
-             _container->vision().getMeasurements (currentPose)) {
-            _container->drivetrain().AddVisionMeasurement (
+        vision.read (currentPose);
+
+        for (const auto& measurement : vision.measurements()) {
+            drive.AddVisionMeasurement (
                 measurement.pose,
                 measurement.timestamp,
                 measurement.stdDevs);
@@ -152,10 +159,12 @@ void Robot::RobotPeriodic()
     }
 #endif
 
+#if BOT_TRACE_VISION
     // Estimated distance from fused robot pose to the hub
     auto robotPose = _container->drivetrain().GetState().Pose;
     units::meter_t distanceToHub = robotPose.Translation().Distance (indy::landmarks::hubPosition());
     tkit::RecordOutput ("Robot/DistanceToHub", distanceToHub.value());
+#endif
 
     tkit::Logger::GetInstance().Periodic();
     frc2::CommandScheduler::GetInstance().Run();
@@ -169,14 +178,12 @@ void Robot::DisabledExit() {}
 
 void Robot::AutonomousInit()
 {
-    std::cout << "AutonomousInit: Getting autonomous command..." << std::endl;
     _autoCommand = _container->GetAutonomousCommand();
 
     if (_autoCommand) {
-        std::cout << "AutonomousInit: Scheduling autonomous command" << std::endl;
         frc2::CommandScheduler::GetInstance().Schedule (*_autoCommand);
     } else {
-        std::cerr << "AutonomousInit: No autonomous command returned!" << std::endl;
+        std::cerr << "[bot] AutonomousInit: No autonomous command returned!" << std::endl;
     }
 }
 

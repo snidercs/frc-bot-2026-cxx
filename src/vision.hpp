@@ -142,6 +142,14 @@ protected:
     struct CameraGateState {
         frc::Pose2d     lastPose{};
         units::second_t lastTime{ 0_s };
+
+#if BOT_ADAPTIVE_STDDEVS
+        // Rolling window for Option F adaptive stdDev scaling.
+        static constexpr int kWindowSize = 6;
+        std::array<frc::Translation2d, kWindowSize> recentPositions{};
+        int windowCount{0};
+        int windowHead{0};
+#endif
     };
     std::unordered_map<std::string, CameraGateState> _cameraState;
 
@@ -149,13 +157,24 @@ protected:
      
         @param distanceMeters Distance from camera to nearest tag in metres.
         @param tagCount       Number of tags used in the PNP solve.
+        @param variance       Mean positional variance of recent accepted poses (m²).
+                              Pass 0.0 when BOT_ADAPTIVE_STDDEVS is off.
         @return [x, y, theta] standard deviations.
     */
-    wpi::array<double, 3> computeStdDevs(double distanceMeters, int tagCount) const {
+    wpi::array<double, 3> computeStdDevs(double distanceMeters, int tagCount,
+                                         double variance = 0.0) const {
         // Conservative base: further away = less trust
         double xy = 0.2 + (distanceMeters * 0.07);
         // Reward good multi-tag geometry
         if (tagCount > 2) xy *= 0.75;
+#if BOT_ADAPTIVE_STDDEVS
+        // Option F: inflate stdDevs when recent measurements have been inconsistent.
+        // kVarianceThreshold is the m² spread that begins scaling. kMaxScale caps it.
+        static constexpr double kVarianceThreshold = 0.05;
+        static constexpr double kMaxScale          = 3.0;
+        const double scale = std::clamp(variance / kVarianceThreshold, 1.0, kMaxScale);
+        xy *= scale;
+#endif
         // theta: very high so vision never overrides the gyro heading
         double theta = 9999.0;
         return {xy, xy, theta};

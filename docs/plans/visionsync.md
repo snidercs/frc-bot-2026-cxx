@@ -137,7 +137,7 @@ to `computeStdDevs()`
 
 ---
 
-### Option C — Field Boundary Clamping
+### Option C — Field Boundary Clamping ✅ IMPLEMENTED
 
 After every odometry update, clamp the estimated pose to within the field
 boundaries. The robot cannot physically be outside the field, so any pose
@@ -181,6 +181,10 @@ only blocks *half* the cameras at most.
 Already live in `VisionIO::processResults()`.
 
 **Next up: Option E ✅ done** — velocity gate on accepted measurements is live in `VisionIO::processResults()`.
+
+**Option C ✅ done** — field boundary clamp in `RobotPeriodic()`. Fires at `0.75_m`
+outside the wall; clamp runs before the `currentPose` snapshot so the residual gate
+benefits in the same cycle. Telemetry: `Vision/PoseClamped` on SmartDashboard.
 
 **Also consider: Option F** — adaptive `stdDevs` scaling. Complements both B and E:
 measurements that slip through the gates but are inconsistent get down-weighted

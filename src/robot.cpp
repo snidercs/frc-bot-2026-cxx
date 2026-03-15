@@ -24,6 +24,7 @@
 #endif
 
 #include "config.hpp"
+#include "mathutil.hpp"
 #include "robot.hpp"
 #include "scripting.hpp"
 #include "turret.hpp"
@@ -113,6 +114,26 @@ void Robot::RobotPeriodic()
 {
 #if BOT_VISION
     if (frc::RobotBase::IsReal() && (IsTeleop() || IsTest())) {
+        // Option C — Field Boundary Clamping.
+        // Must run BEFORE the currentPose snapshot so the residual gate in
+        // processResults() sees the corrected pose, not the drifted one.
+        // Only fires when the pose is clearly wrong (> kClampMargin outside
+        // the physical field boundary), not on normal sensor noise.
+        {
+            static constexpr units::meter_t kFieldLength = 16.535_m;
+            static constexpr units::meter_t kFieldWidth  = 8.069_m;
+            static constexpr units::meter_t kClampMargin = 0.75_m;
+
+            const auto p = _container->drivetrain().GetState().Pose;
+            if (indy::math::isPoseOutOfBounds(p, kFieldLength, kFieldWidth, kClampMargin)) {
+                _container->drivetrain().ResetPose(
+                    indy::math::clampPoseToField(p, kFieldLength, kFieldWidth));
+                frc::SmartDashboard::PutBoolean("Vision/PoseClamped", true);
+            } else {
+                frc::SmartDashboard::PutBoolean("Vision/PoseClamped", false);
+            }
+        }
+
         // Snapshot drivetrain pose first — passed to getMeasurements() so
         // processResults() can gate out any vision pose too far from current
         // odometry (residual gate). Must be read before getMeasurements() clears

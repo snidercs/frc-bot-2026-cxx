@@ -1,4 +1,5 @@
 #include "vision.hpp"
+#include "mathutil.hpp"
 #include "frc/smartdashboard/SmartDashboard.h"
 
 namespace indy {
@@ -105,7 +106,14 @@ void VisionIO::processResults(const std::string& cameraName,
                 VisionMeasurement{
                     pose2d,
                     estimatedPose->timestamp,
+#if BOT_ADAPTIVE_STDDEVS
+                    computeStdDevs(distance, tagCount,
+                        indy::math::rollingVariance2d(
+                            _cameraState[cameraName].recentPositions,
+                            _cameraState[cameraName].windowCount)),
+#else
                     computeStdDevs(distance, tagCount),
+#endif
                     cameraName
                 },
                 tagCount,
@@ -129,6 +137,15 @@ void VisionIO::processResults(const std::string& cameraName,
             // Commit this pose as the velocity gate baseline for the next cycle.
             _cameraState[cameraName].lastPose = best->measurement.pose;
             _cameraState[cameraName].lastTime = best->measurement.timestamp;
+
+#if BOT_ADAPTIVE_STDDEVS
+            // Option F: push accepted position into rolling window for variance tracking.
+            auto& state = _cameraState[cameraName];
+            state.recentPositions[state.windowHead] = best->measurement.pose.Translation();
+            state.windowHead  = (state.windowHead + 1) % CameraGateState::kWindowSize;
+            if (state.windowCount < CameraGateState::kWindowSize)
+                state.windowCount++;
+#endif
 
 #if BOT_TRACE_VISION
             const auto& pose2d = best->measurement.pose;

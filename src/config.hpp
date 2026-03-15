@@ -15,6 +15,9 @@
 #define BOT_VISION 1
 // Trace Vision in NT
 #define BOT_TRACE_VISION 1
+// Enable Adaptive stdDevs scaling based on rolling measurement variance.
+// Off by default — requires post-competition tuning of kVarianceThreshold.
+#define BOT_ADAPTIVE_STDDEVS 1
 
 namespace config {
 

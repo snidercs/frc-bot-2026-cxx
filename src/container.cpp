@@ -63,12 +63,13 @@ protected:
         _sticks[1].Button(config::integer("intake_eject_index")).WhileTrue (
             intake().ejectCommand());
         
-        // Shooter Control — run shaker in parallel to agitate while shooting
+        // Shooter Control — run both shakers in parallel to agitate while shooting
         _sticks[1].Button(config::integer("turret_shoot_button_index")).WhileTrue (
             turret().shootAtDistanceCommand([this] {
                 return drivetrain().GetState().Pose.Translation()
                            .Distance(landmarks::hubPosition());
-            }).AlongWith(shaker().spinCommand(0.3).AsProxy()));
+            }).AlongWith(shaker().spinCommand(0.6).AsProxy())
+              .AlongWith(horizontalShaker().spinCommand(0.6).AsProxy()));
 
         // Climber control
         _sticks[0].Button(config::integer("climber_climb_button_index")).WhileTrue (
@@ -96,7 +97,7 @@ protected:
         _sticks[1].Button(3).OnTrue(turret().calibrateRotationZero());
 
         // Shaker: toggle stick 1 button 17 to oscillate forward/reverse
-        _sticks[1].Button(17).ToggleOnTrue(shaker().oscillateCommand(0.4));
+        // _sticks[1].Button(17).ToggleOnTrue(shaker().oscillateCommand(0.4));
 
         // Manual turret rotation
         const auto rotStick = config::integer("turret_rotation_axis_stick");
@@ -214,6 +215,7 @@ Container::Container()
     _climber = std::make_unique<indy::Climber>();
     _turret = std::make_unique<indy::Turret>();
     _shaker = std::make_unique<indy::Shaker>();
+    _horizontalShaker = std::make_unique<indy::HorizontalShaker>();
 
 #if BOT_VISION
     if (frc::RobotBase::IsSimulation()) {

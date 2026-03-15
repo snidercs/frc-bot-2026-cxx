@@ -56,7 +56,10 @@ local config = {
     intake_stutter_length = 9.25,  -- (seconds) How long to stutter the intake in static-shot auto's
 
     shaker_device_id = 35,
-    shaker_can_bus = "rio"
+    shaker_can_bus = "rio",
+
+    horizontal_shaker_device_id = 45,
+    horizontal_shaker_can_bus = "rio"
 }
 
 return config

@@ -23,6 +23,7 @@ All values sourced from `robot/config.lua`.
 | Turret | Shooter flywheel | 16 | rio |
 | Turret | Uptake motor | 21 | rio |
 | Shaker | Shaker motor | 35 | rio |
+| Horizontal Shaker | Horizontal shaker motor | 22 | rio |
 
 > **Note:** Swerve drive module CAN IDs are defined in `generated/TunerConstants.h`,
 > not in `config.lua`. Update that table separately.

@@ -40,6 +40,7 @@ thinking through or actively working on.
 - [`plans/visionsync.md`](./plans/visionsync.md) — ideas around vision sync, correction behavior, and estimator tuning
 - [`plans/realtime-performance.md`](./plans/realtime-performance.md) — known hot-path performance concerns and optimisation areas in the vision pipeline
 - [`plans/logging-strategy.md`](./plans/logging-strategy.md) — async & RT-safe logging: does SmartDashboard cost you loop time? migration path to DataLog
+- [`plans/pid-status.md`](./plans/pid-status.md) — current state of every closed-loop controller, what's tuned, what's guessed, and recommended tuning order
 
 ## How to use this folder
 

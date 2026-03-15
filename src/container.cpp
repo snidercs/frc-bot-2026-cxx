@@ -58,8 +58,7 @@ protected:
 
         // Intake control
         _sticks[0].Button(config::integer("intake_trigger_index")).WhileTrue (
-            intake().intakeCommand()
-                .AlongWith(shaker().spinCommand(0.1).AsProxy()));
+            intake().intakeCommand());
         _sticks[1].Button(config::integer("intake_eject_index")).WhileTrue (
             intake().ejectCommand());
         

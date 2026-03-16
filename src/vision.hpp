@@ -8,20 +8,24 @@
 #include <unordered_map>
 
 #include <frc/apriltag/AprilTagFieldLayout.h>
+#include <frc/DriverStation.h>
 #include <frc/geometry/Pose2d.h>
 #include <frc/geometry/Rotation3d.h>
 #include <frc/geometry/Transform3d.h>
 #include <frc/geometry/Translation2d.h>
+#include <frc/kinematics/ChassisSpeeds.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+
 #include <photon/PhotonPoseEstimator.h>
 #include <photon/targeting/PhotonPipelineResult.h>
+
 #include <units/angle.h>
 #include <units/length.h>
 #include <units/math.h>
 #include <units/time.h>
 #include <units/velocity.h>
+
 #include <wpi/array.h>
-#include <frc/DriverStation.h>
 
 namespace indy {
 
@@ -84,16 +88,19 @@ public:
         internal buffer and consumes all unread frames from the PhotonVision NT
         ringbuffer — a second call in the same cycle will return an empty buffer.
 
-        After this returns, iterate results via `measurements()`. Both
-        `RobotPeriodic` and `PoseResetOnce::tryReset()` must share the same
-        call — do not call `read()` in both places.
+        After this returns, iterate results via `measurements()`.
 
         @param currentPose The drivetrain's current fused pose, already clamped
                to field bounds if needed. Used by `processResults()` for residual
                gating — any candidate further than `kMaxResidual` from this pose
                is rejected before it can reach `AddVisionMeasurement()`.
+        @param speeds The drivetrain's current measured chassis speeds (`GetState().Speeds`).
+               Stored as `_lastSpeeds` for Option A obstruction detection — when
+               commanded motion is high but actual speed is near-zero for several
+               consecutive cycles, `computeStdDevs()` can inflate stdDevs to
+               increase vision trust during the obstruction window.
     */
-    void read (const frc::Pose2d& currentPose);
+    void process (const frc::Pose2d& pose, const frc::ChassisSpeeds& speeds);
 
     /** Gets a human-readable status string for debugging.
      

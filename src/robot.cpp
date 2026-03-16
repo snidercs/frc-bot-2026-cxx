@@ -125,8 +125,9 @@ void Robot::RobotPeriodic()
         // Read pose once — reused for both field clamping and residual gating.
         // ResetPose() may mutate odometry state, so a second GetState().Pose
         // call after clamping could return a different value.
-        frc::Pose2d currentPose = drive.GetState().Pose;
-
+        auto currentPose = drive.GetState().Pose;
+        auto speeds = drive.GetState().Speeds;
+        
         {
             static constexpr units::meter_t kFieldLength = 16.535_m;
             static constexpr units::meter_t kFieldWidth = 8.069_m;
@@ -148,7 +149,7 @@ void Robot::RobotPeriodic()
 
         // Poll all cameras, apply all gates (latency, tag count, distance,
         // field bounds, odometry residual), and fuse the single best candidate.
-        vision.read (currentPose);
+        vision.process (currentPose, speeds);
 
         for (const auto& measurement : vision.measurements()) {
             drive.AddVisionMeasurement (

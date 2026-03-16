@@ -43,11 +43,18 @@ process noise on the estimator — effectively trusting vision more and odometry
 less during that window.
 
 **Implementation sketch:**
-- Compare `GetState().speeds` (actual measured chassis speeds) against the last
-  commanded `ChassisSpeeds`
-- If the discrepancy exceeds a threshold (e.g. >0.2 m/s commanded, <0.05 m/s
-  actual) for more than N cycles, call `drivetrain.SetVisionMeasurementStdDevs()`
-  with tighter values to increase vision weight
+- In `robot.cpp`, pass `drive.GetState().Speeds` (actual measured chassis speeds)
+  into `vision.read()` alongside `currentPose` — it's already read once before
+  the vision block, so no extra `GetState()` call needed
+- `VisionIO::read()` stores the incoming speeds as `_lastSpeeds` (same pattern
+  as all other gate state in the base class) and computes a scalar obstruction
+  multiplier — e.g. if commanded speed is high but `_lastSpeeds` is near-zero
+  for N consecutive cycles, multiply the `stdDevs` passed to
+  `AddVisionMeasurement()` by a scale factor inside `processResults()`
+- `SetVisionMeasurementStdDevs()` is **not** used — it persists globally across
+  cycles. We already pass per-measurement `stdDevs` via the 3-argument
+  `AddVisionMeasurement()` overload; Option A just adds an obstruction multiplier
+  on top of `computeStdDevs()`, keeping all gate logic self-contained in `VisionIO`
 
 **Pros:** Addresses the root cause directly  
 **Cons:** Requires access to commanded speeds (need to cache them in `robot.cpp`),

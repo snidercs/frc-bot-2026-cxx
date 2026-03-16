@@ -1,4 +1,5 @@
 #include "vision.hpp"
+#include "frc/kinematics/ChassisSpeeds.h"
 #include "mathutil.hpp"
 #include "frc/smartdashboard/SmartDashboard.h"
 
@@ -20,7 +21,7 @@ std::string VisionIO::getRejectedCounts()
            + " Velocity=" + std::to_string (_rejectedVelocity);
 }
 
-void VisionIO::read (const frc::Pose2d& pose)
+void VisionIO::process (const frc::Pose2d& pose, const frc::ChassisSpeeds& speeds)
 {
     _measurements.clear();
     readMeasurements (pose);

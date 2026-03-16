@@ -13,22 +13,23 @@
     All positions sourced from the official 2026 field drawings.
 */
 namespace indy::field {
-    /** Field length 2026 (left to right) */
-    inline constexpr units::meter_t length() { return 16.535_m; }
-    /** Field width (bottom to top) */
-    inline constexpr units::meter_t width() { return 8.069_m; }
-    /** Out of bounds margin */
-    inline constexpr units::meter_t margin() { return 0.75_m; }
+/** Field length 2026 (left to right) */
+inline constexpr units::meter_t length() { return 16.535_m; }
+/** Field width (bottom to top) */
+inline constexpr units::meter_t width() { return 8.069_m; }
+/** Out of bounds margin */
+inline constexpr units::meter_t margin() { return 0.75_m; }
 
-    /** AprilTag field layout for the current season.
+/** AprilTag field layout for the current season.
      
         Loads the standard field layout from WPILib resources.
         Returns empty layout if load fails (caller should handle).
     */
-    inline frc::AprilTagFieldLayout layout() {
-        // Load 2026 field layout
-        return frc::AprilTagFieldLayout::LoadField(frc::AprilTagField::k2026RebuiltAndyMark);
-    }
+inline frc::AprilTagFieldLayout layout()
+{
+    // Load 2026 field layout
+    return frc::AprilTagFieldLayout::LoadField (frc::AprilTagField::k2026RebuiltAndyMark);
+}
 
 /** Returns the hub (goal) position for the current alliance.
      

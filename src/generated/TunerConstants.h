@@ -72,14 +72,14 @@ public:
 
     // Theoretical free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
-    static constexpr units::meters_per_second_t kSpeedAt12Volts = 4.39_mps;
+    static constexpr units::meters_per_second_t kSpeedAt12Volts = 5.12_mps;
 
 private:
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
     // This may need to be tuned to your individual robot
-    static constexpr units::scalar_t kCoupleRatio = 4.5;
+    static constexpr units::scalar_t kCoupleRatio = 3.857142857142857;
 
-    static constexpr units::scalar_t kDriveGearRatio = 7.03125;
+    static constexpr units::scalar_t kDriveGearRatio = 6.026785714285714;
     static constexpr units::scalar_t kSteerGearRatio = 26.09090909090909;
 
     // Wheel radius calibration from straight-line odometry test:

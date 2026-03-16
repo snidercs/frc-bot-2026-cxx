@@ -1,7 +1,10 @@
-#include "vision.hpp"
+
 #include "frc/kinematics/ChassisSpeeds.h"
-#include "mathutil.hpp"
 #include "frc/smartdashboard/SmartDashboard.h"
+
+#include "config.hpp"
+#include "mathutil.hpp"
+#include "vision.hpp"
 
 namespace indy::vision {
 
@@ -176,8 +179,8 @@ void Processor::processResults (const std::string& cameraName,
         // Push accepted position into rolling window for variance tracking.
         auto& state = _cameraState[cameraName];
         state.recentPositions[state.windowHead] = best->measurement.pose.Translation();
-        state.windowHead = (state.windowHead + 1) % CameraGateState::kWindowSize;
-        if (state.windowCount < CameraGateState::kWindowSize)
+        state.windowHead = (state.windowHead + 1) % CameraAnchor::kWindowSize;
+        if (state.windowCount < CameraAnchor::kWindowSize)
             state.windowCount++;
 #endif
 

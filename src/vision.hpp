@@ -26,6 +26,8 @@
 
 #include <wpi/array.h>
 
+#include "config.hpp"
+
 namespace indy::vision {
 
 /** A single vision pose measurement from a camera.
@@ -162,27 +164,22 @@ protected:
 
     uint32_t _dropouts = 0;
 
-    // ── Per-camera velocity gate state ───────────────────────────────────────
+    // Per-camera velocity gate state
     // Tracks the last committed accepted pose and its timestamp for each camera
     // so the velocity gate can reject solves that imply physically impossible motion.
-    //
-    // TODO(next-year): All gate state, constants, and processResults() logic are
-    // good candidates to factor out into a shared TelemetryKit / VisionUtils library
-    // so they can be reused across seasons without copying this file. The natural
-    // boundary is a composable VisionGate interface with per-gate state encapsulation.
-    struct CameraGateState {
+    struct CameraAnchor {
         frc::Pose2d lastPose {};
         units::second_t lastTime { 0_s };
 
 #if BOT_ADAPTIVE_STDDEVS
-        // Rolling window for Option F adaptive stdDev scaling.
+        // Rolling window for adaptive stdDev scaling.
         static constexpr int kWindowSize = 6;
         std::array<frc::Translation2d, kWindowSize> recentPositions {};
         int windowCount { 0 };
         int windowHead { 0 };
 #endif
     };
-    std::unordered_map<std::string, CameraGateState> _cameraState;
+    std::unordered_map<std::string, CameraAnchor> _cameraState;
 
     /** Scales pose std devs by distance and tag count: closer + more tags = more trusted.
      

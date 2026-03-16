@@ -18,7 +18,7 @@
 #include "container.hpp"
 #include "inpututil.hpp"
 #include "shaker.hpp"
-#include "vision.hpp"
+#include "field.hpp"
 #include "visionmulti.hpp"
 #include "visionsim.hpp"
 
@@ -66,7 +66,7 @@ protected:
         _sticks[1].Button(config::integer("turret_shoot_button_index")).WhileTrue (
             turret().shootAtDistanceCommand([this] {
                 return drivetrain().GetState().Pose.Translation()
-                           .Distance(landmarks::hubPosition());
+                           .Distance(field::hubPosition());
             }).AlongWith(shaker().spinCommand(0.6).AsProxy())
               .AlongWith(horizontalShaker().spinCommand(0.6).AsProxy()));
 
@@ -89,7 +89,7 @@ protected:
         _sticks[1].Button(16).ToggleOnTrue(
             turret().aimAtTargetCommand(
                 [this] { return drivetrain().GetState().Pose; },
-                [this] { return frc::Pose2d{landmarks::hubPosition(), frc::Rotation2d{}}; }
+                [this] { return frc::Pose2d{field::hubPosition(), frc::Rotation2d{}}; }
             ));
 
         // Zero turret rotation position
@@ -240,12 +240,12 @@ Container::Container()
             using nc = pathplanner::NamedCommands;
             nc::registerCommand("shooterOn", turret().shooterOnCommand([this] {
                 return drivetrain().GetState().Pose.Translation()
-                           .Distance(landmarks::hubPosition());
+                           .Distance(field::hubPosition());
             }));
             nc::registerCommand("shooterOff",  turret().shooterOffCommand());
             nc::registerCommand("turretAim", turret().aimAtTargetCommand(
                 [this] { return drivetrain().GetState().Pose; },
-                [this] { return frc::Pose2d{landmarks::hubPosition(), frc::Rotation2d{}}; }
+                [this] { return frc::Pose2d{field::hubPosition(), frc::Rotation2d{}}; }
             ));
             
             nc::registerCommand("turretStop",  turret().stopCommand());

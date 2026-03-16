@@ -127,7 +127,7 @@ void Robot::RobotPeriodic()
         // call after clamping could return a different value.
         auto currentPose = drive.GetState().Pose;
         auto speeds = drive.GetState().Speeds;
-        
+
         {
             static constexpr units::meter_t kFieldLength = 16.535_m;
             static constexpr units::meter_t kFieldWidth = 8.069_m;
@@ -163,7 +163,7 @@ void Robot::RobotPeriodic()
 #if BOT_TRACE_VISION
     // Estimated distance from fused robot pose to the hub
     auto robotPose = _container->drivetrain().GetState().Pose;
-    units::meter_t distanceToHub = robotPose.Translation().Distance (indy::landmarks::hubPosition());
+    units::meter_t distanceToHub = robotPose.Translation().Distance (indy::field::hubPosition());
     tkit::RecordOutput ("Robot/DistanceToHub", distanceToHub.value());
 #endif
 

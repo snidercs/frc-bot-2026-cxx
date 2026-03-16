@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
 #include "vision.hpp"
+#include "field.hpp"
 #include <frc/geometry/Pose2d.h>
 #include <frc/geometry/Rotation2d.h>
+#include <frc/kinematics/ChassisSpeeds.h>
 
 /** Mock implementation of VisionIO for testing.
  
@@ -9,14 +11,14 @@
     via `addMeasurement()` and then drive the pipeline through `read()` /
     `measurements()` exactly as production code does.
 */
-class MockVisionIO : public indy::VisionIO {
+class MockVisionIO : public indy::vision::VisionIO {
 private:
     int _callCount = 0;
-    std::vector<indy::VisionMeasurement> _pending;
+    std::vector<indy::vision::Measurement> _pending;
 
 public:
-    /** Stage a measurement to be returned on the next `read()` call. */
-    void addMeasurement(const indy::VisionMeasurement& measurement) {
+    /** Stage a measurement to be returned on the next `process()` call. */
+    void addMeasurement(const indy::vision::Measurement& measurement) {
         _pending.push_back(measurement);
     }
 
@@ -42,9 +44,9 @@ protected:
     }
 };
 
-// Test VisionMeasurement struct creation
+// Test Measurement struct creation
 TEST(VisionTest, MeasurementCreation) {
-    indy::VisionMeasurement measurement{
+    indy::vision::Measurement measurement{
         frc::Pose2d{1.0_m, 2.0_m, frc::Rotation2d{45_deg}},
         1.5_s,
         wpi::array<double, 3>{0.1, 0.1, 0.05},
@@ -64,15 +66,16 @@ TEST(VisionTest, MeasurementCreation) {
 // Test VisionIO interface with mock
 TEST(VisionTest, MockVisionIO) {
     MockVisionIO mockVision;
-    const frc::Pose2d anyPose{};  // pose doesn't matter for mock — gating is bypassed
+    const frc::Pose2d anyPose{};
+    const frc::ChassisSpeeds anySpeeds{};
 
     // Initially empty
-    mockVision.read(anyPose);
+    mockVision.process(anyPose, anySpeeds);
     EXPECT_EQ(mockVision.measurements().size(), 0);
     EXPECT_EQ(mockVision.getCallCount(), 1);
 
     // Add a measurement and read it
-    indy::VisionMeasurement m1{
+    indy::vision::Measurement m1{
         frc::Pose2d{0.0_m, 0.0_m, frc::Rotation2d{0_deg}},
         1.0_s,
         wpi::array<double, 3>{0.5, 0.5, 0.1},
@@ -80,13 +83,13 @@ TEST(VisionTest, MockVisionIO) {
     };
     mockVision.addMeasurement(m1);
 
-    mockVision.read(anyPose);
+    mockVision.process(anyPose, anySpeeds);
     EXPECT_EQ(mockVision.measurements().size(), 1);
     EXPECT_EQ(mockVision.measurements()[0].source, "FR");
     EXPECT_EQ(mockVision.getCallCount(), 2);
 
     // Stage two measurements and read them
-    indy::VisionMeasurement m2{
+    indy::vision::Measurement m2{
         frc::Pose2d{1.0_m, 1.0_m, frc::Rotation2d{90_deg}},
         2.0_s,
         wpi::array<double, 3>{0.3, 0.3, 0.08},
@@ -95,13 +98,13 @@ TEST(VisionTest, MockVisionIO) {
     mockVision.addMeasurement(m1);
     mockVision.addMeasurement(m2);
 
-    mockVision.read(anyPose);
+    mockVision.process(anyPose, anySpeeds);
     EXPECT_EQ(mockVision.measurements().size(), 2);
     EXPECT_EQ(mockVision.measurements()[1].source, "BL");
 
     // Clear and verify
     mockVision.clearMeasurements();
-    mockVision.read(anyPose);
+    mockVision.process(anyPose, anySpeeds);
     EXPECT_EQ(mockVision.measurements().size(), 0);
 }
 
@@ -135,7 +138,7 @@ TEST(VisionTest, TurretPivot) {
 }
 
 TEST(VisionTest, FieldLayout) {
-    auto layout = indy::vision::fieldLayout();
+    auto layout = indy::field::layout();
     // Field layout should have tags
     auto tags = layout.GetTags();
     EXPECT_GT(tags.size(), 0);

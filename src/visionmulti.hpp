@@ -21,13 +21,15 @@ namespace indy {
     All measurement processing is handled by `VisionIO::processResults()`.
     This class only owns the camera/estimator pairs and fetches raw results.
 */
-class VisionMulti : public VisionIO {
+class VisionMulti : public vision::VisionIO {
 public:
     VisionMulti();
 
-    void readMeasurements(const frc::Pose2d& currentPose) override;
     std::string getStatus() override;
     std::string getLastTargets() override;
+
+protected: 
+    void readMeasurements(const frc::Pose2d& currentPose) override;
 
 private:
     struct CameraUnit {

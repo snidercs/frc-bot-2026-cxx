@@ -23,7 +23,7 @@ namespace indy {
     Call `update(robotPose)` **once per SimulationPeriodic** to advance the sim,
     then `getMeasurements()` flows through the normal `VisionIO` path unchanged.
 */
-class VisionSim : public VisionIO {
+class VisionSim : public vision::VisionIO {
 public:
     VisionSim();
 
@@ -35,9 +35,11 @@ public:
     */
     void update(const frc::Pose2d& robotPose);
 
-    void readMeasurements(const frc::Pose2d& currentPose) override;
     std::string getStatus() override;
     std::string getLastTargets() override;
+
+protected:
+    void readMeasurements(const frc::Pose2d& currentPose) override;
 
 private:
     struct CameraUnit {

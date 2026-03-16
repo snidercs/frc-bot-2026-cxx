@@ -3,7 +3,7 @@
 #include "mathutil.hpp"
 #include "frc/smartdashboard/SmartDashboard.h"
 
-namespace indy {
+namespace indy::vision {
 
 VisionIO::VisionIO()
 {
@@ -23,8 +23,41 @@ std::string VisionIO::getRejectedCounts()
 
 void VisionIO::process (const frc::Pose2d& pose, const frc::ChassisSpeeds& speeds)
 {
+    _lastPose = pose;
+    _lastSpeeds = speeds;
     _measurements.clear();
     readMeasurements (pose);
+
+    // Update dropout counter once per cycle, after all cameras have been processed.
+    // _dropouts drives the loose residual gate in processResults() next cycle.
+    if (_measurements.empty())
+        ++_dropouts;
+    else
+        _dropouts = 0;
+
+#if BOT_TRACE_RESIDUAL || BOT_TRACE_VISION
+    frc::SmartDashboard::PutNumber ("Vision/Dropouts", (int) _dropouts);
+#endif
+}
+
+wpi::array<double, 3> VisionIO::computeStdDevs (double distanceMeters, int tagCount, double variance) const
+{
+    // Conservative base: further away = less trust
+    double xy = 0.2 + (distanceMeters * 0.07);
+    // Reward good multi-tag geometry
+    if (tagCount > 2)
+        xy *= 0.75;
+#if BOT_ADAPTIVE_STDDEVS
+    // Inflate stdDevs when recent measurements have been inconsistent.
+    // kVarianceThreshold is the m² spread that begins scaling. kMaxScale caps it.
+    static constexpr double kVarianceThreshold = 0.05;
+    static constexpr double kMaxScale = 3.0;
+    const double scale = std::clamp (variance / kVarianceThreshold, 1.0, kMaxScale);
+    xy *= scale;
+#endif
+    // theta: very high so vision never overrides the gyro heading
+    double theta = 9999.0;
+    return { xy, xy, theta };
 }
 
 void VisionIO::processResults (const std::string& cameraName,
@@ -110,7 +143,7 @@ void VisionIO::processResults (const std::string& cameraName,
         }
 
         _candidates.push_back (Candidate {
-            VisionMeasurement {
+            Measurement {
                 pose2d,
                 estimatedPose->timestamp,
 #if BOT_ADAPTIVE_STDDEVS
@@ -140,7 +173,7 @@ void VisionIO::processResults (const std::string& cameraName,
         _cameraState[cameraName].lastTime = best->measurement.timestamp;
 
 #if BOT_ADAPTIVE_STDDEVS
-        // Option F: push accepted position into rolling window for variance tracking.
+        // Push accepted position into rolling window for variance tracking.
         auto& state = _cameraState[cameraName];
         state.recentPositions[state.windowHead] = best->measurement.pose.Translation();
         state.windowHead = (state.windowHead + 1) % CameraGateState::kWindowSize;
@@ -158,15 +191,6 @@ void VisionIO::processResults (const std::string& cameraName,
 #endif
     }
 
-    // update num dropouts
-    if (_measurements.empty()) {
-        ++_dropouts;
-#if BOT_TRACE_RESIDUAL || BOT_TRACE_VISION
-        frc::SmartDashboard::PutNumber ("Vision/Dropouts", (int) _dropouts);
-#endif
-    } else {
-        _dropouts = 0;
-    }
 #if BOT_TRACE_RESIDUAL || BOT_TRACE_VISION
     frc::SmartDashboard::PutNumber ("Vision/Accepted", _acceptedCount);
     frc::SmartDashboard::PutNumber ("Vision/Rejected Residual", _rejectedResidual);

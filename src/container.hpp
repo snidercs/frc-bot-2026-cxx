@@ -68,7 +68,7 @@ private:
     std::unique_ptr<indy::Turret> _turret;
     std::unique_ptr<indy::Shaker> _shaker;
     std::unique_ptr<indy::HorizontalShaker> _horizontalShaker;
-    std::unique_ptr<VisionIO> _vision;
+    std::unique_ptr<vision::VisionIO> _vision;
     std::optional<frc::SendableChooser<frc2::Command *>> _autoBuilder;
 };
 

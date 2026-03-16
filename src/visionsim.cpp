@@ -1,3 +1,4 @@
+#include "field.hpp"
 #include "visionsim.hpp"
 
 namespace indy {
@@ -30,7 +31,7 @@ VisionSim::CameraUnit::CameraUnit(std::string_view name,
 // ─── VisionSim ──────────────────────────────────────────────────────────────
 
 VisionSim::VisionSim()
-    : _fieldLayout(vision::fieldLayout())
+    : _fieldLayout(field::layout())
     , _visionSim("VisionSim")
 {
     // No real coprocessor in sim — disable NT version checks to suppress warnings

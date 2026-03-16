@@ -110,7 +110,7 @@ State is committed only when a candidate is accepted as the best — never mid-l
 
 ---
 
-### Option F — Adaptive `stdDevs` Based on Measurement Consistency
+### Option F — Adaptive `stdDevs` Based on Measurement Consistency ✅ IMPLEMENTED
 
 Rather than filtering the pose directly, inflate the `stdDevs` passed to
 `AddVisionMeasurement()` when recent measurements have been inconsistent.
@@ -118,12 +118,15 @@ This keeps the Kalman filter in control — instead of rejecting outright,
 it just trusts the measurement less, allowing gradual convergence rather
 than a hard jump or hard reject.
 
-**Implementation sketch:**
+**Implementation (live in `VisionIO`, guarded by `BOT_ADAPTIVE_STDDEVS`):**
 ```cpp
-// Track a rolling variance of recent accepted X/Y.
-// If variance is high (measurements are jumping around), scale up stdDevs:
-double consistencyScale = std::clamp(recentVariance / kVarianceThreshold, 1.0, 4.0);
-double xy = (0.2 + distanceMeters * 0.07) * consistencyScale;
+// Per-camera rolling window (kWindowSize = 6) in CameraGateState.
+// Variance computed via indy::math::rollingVariance2d().
+// In computeStdDevs():
+static constexpr double kVarianceThreshold = 0.05;
+static constexpr double kMaxScale          = 3.0;
+const double scale = std::clamp(variance / kVarianceThreshold, 1.0, kMaxScale);
+xy *= scale;
 ```
 
 **Pros:**
@@ -186,10 +189,12 @@ Already live in `VisionIO::processResults()`.
 outside the wall; clamp runs before the `currentPose` snapshot so the residual gate
 benefits in the same cycle. Telemetry: `Vision/PoseClamped` on SmartDashboard.
 
-**Also consider: Option F** — adaptive `stdDevs` scaling. Complements both B and E:
-measurements that slip through the gates but are inconsistent get down-weighted
-naturally by the Kalman filter rather than hard-rejected. Good follow-on once E
-is validated.
+**Option F ✅ done** — adaptive `stdDevs` scaling is live behind `BOT_ADAPTIVE_STDDEVS`.
+A rolling window of 6 accepted positions is tracked per camera in `CameraGateState`.
+`computeStdDevs()` calls `indy::math::rollingVariance2d()` and scales `xy` stdDevs
+up to `3×` when recent measurements are inconsistent. Complements B and E: measurements
+that slip through the gates are down-weighted by the Kalman filter rather than
+hard-rejected.
 
 **Medium term: Option A** — velocity discrepancy detection. Catches obstruction
 before the pose drifts enough to trigger the rejection cycle in the first place.

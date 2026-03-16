@@ -72,7 +72,7 @@ struct Candidate {
     Provides a hardware abstraction layer for vision systems, allowing the
     same code to work with both PhotonVision cameras and simulation.
 
-    ## Extending VisionIO
+    ## Extending Processor
     Common pipeline logic lives here so subclasses stay thin. The only thing
     a subclass must supply is *how to get raw results* for each camera — call
     `processResults()` with those results and everything else (gating, std-dev
@@ -81,10 +81,10 @@ struct Candidate {
     To add new shared behaviour, add it here rather than duplicating it in
     both `VisionMulti` and `VisionSim`.
 */
-class VisionIO {
+class Processor {
 public:
-    VisionIO();
-    virtual ~VisionIO() = default;
+    Processor();
+    virtual ~Processor() = default;
 
     /** Returns the measurement buffer populated by the last call to `read()`.
      
@@ -119,7 +119,7 @@ public:
      
         @return Status information about the vision system
     */
-    virtual std::string getStatus() { return "VisionIO base class"; }
+    virtual std::string getStatus() { return "Processor base class"; }
 
     /** Gets the most recent target information from all cameras.
      

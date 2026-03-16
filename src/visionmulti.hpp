@@ -18,10 +18,10 @@ namespace indy {
     returned as individual `VisionMeasurement` entries for the pose estimator
     to fuse via `AddVisionMeasurement()`.
 
-    All measurement processing is handled by `VisionIO::processResults()`.
+    All measurement processing is handled by `Processor::processResults()`.
     This class only owns the camera/estimator pairs and fetches raw results.
 */
-class VisionMulti : public vision::VisionIO {
+class VisionMulti : public vision::Processor {
 public:
     VisionMulti();
 

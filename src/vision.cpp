@@ -5,13 +5,13 @@
 
 namespace indy::vision {
 
-VisionIO::VisionIO()
+Processor::Processor()
 {
     _measurements.reserve (vision::kCameraNames.size() * 16);
     _candidates.reserve (16);
 }
 
-std::string VisionIO::getRejectedCounts()
+std::string Processor::getRejectedCounts()
 {
     return "Accepted: " + std::to_string (_acceptedCount)
            + " | Rejected: NoTargets=" + std::to_string (_rejectedNoTargets)
@@ -21,7 +21,7 @@ std::string VisionIO::getRejectedCounts()
            + " Velocity=" + std::to_string (_rejectedVelocity);
 }
 
-void VisionIO::process (const frc::Pose2d& pose, const frc::ChassisSpeeds& speeds)
+void Processor::process (const frc::Pose2d& pose, const frc::ChassisSpeeds& speeds)
 {
     _lastPose = pose;
     _lastSpeeds = speeds;
@@ -40,7 +40,7 @@ void VisionIO::process (const frc::Pose2d& pose, const frc::ChassisSpeeds& speed
 #endif
 }
 
-wpi::array<double, 3> VisionIO::computeStdDevs (double distanceMeters, int tagCount, double variance) const
+wpi::array<double, 3> Processor::computeStdDevs (double distanceMeters, int tagCount, double variance) const
 {
     // Conservative base: further away = less trust
     double xy = 0.2 + (distanceMeters * 0.07);
@@ -60,7 +60,7 @@ wpi::array<double, 3> VisionIO::computeStdDevs (double distanceMeters, int tagCo
     return { xy, xy, theta };
 }
 
-void VisionIO::processResults (const std::string& cameraName,
+void Processor::processResults (const std::string& cameraName,
                                photon::PhotonPoseEstimator& estimator,
                                std::vector<photon::PhotonPipelineResult>& results,
                                const frc::Pose2d& currentPose)

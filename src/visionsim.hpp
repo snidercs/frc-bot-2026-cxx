@@ -18,12 +18,12 @@ namespace indy {
  
     Mirrors the four chassis-mounted cameras from `VisionMulti`, but drives them
     through `photon::VisionSystemSim` / `photon::PhotonCameraSim` instead of real
-    hardware. All measurement processing is handled by `VisionIO::processResults()`.
+    hardware. All measurement processing is handled by `Processor::processResults()`.
 
     Call `update(robotPose)` **once per SimulationPeriodic** to advance the sim,
-    then `getMeasurements()` flows through the normal `VisionIO` path unchanged.
+    then `process()` flows through the normal `Processor` path unchanged.
 */
-class VisionSim : public vision::VisionIO {
+class VisionSim : public vision::Processor {
 public:
     VisionSim();
 

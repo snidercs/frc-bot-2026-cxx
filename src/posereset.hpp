@@ -38,11 +38,11 @@ public:
         measurement buffer from @p vision and, on the first entry found, calls
         `drivetrain.ResetPose()` and latches.
 
-        @param vision      The active `vision::VisionIO` source.
+        @param vision      The active `vision::Processor` source.
         @param drivetrain  The swerve drivetrain whose pose will be reset.
         @return true if a reset was performed on this call, false otherwise.
     */
-    bool tryReset (vision::VisionIO& vision, CommandSwerveDrivetrain& drivetrain)
+    bool tryReset (vision::Processor& vision, CommandSwerveDrivetrain& drivetrain)
     {
         if (_done)
             return false;

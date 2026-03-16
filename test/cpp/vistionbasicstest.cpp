@@ -5,13 +5,13 @@
 #include <frc/geometry/Rotation2d.h>
 #include <frc/kinematics/ChassisSpeeds.h>
 
-/** Mock implementation of VisionIO for testing.
+/** Mock implementation of Processor for testing.
  
     Implements the `readMeasurements()` hook so tests can pre-load measurements
-    via `addMeasurement()` and then drive the pipeline through `read()` /
+    via `addMeasurement()` and then drive the pipeline through `process()` /
     `measurements()` exactly as production code does.
 */
-class MockVisionIO : public indy::vision::VisionIO {
+class MockVisionIO : public indy::vision::Processor {
 private:
     int _callCount = 0;
     std::vector<indy::vision::Measurement> _pending;

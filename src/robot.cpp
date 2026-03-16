@@ -24,6 +24,7 @@
 #endif
 
 #include "config.hpp"
+#include "field.hpp"
 #include "mathutil.hpp"
 #include "robot.hpp"
 #include "scripting.hpp"
@@ -129,12 +130,13 @@ void Robot::RobotPeriodic()
         auto speeds = drive.GetState().Speeds;
 
         {
-            static constexpr units::meter_t kFieldLength = 16.535_m;
-            static constexpr units::meter_t kFieldWidth = 8.069_m;
-            static constexpr units::meter_t kClampMargin = 0.75_m;
-
-            if (indy::math::isPoseOutOfBounds (currentPose, kFieldLength, kFieldWidth, kClampMargin)) {
-                currentPose = indy::math::clampPoseToField (currentPose, kFieldLength, kFieldWidth);
+            if (indy::math::isPoseOutOfBounds (currentPose, 
+                    indy::field::length(), 
+                    indy::field::width(), 
+                    indy::field::margin())) {
+                currentPose = indy::math::clampPoseToField (currentPose, 
+                    indy::field::length(), 
+                    indy::field::width());
                 drive.ResetPose (currentPose);
     #if BOT_TRACE_VISION
                 frc::SmartDashboard::PutBoolean ("Vision/PoseClamped", true);

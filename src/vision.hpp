@@ -88,10 +88,10 @@ public:
     Processor();
     virtual ~Processor() = default;
 
-    /** Returns the measurement buffer populated by the last call to `read()`.
+    /** Returns the measurement buffer populated by the last call to `process()`.
      
         Does **not** poll cameras or mutate any state — safe to call multiple
-        times per cycle. The buffer is valid until the next `read()` call.
+        times per cycle. The buffer is valid until the next `process()` call.
 
         @return Const reference to the internal measurement buffer.
     */

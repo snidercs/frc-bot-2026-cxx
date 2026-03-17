@@ -73,7 +73,7 @@ public:
 #else
     static inline const CANBus kCANBus{kCANBusName, "./logs/example.hoot"};
 #endif
-    // TODO: Theoretical free speed (m/s) at 12 V applied output;
+    // Ground speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
     static constexpr units::meters_per_second_t kSpeedAt12Volts = 4.5347109574_mps;
 

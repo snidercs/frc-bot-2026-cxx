@@ -48,9 +48,9 @@ protected:
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     swerve::requests::FieldCentric drive = swerve::requests::FieldCentric {}
-                                               .WithDriveRequestType (swerve::DriveRequestType::OpenLoopVoltage); // Use open-loop control for drive motors
+                                               .WithDriveRequestType (swerve::DriveRequestType::Velocity);
     swerve::requests::RobotCentric robotCentric = swerve::requests::RobotCentric {}
-                                               .WithDriveRequestType (swerve::DriveRequestType::OpenLoopVoltage);
+                                               .WithDriveRequestType (swerve::DriveRequestType::Velocity);
     swerve::requests::SwerveDriveBrake brake {};
     swerve::requests::PointWheelsAt point {};
 

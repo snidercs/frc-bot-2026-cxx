@@ -5,6 +5,7 @@
 #include "container.hpp"
 #include "frc/RobotBase.h"
 #include "frc/TimedRobot.h"
+#include "units/velocity.h"
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
@@ -171,6 +172,14 @@ void Robot::RobotPeriodic()
 
     tkit::Logger::GetInstance().Periodic();
     frc2::CommandScheduler::GetInstance().Run();
+#if 0
+    static units::meters_per_second_t mpsyHi = 0.0_mps;
+    units::meters_per_second_t mpsy = drive.GetState().Speeds.vy;
+    if (mpsyHi < mpsy) {
+        mpsyHi = mpsy;
+        SmartDashboard::PutNumber("Tune/mpsy", mpsy.value());
+    }
+#endif
 }
 
 void Robot::DisabledInit() {}

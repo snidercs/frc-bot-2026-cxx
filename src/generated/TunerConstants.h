@@ -46,7 +46,7 @@ class TunerConstants {
 
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    static constexpr units::ampere_t kSlipCurrent = 60_A;
+    static constexpr units::ampere_t kSlipCurrent = 57_A;
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `With*InitialConfigs()` API documentation.
@@ -75,7 +75,7 @@ public:
 #endif
     // TODO: Theoretical free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
-    static constexpr units::meters_per_second_t kSpeedAt12Volts = 5.12_mps;
+    static constexpr units::meters_per_second_t kSpeedAt12Volts = 4.5347109574_mps;
 
 private:
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
@@ -85,8 +85,22 @@ private:
     static constexpr units::scalar_t kDriveGearRatio = 6.026785714285714;
     static constexpr units::scalar_t kSteerGearRatio = 26.09090909090909;
 
-    // TODO: redo wheel radius calibration from straight-line odometry test:
-    static constexpr units::inch_t kWheelRadius = 2.00_in;
+    // Wheel radius calibration from straight-line odometry test:
+    // Configured wheel radius: 2.00 in
+    // Reported pose X: 1.002587 m
+    // Measured real travel: 0.98 m (robot stopped ~2 cm short of 1 meter)
+    //
+    // Odometry scale factor:
+    //   1.002587 / 0.98 = 1.02305
+    //
+    // Since odometry reported more distance than the robot actually traveled,
+    // the configured wheel radius is too large and should be decreased
+    // proportionally:
+    //
+    //   newWheelRadius = oldWheelRadius / scaleFactor
+    //                  = 2.00 in / 1.02305
+    //                  ≈ 1.9551 in
+    static constexpr units::inch_t kWheelRadius = 1.9551_in;
 
     static constexpr bool kInvertLeftSide = true;
     static constexpr bool kInvertRightSide = false;

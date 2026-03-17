@@ -68,9 +68,12 @@ class TunerConstants {
 public:
     // CAN bus that the devices are located on;
     // All swerve devices must share the same CAN bus
+#ifdef __FRC_ROBORIO__
+    static inline const CANBus kCANBus{kCANBusName, "/media/sda1/logs/example.hoot"};
+#else
     static inline const CANBus kCANBus{kCANBusName, "./logs/example.hoot"};
-
-    // Theoretical free speed (m/s) at 12 V applied output;
+#endif
+    // TODO: Theoretical free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
     static constexpr units::meters_per_second_t kSpeedAt12Volts = 5.12_mps;
 

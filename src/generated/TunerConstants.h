@@ -46,7 +46,7 @@ class TunerConstants {
 
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    static constexpr units::ampere_t kSlipCurrent = 32_A;
+    static constexpr units::ampere_t kSlipCurrent = 60_A;
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `With*InitialConfigs()` API documentation.
@@ -82,22 +82,8 @@ private:
     static constexpr units::scalar_t kDriveGearRatio = 6.026785714285714;
     static constexpr units::scalar_t kSteerGearRatio = 26.09090909090909;
 
-    // Wheel radius calibration from straight-line odometry test:
-    // Configured wheel radius: 1.893 in
-    // Reported pose X: 1.00178 m
-    // Measured real travel: 1.04 m (robot traveled ~4 cm past 1 meter)
-    //
-    // Odometry scale factor:
-    //   1.00178 / 1.04 = 0.96325
-    //
-    // Since odometry reported less distance than the robot actually traveled,
-    // the configured wheel radius is too small and should be increased
-    // proportionally:
-    //
-    //   newWheelRadius = oldWheelRadius / scaleFactor
-    //                  = 1.893 in / 0.96325
-    //                  ≈ 1.965 in
-    static constexpr units::inch_t kWheelRadius = 1.965_in;
+    // TODO: redo wheel radius calibration from straight-line odometry test:
+    static constexpr units::inch_t kWheelRadius = 2.00_in;
 
     static constexpr bool kInvertLeftSide = true;
     static constexpr bool kInvertRightSide = false;

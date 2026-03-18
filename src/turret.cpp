@@ -359,10 +359,10 @@ frc2::CommandPtr Turret::stopCommand() {
 }
 
 units::turns_per_second_t Turret::velocityFromDistance(units::meter_t distance) const {
-    constexpr units::meter_t kNearDist  = 2.378_m;
-    constexpr units::meter_t kFarDist   = 5_m;
-    constexpr double         kNearSpeed = 45.0;
-    constexpr double         kFarSpeed  = 64.0;
+    constexpr units::meter_t kNearDist  = 1.75_m;
+    constexpr units::meter_t kFarDist   = 5.5_m;
+    constexpr double         kNearSpeed = 46.0;
+    constexpr double         kFarSpeed  = 65.2;
 
     double t = (distance - kNearDist) / (kFarDist - kNearDist);
     t = std::clamp(t, 0.0, 1.0);

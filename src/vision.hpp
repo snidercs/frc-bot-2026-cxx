@@ -245,11 +245,7 @@ struct Camera {
 /** Camera names (must match PhotonVision configuration) */
 constexpr const std::array<const char*, 2> kCameraNames = { "FL", "BL" };
 
-/** Camera mounting positions relative to robot center.
-     
-        Index order: FL=0, BL=1
-        TODO: Add FR and BR once physically mounted and measured.
-    */
+/** Camera mounting positions relative to robot center. */
 constexpr const std::array<frc::Transform3d, 2> kRobotToCamera = {
     // Front-Left: forward-left corner, facing straight forward
     frc::Transform3d {

@@ -11,6 +11,7 @@ namespace indy {
 Turret::Turret() {
     SetName("Turret");
     configureMotors();
+    frc::SmartDashboard::SetDefaultNumber("Turret/Distance Scale", _distanceScale);
 }
 
 void Turret::configureMotors() {
@@ -147,6 +148,10 @@ void Turret::Periodic() {
     frc::SmartDashboard::PutNumber("Turret/Shooter Velocity (tps)", _cachedShooterVelocity.value());
     frc::SmartDashboard::PutBoolean("Turret/Shooter Ready", isShooterReady());
     frc::SmartDashboard::PutNumber("Turret/Shooter Target (tps)", _cachedShooterTarget.value());
+
+    // Read distance scale from Elastic slider (clamped for safety)
+    _distanceScale = std::clamp(
+        frc::SmartDashboard::GetNumber("Turret/Distance Scale", 1.0), 0.5, 1.5);
 
 #if BOT_TRACE_SUBSYSTEMS
     // Verbose telemetry (all values from cache — no additional CAN reads)
@@ -366,6 +371,9 @@ units::turns_per_second_t Turret::velocityFromDistance(units::meter_t distance) 
 
     if (! _autoAimEnabled)
         return kFallbackShooterVelocity;
+
+    // Scale distance before lookup. Decrease to reduce power (e.g. for balls that fly farther).
+    distance *= _distanceScale;
 
     double t = (distance - kNearDist) / (kFarDist - kNearDist);
     t = std::clamp(t, 0.0, 1.0);

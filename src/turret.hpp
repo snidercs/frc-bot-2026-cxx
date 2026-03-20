@@ -131,6 +131,10 @@ private:
     bool _isHoldingPosition = false;
     units::turn_t _holdPosition = 0_tr;
 
+    // Live-tunable scale factor applied to distance before shooter speed lookup.
+    // Adjust via Elastic slider to compensate for different ball types.
+    double _distanceScale = 1.0;
+
     // Constants
     static constexpr units::turns_per_second_t kShooterVelocity = 54_tps;
     static constexpr units::turns_per_second_t kFallbackShooterVelocity = 52_tps;

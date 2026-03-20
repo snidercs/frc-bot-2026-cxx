@@ -54,7 +54,6 @@ public:
 
     frc2::CommandPtr spinUpCommand();
     frc2::CommandPtr stopCommand();
-    frc2::CommandPtr shootCommand();
     frc2::CommandPtr calibrateRotationZero();
 
     // Manual control
@@ -134,13 +133,14 @@ private:
 
     // Constants
     static constexpr units::turns_per_second_t kShooterVelocity = 54_tps;
+    static constexpr units::turns_per_second_t kFallbackShooterVelocity = 52_tps;
     static constexpr units::turns_per_second_t kShooterTolerance = 5_tps;
     static constexpr units::turns_per_second_t kUptakeVelocity = 100_tps;
     static constexpr units::degree_t kAngleTolerance = 2_deg;
     static constexpr units::turns_per_second_t kManualRotationSpeed = 0.3_tps;
     
     // Gear ratio from motor to turret (motor rotations per turret rotation)
-    static constexpr double kRotationGearRatio = 100.0;  // TODO: measure actual ratio
+    static constexpr double kRotationGearRatio = 100.0;
 
     void configureMotors();
     void setTargetPosition(units::turn_t position);
@@ -148,11 +148,12 @@ private:
                                      const frc::Pose2d& targetPose) const;
 
     /** Returns shooter flywheel velocity for a given distance to the hub.
-     
+        When auto aiming is off, this will return a fallback, fixed, velocity.
+
         Linear interpolation between two measured calibration points:
-        - ~2.08 m (6 ft 10 in): 50 tps
-        - ~2.74 m (9 ft):       55 tps
-        Clamps to [50, 55] tps outside the calibrated range.
+        - 1.75 m (~5 ft 9 in): 46 tps
+        - 5.5 m  (~18 ft):     65.2 tps
+        Clamps to [46, 65.2] tps outside the calibrated range.
 
         @param distance Distance from robot to hub in metres.
         @return Target flywheel velocity in turns per second.

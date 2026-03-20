@@ -364,6 +364,9 @@ units::turns_per_second_t Turret::velocityFromDistance(units::meter_t distance) 
     constexpr double         kNearSpeed = 46.0;
     constexpr double         kFarSpeed  = 65.2;
 
+    if (! _autoAimEnabled)
+        return kFallbackShooterVelocity;
+
     double t = (distance - kNearDist) / (kFarDist - kNearDist);
     t = std::clamp(t, 0.0, 1.0);
     return units::turns_per_second_t{kNearSpeed + t * (kFarSpeed - kNearSpeed)};
@@ -427,18 +430,6 @@ frc2::CommandPtr Turret::shooterOffCommand() {
         stopUptake();
         stopShooter();
     }).WithName("ShooterOff");
-}
-
-frc2::CommandPtr Turret::shootCommand() {
-    return frc2::cmd::Sequence(
-        shooterOnCommand(),
-        frc2::cmd::Idle()
-    )
-    .FinallyDo([this] { 
-        stopUptake();
-        stopShooter(); 
-    })
-    .WithName("ManualShoot");
 }
 
 frc2::CommandPtr Turret::calibrateRotationZero() {

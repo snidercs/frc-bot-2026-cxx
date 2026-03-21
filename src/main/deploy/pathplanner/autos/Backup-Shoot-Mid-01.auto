@@ -21,9 +21,9 @@
                 }
               },
               {
-                "type": "named",
+                "type": "wait",
                 "data": {
-                  "name": "intakeStart"
+                  "waitTime": 0.5
                 }
               },
               {

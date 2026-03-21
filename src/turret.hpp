@@ -132,7 +132,7 @@ private:
     units::turn_t _holdPosition = 0_tr;
 
     // Live-tunable scale factor applied to distance before shooter speed lookup.
-    // Adjust via Elastic slider to compensate for different ball types.
+    // Adjust via Elastic slider - we'll use this to figure out what scale we need for the competition balls vs. our balls
     double _distanceScale = 1.0;
 
     // Constants

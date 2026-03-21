@@ -10,6 +10,8 @@
 #include <frc2/command/CommandPtr.h>
 
 #include "container.hpp"
+#include "collisionreset.hpp"
+#include "config.hpp"
 #include "posereset.hpp"
 
 class Robot : public frc::TimedRobot {
@@ -36,6 +38,9 @@ private:
     std::optional<frc2::CommandPtr> _autoCommand;
     std::unique_ptr<indy::Container> _container;
     indy::PoseResetOnce _poseReset;
+#if BOT_COLLISION_RESET
+    indy::CollisionReset _collisionReset;
+#endif
 
     static void cameraThread();
 };

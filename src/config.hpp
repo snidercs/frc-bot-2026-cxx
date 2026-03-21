@@ -20,6 +20,10 @@
 // Enable Adaptive stdDevs scaling based on rolling measurement variance.
 // Off by default — requires post-competition tuning of kVarianceThreshold.
 #define BOT_ADAPTIVE_STDDEVS 1
+// Enable collision/obstruction detection via Pigeon 2 IMU jerk + vision divergence.
+// When a lateral-g spike AND a vision-odometry disagreement are both detected,
+// the robot pose is hard-reset to the vision measurement.
+#define BOT_COLLISION_RESET 0
 
 namespace config {
 

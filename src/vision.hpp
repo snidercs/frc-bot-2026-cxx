@@ -135,17 +135,64 @@ public:
     */
     virtual std::string getRejectedCounts();
 
+    /** All pipeline gating thresholds in one swappable struct.
+
+        The default-constructed values are the safe competition settings.
+        External callers (e.g. `CollisionReset`) may call `setParameters()`
+        to temporarily widen the gates and then restore `kDefault` once the
+        event window has elapsed.
+    */
+    struct Parameters {
+        /** Maximum accepted pose ambiguity for single-tag solves. */
+        double maxAmbiguity { 0.2 };
+
+        /** Maximum frame latency before a result is discarded as stale. */
+        units::second_t maxLatency { 0.25_s };
+
+        /** Minimum number of tags required to accept a PNP solve.
+            Single-tag solves have an inherent 180° ambiguity. */
+        int minTagsForSingleSolve { 2 };
+
+        /** Maximum camera-to-tag distance in metres. */
+        double maxTagDistance { 4.0 };
+
+        /** Normal odometry residual gate: vision poses further than this
+            from the current fused pose are rejected. */
+        units::meter_t maxResidual { 0.6_m };
+
+        /** Loose residual gate used when `_dropouts` exceeds
+            `dropoutLooseThreshold` or when externally set via `setParameters()`.
+            Wide enough to let the Kalman filter self-correct after a collision. */
+        units::meter_t looseResidual { 1.5_m };
+
+        /** Number of consecutive dropout cycles before the residual gate
+            switches from `maxResidual` to `looseResidual`. */
+        uint32_t dropoutLooseThreshold { 10 };
+
+        /** Maximum physically plausible implied robot velocity between two
+            accepted vision poses. Solves above this are rejected. */
+        units::meters_per_second_t maxImpliedVelocity { 5.0_mps };
+
+        /** Safe competition defaults — always restore to this after any
+            temporary gate relaxation. */
+        static const Parameters kDefault;
+    };
+
+    /** Replace the active pipeline gating parameters.
+
+        Called by external systems (e.g. `CollisionReset`) to widen gates
+        temporarily.  Restore with `setParameters(Parameters::kDefault)` once
+        the event window expires.
+
+        @param params The new parameter set to apply immediately.
+    */
+    void setParameters(const Parameters& params) noexcept { _params = params; }
+
+    /** Returns the currently active pipeline parameters. */
+    const Parameters& parameters() const noexcept { return _params; }
+
 protected:
-    // Gating constants
-    static constexpr double kMaxAmbiguity = 0.2;
-    static constexpr units::second_t kMaxLatency = 0.25_s;
-    static constexpr int kMinTagsForSingleSolve = 2;
-    static constexpr double kMaxTagDistance = 4.0; // metres
-    static constexpr units::meter_t kMaxResidual = 0.6_m;
-    static constexpr units::meter_t kLooseResidual = 1.5_m;
-    // Maximum physically plausible robot speed between two accepted vision poses.
-    // Any implied velocity above this is treated as a bad solve and rejected.
-    static constexpr units::meters_per_second_t kMaxImpliedVelocity = 5.0_mps;
+    Parameters _params {};
 
     // Buffers and state tracking
     std::vector<Measurement> _measurements;

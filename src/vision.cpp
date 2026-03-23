@@ -8,6 +8,11 @@
 
 namespace indy::vision {
 
+// Out-of-line definition of the default parameters.
+// All pipeline gating code reads from _params, so this is the single source
+// of truth for safe competition values.
+const Processor::Parameters Processor::Parameters::kDefault {};
+
 Processor::Processor()
 {
     _measurements.reserve (vision::kCameraNames.size() * 16);
@@ -76,7 +81,7 @@ void Processor::processResults (const std::string& cameraName,
             continue;
         }
 
-        if (result.GetLatency() > kMaxLatency) {
+        if (result.GetLatency() > _params.maxLatency) {
             _rejectedStale++;
             continue;
         }
@@ -85,7 +90,7 @@ void Processor::processResults (const std::string& cameraName,
         // Single-tag solves have an inherent 180° pose ambiguity and produce
         // drastic jumps — reject them outright regardless of ambiguity score.
         int tagCount = static_cast<int> (result.GetTargets().size());
-        if (tagCount < kMinTagsForSingleSolve) {
+        if (tagCount < _params.minTagsForSingleSolve) {
             _rejectedAmbiguous++;
             continue;
         }
@@ -101,7 +106,7 @@ void Processor::processResults (const std::string& cameraName,
                               units::math::pow<2> (bestTransform.X()) + units::math::pow<2> (bestTransform.Y()) + units::math::pow<2> (bestTransform.Z()))
                               .value();
 
-        if (distance > kMaxTagDistance) {
+        if (distance > _params.maxTagDistance) {
             _rejectedOutOfBounds++;
             continue;
         }
@@ -118,7 +123,9 @@ void Processor::processResults (const std::string& cameraName,
         // If vision disagrees with current odometry by more than kMaxResidual,
         // the solve is probably bad. Don't let it corrupt the estimator.
         units::meter_t residual = pose2d.Translation().Distance (currentPose.Translation());
-        const auto residualLimit = _dropouts > 10 ? kLooseResidual : kMaxResidual;
+        const auto residualLimit = _dropouts > _params.dropoutLooseThreshold
+                                       ? _params.looseResidual
+                                       : _params.maxResidual;
         if (residual > residualLimit) {
             _rejectedResidual++;
 #if BOT_TRACE_RESIDUAL || BOT_TRACE_VISION
@@ -138,7 +145,7 @@ void Processor::processResults (const std::string& cameraName,
             if (dt > 0_s) {
                 auto displacement = pose2d.Translation().Distance (camState.lastPose.Translation());
                 auto impliedVelocity = displacement / dt;
-                if (impliedVelocity > kMaxImpliedVelocity) {
+                if (impliedVelocity > _params.maxImpliedVelocity) {
                     _rejectedVelocity++;
                     continue;
                 }

@@ -5,7 +5,6 @@
 
 #include <frc/geometry/Pose2d.h>
 #include <frc/smartdashboard/SmartDashboard.h>
-#include <units/acceleration.h>
 #include <units/length.h>
 
 #include "drivetrain.hpp"
@@ -14,37 +13,39 @@
 namespace indy {
 
 /** Detects robot collisions or obstruction events via Pigeon 2 IMU jerk and
-    performs a hard odometry reset from the best available vision measurement.
+    recovers odometry using a two-tier response:
 
-    ## How it works
+    **Tier 1 — Gate relaxation (always on jerk confirmation):**
+    Calls `vision.setParameters()` with a loose residual window so the Kalman
+    filter can self-correct over the next `kCooldownCycles` cycles without any
+    discontinuous pose jump.  This is the preferred recovery path.
 
-    Every call to `update()`:
-    1. Reads the lateral (X/Y) acceleration magnitude from the Pigeon 2.
-    2. If that magnitude exceeds `kJerkThreshold` for at least `kConfirmCycles`
-       consecutive cycles, a **jerk event** is latched and a cooldown window of
-       `kCooldownCycles` opens.
-    3. While the cooldown is active, the first vision measurement that disagrees
-       with the current fused odometry pose by more than `kDivergenceThreshold`
-       triggers a `ResetPose()` to that vision pose.  If vision agrees (or is
-       absent), no reset is issued — the odometry is still good.
-    4. The cooldown expires after `kCooldownCycles` whether or not a reset
-       fires, preventing repeated resets from a single event.
+    **Tier 2 — Hard reset (only when divergence is catastrophic):**
+    If a vision measurement disagrees with odometry by more than
+    `kHardResetThreshold` while the cooldown is active, `ResetPose()` is called
+    and `Parameters::kDefault` is restored immediately.  This covers cases where
+    the robot was physically displaced far enough that gradual correction would
+    take too long (e.g. pushed across the field).
+
+    When the cooldown expires without a hard reset, `Parameters::kDefault` is
+    restored so normal gating resumes cleanly.
 
     ## Safety properties
-    - **Vision-confirmed**: a reset is only issued when *both* an IMU spike
-      AND a measurable pose divergence are seen.  A hard bump that doesn't
-      move the robot (e.g. another robot bouncing off) will not reset anything.
-    - **Cooldown-gated**: a minimum of `kCooldownCycles` robot-loop cycles
-      must pass before another reset can be armed (≈ 1 s at 50 Hz).
-    - **Teleop/Test only**: the caller guards invocation with `IsTeleop() || IsTest()`.
+    - **IMU-debounced**: requires `kConfirmCycles` consecutive over-threshold
+      reads before any action is taken, rejecting single-sample bumps.
+    - **Vision-confirmed hard reset**: `ResetPose()` is only issued when *both*
+      an IMU spike AND a large pose divergence are seen concurrently.
+    - **Cooldown-gated**: minimum `kCooldownCycles` must pass before a new
+      event can be armed, preventing repeated resets from one collision.
+    - **Teleop/Test only**: callers guard invocation with `IsTeleop() || IsTest()`.
     - **No autonomous interference**: never called during PathPlanner sequences.
 
     ## Usage
     @code
-        // in Robot member:  indy::CollisionReset _collisionReset;
-        // in RobotPeriodic (inside the BOT_VISION + teleop guard,
+        // member: indy::CollisionReset _collisionReset;
+        // in RobotPeriodic (inside BOT_VISION + teleop guard,
         //   AFTER vision.process() and the fuse loop):
-        _collisionReset.update(drive, vision.measurements(), currentPose);
+        _collisionReset.update(drive, vision, vision.measurements(), currentPose);
     @endcode
 */
 class CollisionReset {
@@ -53,18 +54,20 @@ public:
 
     /** Process one robot-loop cycle.
 
-        Must be called **after** `vision.process()` so that
-        `measurements` already contains the current cycle's data.
+        Must be called **after** `vision.process()` so that `measurements`
+        already contains the current cycle's data.
 
-        @param drivetrain   The swerve drivetrain — supplies the Pigeon 2 and
-                            receives `ResetPose()` when triggered.
+        @param drivetrain   Supplies the Pigeon 2 and receives `ResetPose()`
+                            if a hard reset is warranted.
+        @param vision       The active `vision::Processor` — its parameters are
+                            loosened on jerk confirmation and restored on expiry.
         @param measurements The vision measurement buffer from this cycle
-                            (i.e. the result of `vision.measurements()`).
-        @param currentPose  The drivetrain's fused pose **as sampled before**
-                            `vision.process()` this cycle (same value passed
-                            to `vision.process()`).
+                            (`vision.measurements()`).
+        @param currentPose  The drivetrain's fused pose as sampled **before**
+                            `vision.process()` this cycle.
     */
     void update(CommandSwerveDrivetrain& drivetrain,
+                vision::Processor& vision,
                 const std::vector<vision::Measurement>& measurements,
                 const frc::Pose2d& currentPose)
     {
@@ -84,12 +87,23 @@ public:
 
         const bool jerkConfirmed = (_jerkCount >= kConfirmCycles);
 
-        // ── 3. Arm the cooldown window on a fresh jerk event ──
+        // ── 3. On a fresh jerk event: Tier 1 — loosen vision gates ──
         if (jerkConfirmed && _cooldown == 0) {
             _cooldown = kCooldownCycles;
+
+            // Build a loose parameter set from current defaults — only widen
+            // the residual limits, leave everything else competition-safe.
+            auto looseParams = vision::Processor::Parameters::kDefault;
+            looseParams.maxResidual   = kLooseResidualOverride;
+            looseParams.looseResidual = kLooseResidualOverride;
+            vision.setParameters(looseParams);
+
+#if BOT_TRACE_VISION
+            frc::SmartDashboard::PutBoolean("Vision/CollisionGateLoose", true);
+#endif
         }
 
-        // ── 4. While cooldown is active, look for vision divergence ──
+        // ── 4. While cooldown is active: check for Tier 2 — catastrophic divergence ──
         if (_cooldown > 0) {
             --_cooldown;
 
@@ -97,65 +111,75 @@ public:
                 const units::meter_t divergence =
                     m.pose.Translation().Distance(currentPose.Translation());
 
-                if (divergence > kDivergenceThreshold) {
+                if (divergence > kHardResetThreshold) {
+                    // Tier 2: pose is too far gone for gradual correction.
                     drivetrain.ResetPose(m.pose);
-                    // Suppress remaining cooldown — one reset per event is enough.
-                    _cooldown = 0;
+                    vision.setParameters(vision::Processor::Parameters::kDefault);
+                    _cooldown  = 0;
                     _jerkCount = 0;
-                    ++_resetCount;
+                    ++_hardResetCount;
 
 #if BOT_TRACE_VISION
-                    frc::SmartDashboard::PutNumber(
-                        "Vision/CollisionResets", _resetCount);
-                    frc::SmartDashboard::PutNumber(
-                        "Vision/CollisionJerk_g", magnitude);
-                    frc::SmartDashboard::PutNumber(
-                        "Vision/CollisionDivergence_m", divergence.value());
+                    frc::SmartDashboard::PutNumber("Vision/CollisionHardResets", _hardResetCount);
+                    frc::SmartDashboard::PutNumber("Vision/CollisionJerk_g", magnitude);
+                    frc::SmartDashboard::PutNumber("Vision/CollisionDivergence_m", divergence.value());
+                    frc::SmartDashboard::PutBoolean("Vision/CollisionGateLoose", false);
 #endif
                     return;
                 }
+            }
+
+            // Cooldown just expired without a hard reset — restore normal gates.
+            if (_cooldown == 0) {
+                vision.setParameters(vision::Processor::Parameters::kDefault);
+#if BOT_TRACE_VISION
+                frc::SmartDashboard::PutBoolean("Vision/CollisionGateLoose", false);
+#endif
             }
         }
 
 #if BOT_TRACE_VISION
         frc::SmartDashboard::PutNumber("Vision/CollisionJerk_g", magnitude);
-        frc::SmartDashboard::PutNumber("Vision/CollisionResets", _resetCount);
+        frc::SmartDashboard::PutNumber("Vision/CollisionHardResets", _hardResetCount);
 #endif
     }
 
-    /** Returns the total number of hard resets performed since construction. */
-    int resetCount() const noexcept { return _resetCount; }
+    /** Returns the total number of hard `ResetPose()` calls since construction. */
+    int hardResetCount() const noexcept { return _hardResetCount; }
 
 private:
     // ── Tuning constants ──────────────────────────────────────────────────────
 
     /** Lateral acceleration threshold that indicates a collision or obstruction.
-        The Pigeon 2 reports in standard-gravity units (1 g = 9.81 m/s²).
-        At rest the Z axis reads ~1 g; X/Y should be near 0.
+        Pigeon 2 reports in standard-gravity units (g). X/Y should be ~0 at rest.
         FRC collisions typically register 2–5 g laterally.
-        Start conservative (1.5 g) and tune down if events are missed,
-        or up if normal driving triggers false positives. */
+        Start conservative and tune: raise if normal driving false-triggers,
+        lower if real hits are missed. */
     static constexpr double kJerkThreshold = 1.5; // standard g
 
-    /** Number of consecutive over-threshold cycles required before a jerk
-        event is confirmed.  At 50 Hz one cycle = 20 ms; 2 cycles = 40 ms.
-        This rejects single-sample noise spikes from driving over a bump. */
+    /** Consecutive over-threshold cycles required to confirm a jerk event.
+        At 50 Hz: 2 cycles = 40 ms. Rejects single-sample noise from bumps. */
     static constexpr int kConfirmCycles = 2;
 
-    /** How many robot-loop cycles the reset window stays open after a
-        confirmed jerk event.  At 50 Hz: 50 cycles ≈ 1 second.
-        Vision must produce a diverging measurement within this window. */
+    /** Cycles the loose gate and hard-reset window stay open after a jerk event.
+        At 50 Hz: 50 cycles ≈ 1 second. */
     static constexpr int kCooldownCycles = 50;
 
-    /** Minimum pose disagreement (vision vs odometry) required to commit a
-        reset.  Below this the odometry is still trustworthy and no reset
-        is needed even after a bump. */
-    static constexpr units::meter_t kDivergenceThreshold = 0.3_m;
+    /** Residual limit applied to both `maxResidual` and `looseResidual` during
+        the Tier 1 loose-gate window. Wide enough to let the Kalman filter see
+        measurements that a hard collision displaced beyond the normal gate. */
+    static constexpr units::meter_t kLooseResidualOverride = 1.5_m;
+
+    /** Divergence above which Tier 2 fires: gradual correction is too slow and
+        a hard `ResetPose()` is warranted. Must be > `kLooseResidualOverride`
+        so there is always a window where Tier 1 can correct without a hard reset. */
+    static constexpr units::meter_t kHardResetThreshold = 1.0_m;
 
     // ── State ─────────────────────────────────────────────────────────────────
-    int _jerkCount  { 0 };
-    int _cooldown   { 0 };
-    int _resetCount { 0 };
+    int _jerkCount     { 0 };
+    int _cooldown      { 0 };
+    int _hardResetCount{ 0 };
 };
 
 } // namespace indy
+

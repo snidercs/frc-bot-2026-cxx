@@ -31,6 +31,8 @@ The vision system uses a `VisionIO` base class as a hardware abstraction layer w
 
 **`PoseResetOnce::tryReset()` calls `getMeasurements()` internally.** If `tryReset()` and the vision fuse loop both run in the same `RobotPeriodic`, that is two calls to `getMeasurements()` in one cycle. The fuse loop call will get an empty buffer. Structure the periodic code so `getMeasurements()` is called once, its results are stored in a local, and both `tryReset` and the fuse loop operate on that same local.
 
+**`vision::Processor::Parameters` and `setParameters()`**: All pipeline gating thresholds (residual limits, latency cap, tag distance, implied velocity cap, etc.) live in a `Parameters` struct on `Processor`. A `static const Parameters kDefault` provides the safe competition values. External callers (e.g. `CollisionReset`) may call `setParameters()` at runtime to temporarily loosen gates — for example switching to a wider residual window after a detected collision so the Kalman filter can self-correct without a hard `ResetPose()`. Always restore `kDefault` after the event window expires. Do **not** store raw gate values as `static constexpr` members — put them in `Parameters` so they are reachable and overridable from outside the class.
+
 ## Code Style Guidelines
 
 ### Naming Conventions

@@ -165,7 +165,7 @@ void Robot::RobotPeriodic()
         // Hard reset if Pigeon 2 detects a lateral jerk spike (hit / obstruction)
         // AND a vision measurement disagrees with the current odometry pose.
         // Called after the fuse loop so it operates on the same measurement buffer.
-        _collisionReset.update (drive, vision.measurements(), currentPose);
+        _collisionReset.update (drive, vision, vision.measurements(), currentPose);
 #endif
     }
 #endif

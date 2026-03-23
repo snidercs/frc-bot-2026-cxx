@@ -143,31 +143,31 @@ public:
         event window has elapsed.
     */
     struct Parameters {
-        /** Maximum accepted pose ambiguity for single-tag solves. */
+        /** Maximum accepted pose ambiguity for single-tag solves (0–1 scale).
+            PhotonLib reports 0 = perfect, 1 = fully ambiguous. Values below
+            0.2 are considered reliable for single-tag use. Multi-tag PNP
+            solves bypass this check entirely — they are always accepted if
+            they pass the other gates. */
         double maxAmbiguity { 0.2 };
 
         /** Maximum frame latency before a result is discarded as stale. */
         units::second_t maxLatency { 0.25_s };
 
-        /** Minimum number of tags required to accept a PNP solve.
-            Single-tag solves have an inherent 180° ambiguity. */
-        int minTagsForSingleSolve { 2 };
-
         /** Maximum camera-to-tag distance in metres. */
-        double maxTagDistance { 4.0 };
+        double maxTagDistance { 5.5 };
 
         /** Normal odometry residual gate: vision poses further than this
             from the current fused pose are rejected. */
-        units::meter_t maxResidual { 0.6_m };
+        units::meter_t maxResidual { 1.0_m };
 
         /** Loose residual gate used when `_dropouts` exceeds
             `dropoutLooseThreshold` or when externally set via `setParameters()`.
             Wide enough to let the Kalman filter self-correct after a collision. */
-        units::meter_t looseResidual { 1.5_m };
+        units::meter_t looseResidual { 2.0_m };
 
         /** Number of consecutive dropout cycles before the residual gate
             switches from `maxResidual` to `looseResidual`. */
-        uint32_t dropoutLooseThreshold { 10 };
+        uint32_t dropoutLooseThreshold { 3 };
 
         /** Maximum physically plausible implied robot velocity between two
             accepted vision poses. Solves above this are rejected. */

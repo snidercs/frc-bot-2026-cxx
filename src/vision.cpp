@@ -26,6 +26,7 @@ std::string Processor::getRejectedCounts()
            + " Stale=" + std::to_string (_rejectedStale)
            + " Ambiguous=" + std::to_string (_rejectedAmbiguous)
            + " OutOfBounds=" + std::to_string (_rejectedOutOfBounds)
+           + " Residual=" + std::to_string (_rejectedResidual)
            + " Velocity=" + std::to_string (_rejectedVelocity);
 }
 
@@ -86,13 +87,15 @@ void Processor::processResults (const std::string& cameraName,
             continue;
         }
 
-        // Only accept multi-tag PNP solves (≥2 tags visible).
-        // Single-tag solves have an inherent 180° pose ambiguity and produce
-        // drastic jumps — reject them outright regardless of ambiguity score.
+        // Multi-tag PNP solves are always accepted (no ambiguity concern).
+        // Single-tag solves have an inherent 180° pose ambiguity — only accept
+        // them when PhotonLib's ambiguity score is below the threshold.
         int tagCount = static_cast<int> (result.GetTargets().size());
-        if (tagCount < _params.minTagsForSingleSolve) {
-            _rejectedAmbiguous++;
-            continue;
+        if (tagCount < 2) {
+            if (result.GetBestTarget().GetPoseAmbiguity() >= _params.maxAmbiguity) {
+                _rejectedAmbiguous++;
+                continue;
+            }
         }
 
         auto estimatedPose = estimator.Update (result);

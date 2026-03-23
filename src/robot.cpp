@@ -150,6 +150,14 @@ void Robot::RobotPeriodic()
             }
         }
 
+#if BOT_COLLISION_RESET
+        // Run BEFORE vision.process() so Tier 1 gate relaxation (setParameters)
+        // takes effect on THIS cycle's processResults() call.
+        // Uses the previous cycle's measurements() for the Tier 2 divergence
+        // check — one cycle lag is fine; a hard reset is a coarse recovery.
+        _collisionReset.update (drive, vision, vision.measurements(), currentPose);
+#endif
+
         // Poll all cameras, apply all gates (latency, tag count, distance,
         // field bounds, odometry residual), and fuse the single best candidate.
         vision.process (currentPose, speeds);
@@ -160,13 +168,6 @@ void Robot::RobotPeriodic()
                 measurement.timestamp,
                 measurement.stdDevs);
         }
-
-#if BOT_COLLISION_RESET
-        // Hard reset if Pigeon 2 detects a lateral jerk spike (hit / obstruction)
-        // AND a vision measurement disagrees with the current odometry pose.
-        // Called after the fuse loop so it operates on the same measurement buffer.
-        _collisionReset.update (drive, vision, vision.measurements(), currentPose);
-#endif
     }
 #endif
 

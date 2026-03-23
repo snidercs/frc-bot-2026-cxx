@@ -61,12 +61,15 @@ protected:
         _sticks[1].Button(config::integer("intake_eject_index")).WhileTrue (
             intake().ejectCommand());
         
-        // Shooter Control — run the shaker in parallel to agitate while shooting
+        // Shooter Control — brake the drivetrain and run the shaker in parallel while shooting.
+        // Braking locks the swerve wheels in an X-pattern to resist any forces that would
+        // disturb the robot's heading and throw off turret aim.
         _sticks[1].Button(config::integer("turret_shoot_button_index")).WhileTrue (
             turret().shootAtDistanceCommand([this] {
                 return drivetrain().GetState().Pose.Translation()
                            .Distance(field::hubPosition());
-            }).AlongWith(horizontalShaker().spinCommand(0.7).AsProxy()));
+            }).AlongWith(drivetrain().ApplyRequest([this]() -> auto&& { return brake; }).AsProxy())
+              .AlongWith(horizontalShaker().spinCommand(0.7).AsProxy()));
 
         // Climber control
         _sticks[0].Button(config::integer("climber_climb_button_index")).WhileTrue (

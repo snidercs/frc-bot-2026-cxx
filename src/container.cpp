@@ -68,7 +68,10 @@ protected:
             turret().shootAtDistanceCommand([this] {
                 return drivetrain().GetState().Pose.Translation()
                            .Distance(field::hubPosition());
-            }).AlongWith(drivetrain().ApplyRequest([this]() -> auto&& { return brake; }).AsProxy())
+            })
+#if BOT_BRAKE_ON_SHOOT
+              .AlongWith(drivetrain().ApplyRequest([this]() -> auto&& { return brake; }).AsProxy())
+#endif
               .AlongWith(horizontalShaker().spinCommand(0.7).AsProxy()));
 
         // Climber control

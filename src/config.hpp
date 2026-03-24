@@ -23,7 +23,9 @@
 // Enable collision/obstruction detection via Pigeon 2 IMU jerk + vision divergence.
 // When a lateral-g spike AND a vision-odometry disagreement are both detected,
 // the robot pose is hard-reset to the vision measurement.
-#define BOT_COLLISION_RESET 0
+#define BOT_COLLISION_RESET 1
+// When enabled, apply the brakes when the shooter trigger is held
+#define BOT_BRAKE_ON_SHOOT 0
 
 namespace config {
 

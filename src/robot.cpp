@@ -270,10 +270,11 @@ void Robot::SimulationPeriodic()
 
 void Robot::cameraThread()
 {
-#if SIM_CAMERA_DISABLED
-    if (RobotBase::IsSimulation())
+    // Skip camera thread in simulation to prevent zombie processes.
+    // The detached thread blocks on GrabFrame() forever when the sim GUI closes.
+    if (frc::RobotBase::IsSimulation())
         return;
-#endif
+
     const auto cameraName = "DumbCamera";
     const auto width = 640;
     const auto height = 360;

@@ -8,6 +8,9 @@
 #include <units/length.h>
 #include <units/voltage.h>
 #include <units/current.h>
+#include <units/velocity.h>
+#include <units/time.h>
+#include <frc/kinematics/ChassisSpeeds.h>
 #include "ctre/phoenix6/TalonFX.hpp"
 #include "config.hpp"
 
@@ -36,6 +39,34 @@ public:
     frc2::CommandPtr aimAtTargetCommand(std::function<frc::Pose2d()> robotPoseSupplier,
                                         std::function<frc::Pose2d()> targetPoseSupplier);
     frc2::CommandPtr manualRotateCommand(std::function<double()> speedSupplier);
+
+    // --- Shoot-on-the-move (SOTM) command factories ---
+
+    /** Auto-aim with shoot-on-the-move lead compensation.
+     
+        Predicts the robot's future pose based on current velocity and aims at
+        where the turret needs to point by the time the ball arrives. Also feeds
+        a velocity hint to the rotation motor for smoother tracking.
+
+        @param robotPoseSupplier  Supplier returning the current fused robot pose.
+        @param targetPoseSupplier Supplier returning the target (hub) pose.
+        @param speedsSupplier     Supplier returning the current robot-centric ChassisSpeeds.
+    */
+    frc2::CommandPtr sotmAimCommand(std::function<frc::Pose2d()> robotPoseSupplier,
+                                    std::function<frc::Pose2d()> targetPoseSupplier,
+                                    std::function<frc::ChassisSpeeds()> speedsSupplier);
+
+    /** Shoot-on-the-move shoot command — adjusts shooter speed for radial velocity.
+     
+        Like shootAtDistanceCommand, but compensates the distance lookup for the
+        robot's radial velocity relative to the target so the ball arrives at the
+        correct speed even while the robot is moving toward/away from the hub.
+
+        @param distanceFn      Supplier returning current distance to target (metres).
+        @param radialVelFn     Supplier returning radial velocity toward target (m/s, positive = closing).
+    */
+    frc2::CommandPtr sotmShootCommand(std::function<units::meter_t()> distanceFn,
+                                      std::function<units::meters_per_second_t()> radialVelFn);
 
     /** Spin up the shooter and run the uptake.
      
@@ -143,13 +174,38 @@ private:
     static constexpr units::degree_t kAngleTolerance = 2_deg;
     static constexpr units::turns_per_second_t kManualRotationSpeed = 0.3_tps;
     
-    // Gear ratio from motor to turret (motor rotations per turret rotation)
-    static constexpr double kRotationGearRatio = 100.0;
+    // --- SOTM (shoot-on-the-move) constants ---
+    // Tuning-phase values: adjust via SmartDashboard, then bake into constexpr.
+    static constexpr units::second_t kDefaultLookaheadTime = 0.25_s;
+    static constexpr double kDefaultTurretFFGain = 1.0;
+    static constexpr units::meters_per_second_t kMaxSOTMSpeed = 3.5_mps;
+    static constexpr units::turns_per_second_t kMaxTurretFF = 0.5_tps;
+
+    // Live-tunable SOTM gains (SmartDashboard sliders during tuning phase)
+    double _sotmLookahead = kDefaultLookaheadTime.value();
+    double _sotmFFGain = kDefaultTurretFFGain;
 
     void configureMotors();
     void setTargetPosition(units::turn_t position);
+    void setTargetPositionWithFF(units::turn_t position, units::turns_per_second_t velocityFF);
     units::turn_t computeAimPosition(const frc::Pose2d& robotPose, 
                                      const frc::Pose2d& targetPose) const;
+
+    /** Compute SOTM-compensated aim position + turret velocity feedforward.
+     
+        Predicts the robot pose forward by the lookahead time, computes the aim
+        angle from that predicted pose, and derives the turret angular velocity
+        needed to track the moving aim point.
+
+        @param robotPose   Current fused robot pose (field-relative).
+        @param targetPose  Target (hub) pose (field-relative).
+        @param fieldSpeeds Field-relative chassis speeds.
+        @return Pair of {aim position in turret turns, velocity feedforward in tps}.
+    */
+    std::pair<units::turn_t, units::turns_per_second_t>
+    computeAimWithSOTM(const frc::Pose2d& robotPose,
+                       const frc::Pose2d& targetPose,
+                       const frc::ChassisSpeeds& fieldSpeeds) const;
 
     /** Returns shooter flywheel velocity for a given distance to the hub.
         When auto aiming is off, this will return a fallback, fixed, velocity.

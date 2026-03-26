@@ -2,7 +2,9 @@
 #include "vision.hpp"
 #include <frc2/command/Commands.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/kinematics/ChassisSpeeds.h>
 #include <numbers>
+#include <cmath>
 
 using namespace ctre::phoenix6;
 
@@ -12,6 +14,8 @@ Turret::Turret() {
     SetName("Turret");
     configureMotors();
     frc::SmartDashboard::SetDefaultNumber("Turret/Distance Scale", _distanceScale);
+    frc::SmartDashboard::SetDefaultNumber("SOTM/Lookahead (s)", _sotmLookahead);
+    frc::SmartDashboard::SetDefaultNumber("SOTM/FF Gain", _sotmFFGain);
 }
 
 void Turret::configureMotors() {
@@ -153,6 +157,14 @@ void Turret::Periodic() {
     _distanceScale = std::clamp(
         frc::SmartDashboard::GetNumber("Turret/Distance Scale", 1.0), 0.5, 1.5);
 
+    // Read SOTM tuning sliders (clamped for safety)
+    _sotmLookahead = std::clamp(
+        frc::SmartDashboard::GetNumber("SOTM/Lookahead (s)", kDefaultLookaheadTime.value()),
+        0.05, 0.6);
+    _sotmFFGain = std::clamp(
+        frc::SmartDashboard::GetNumber("SOTM/FF Gain", kDefaultTurretFFGain),
+        0.0, 2.0);
+
 #if BOT_TRACE_SUBSYSTEMS
     // Verbose telemetry (all values from cache — no additional CAN reads)
     frc::SmartDashboard::PutBoolean("Turret/Auto Aim Enabled", _autoAimEnabled);
@@ -264,6 +276,18 @@ void Turret::setTargetPosition(units::turn_t position) {
     _rotationMotor.SetControl(_positionRequest.WithPosition(position));
 }
 
+void Turret::setTargetPositionWithFF(units::turn_t position,
+                                     units::turns_per_second_t velocityFF) {
+    _targetAngle = units::degree_t{position};
+    constexpr units::turn_t kMinPos = -0.05542_tr;
+    constexpr units::turn_t kMaxPos =  0.25_tr;
+    position = units::math::max(kMinPos, units::math::min(kMaxPos, position));
+    // Clamp velocity feedforward for safety
+    velocityFF = units::math::max(-kMaxTurretFF, units::math::min(kMaxTurretFF, velocityFF));
+    _rotationMotor.SetControl(
+        _positionRequest.WithPosition(position).WithVelocity(velocityFF));
+}
+
 units::degree_t Turret::getCurrentAngle() const {
     return _cachedAngle;
 }
@@ -325,6 +349,71 @@ units::turn_t Turret::computeAimPosition(const frc::Pose2d& robotPose,
     return motorPos;
 }
 
+std::pair<units::turn_t, units::turns_per_second_t>
+Turret::computeAimWithSOTM(const frc::Pose2d& robotPose,
+                           const frc::Pose2d& targetPose,
+                           const frc::ChassisSpeeds& fieldSpeeds) const {
+    // --- 1. Pose prediction: where will the robot be when the ball arrives? ---
+    units::second_t lookahead{_sotmLookahead};
+    frc::Pose2d predictedPose{
+        robotPose.X() + fieldSpeeds.vx * lookahead,
+        robotPose.Y() + fieldSpeeds.vy * lookahead,
+        robotPose.Rotation() + frc::Rotation2d{fieldSpeeds.omega * lookahead}};
+
+    // Compute aim from predicted pose (reuse existing math)
+    auto aimPos = computeAimPosition(predictedPose, targetPose);
+
+    // --- 2. Turret velocity feedforward ---
+    // The turret must counter-rotate against robot yaw AND track the tangential
+    // component of the robot's motion relative to the target.
+    //
+    // Formula (in rad/s, then converted to turret turns/s):
+    //   turretAngVel = -(omega + v_tangential / distance)
+    //
+    // omega           = robot yaw rate (rad/s, CCW positive)
+    // v_tangential    = component of field velocity perpendicular to robot→target line
+    // distance        = robot→target distance
+
+    auto robotToTarget = targetPose.Translation() - robotPose.Translation();
+    auto distance = robotToTarget.Norm();
+
+    units::turns_per_second_t turretFF{0};
+    if (distance > 0.5_m) {
+        // Unit vector from robot to target
+        double dx = robotToTarget.X().value();
+        double dy = robotToTarget.Y().value();
+        double dist = distance.value();
+        double ux = dx / dist;
+        double uy = dy / dist;
+
+        // Tangential velocity: cross product of unit vector × velocity gives the
+        // perpendicular component (positive = target moving CCW from robot's POV)
+        double vx = fieldSpeeds.vx.value();
+        double vy = fieldSpeeds.vy.value();
+        double vTangential = -(ux * vy - uy * vx);  // negative because turret frame is mirrored
+
+        double omegaRad = fieldSpeeds.omega.value();  // rad/s
+
+        // Total angular rate the turret needs to track (rad/s)
+        double turretAngVelRad = -(omegaRad + vTangential / dist);
+
+        // Convert rad/s → turret turns/s (1 turn = 2π rad)
+        double turretAngVelTps = turretAngVelRad / (2.0 * std::numbers::pi);
+
+        turretFF = units::turns_per_second_t{turretAngVelTps * _sotmFFGain};
+    }
+
+#if BOT_TRACE_SUBSYSTEMS
+    frc::SmartDashboard::PutNumber("SOTM/Aim Position (tr)", aimPos.value());
+    frc::SmartDashboard::PutNumber("SOTM/Turret FF (tps)", turretFF.value());
+    frc::SmartDashboard::PutNumber("SOTM/Distance (m)", distance.value());
+    frc::SmartDashboard::PutNumber("SOTM/Predicted X", predictedPose.X().value());
+    frc::SmartDashboard::PutNumber("SOTM/Predicted Y", predictedPose.Y().value());
+#endif
+
+    return {aimPos, turretFF};
+}
+
 // Command factories
 frc2::CommandPtr Turret::aimAtTargetCommand(std::function<frc::Pose2d()> robotPoseSupplier,
                                               std::function<frc::Pose2d()> targetPoseSupplier) {
@@ -351,6 +440,69 @@ frc2::CommandPtr Turret::manualRotateCommand(std::function<double()> speedSuppli
     })
     .WithName("ManualRotate");
     // NOTE: No FinallyDo needed - updateRotationControl handles hold automatically
+}
+
+// --- SOTM command factories ---
+
+frc2::CommandPtr Turret::sotmAimCommand(std::function<frc::Pose2d()> robotPoseSupplier,
+                                        std::function<frc::Pose2d()> targetPoseSupplier,
+                                        std::function<frc::ChassisSpeeds()> speedsSupplier) {
+    return RunOnce([this] { enableAutoAim(); })
+        .AndThen(
+            Run([this, robotPoseSupplier, targetPoseSupplier, speedsSupplier] {
+                auto robotPose = robotPoseSupplier();
+                auto targetPose = targetPoseSupplier();
+                auto robotSpeeds = speedsSupplier();
+
+                // Convert robot-relative speeds to field-relative for SOTM math
+                auto fieldSpeeds = frc::ChassisSpeeds::FromRobotRelativeSpeeds(
+                    robotSpeeds, robotPose.Rotation());
+
+                // Check speed gate: only apply SOTM when moving at a reasonable speed
+                auto linearSpeed = units::math::sqrt(
+                    fieldSpeeds.vx * fieldSpeeds.vx + fieldSpeeds.vy * fieldSpeeds.vy);
+
+                if (linearSpeed < kMaxSOTMSpeed) {
+                    // SOTM path: predicted aim + velocity feedforward
+                    auto [aimPos, turretFF] = computeAimWithSOTM(
+                        robotPose, targetPose, fieldSpeeds);
+                    setTargetPositionWithFF(aimPos, turretFF);
+                } else {
+                    // Speed too high — fall back to static aim (no prediction, no FF)
+                    auto aimPos = computeAimPosition(robotPose, targetPose);
+                    setTargetPosition(aimPos);
+                }
+            })
+        )
+        .FinallyDo([this] { disableAutoAim(); })
+        .WithName("SOTMAim");
+}
+
+frc2::CommandPtr Turret::sotmShootCommand(std::function<units::meter_t()> distanceFn,
+                                          std::function<units::meters_per_second_t()> radialVelFn) {
+    return frc2::cmd::Sequence(
+        // Spin up with initial SOTM-compensated speed
+        frc2::cmd::RunOnce([this, distanceFn, radialVelFn] {
+            auto effectiveDist = distanceFn() + radialVelFn() * units::second_t{_sotmLookahead};
+            setShooterVelocity(velocityFromDistance(effectiveDist));
+        }),
+        frc2::cmd::WaitUntil([this] { return isShooterReady(); }),
+        // Once ready: continuously track SOTM-compensated distance and run uptake
+        frc2::cmd::Run([this, distanceFn, radialVelFn] {
+            auto effectiveDist = distanceFn() + radialVelFn() * units::second_t{_sotmLookahead};
+            setShooterVelocity(velocityFromDistance(effectiveDist));
+            _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
+#if BOT_TRACE_SUBSYSTEMS
+            frc::SmartDashboard::PutNumber("SOTM/Effective Distance (m)", effectiveDist.value());
+            frc::SmartDashboard::PutNumber("SOTM/Radial Vel (m/s)", radialVelFn().value());
+#endif
+        })
+    )
+    .FinallyDo([this] {
+        stopUptake();
+        stopShooter();
+    })
+    .WithName("SOTMShoot");
 }
 
 frc2::CommandPtr Turret::spinUpCommand() {

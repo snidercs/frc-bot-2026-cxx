@@ -7,6 +7,7 @@
 #include <frc/DriverStation.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/RobotBase.h>
+#include <frc/kinematics/ChassisSpeeds.h>
 #include <frc2/command/Commands.h>
 #include <frc2/command/button/RobotModeTriggers.h>
 #include <frc2/command/button/CommandJoystick.h>
@@ -61,17 +62,30 @@ protected:
         _sticks[1].Button(config::integer("intake_eject_index")).WhileTrue (
             intake().ejectCommand());
         
-        // Shooter Control — brake the drivetrain and run the shaker in parallel while shooting.
-        // Braking locks the swerve wheels in an X-pattern to resist any forces that would
-        // disturb the robot's heading and throw off turret aim.
+        // Shooter Control — SOTM-aware: compensates distance for radial velocity
+        // so the shooter leads the target while the robot is moving.
+        // No drivetrain brake — the whole point of SOTM is to shoot while driving.
         _sticks[1].Button(config::integer("turret_shoot_button_index")).WhileTrue (
-            turret().shootAtDistanceCommand([this] {
-                return drivetrain().GetState().Pose.Translation()
-                           .Distance(field::hubPosition());
-            })
-#if BOT_BRAKE_ON_SHOOT
-              .AlongWith(drivetrain().ApplyRequest([this]() -> auto&& { return brake; }).AsProxy())
-#endif
+            turret().sotmShootCommand(
+                [this] {
+                    return drivetrain().GetState().Pose.Translation()
+                               .Distance(field::hubPosition());
+                },
+                [this] {
+                    // Radial velocity: positive = closing distance to hub
+                    auto pose = drivetrain().GetState().Pose;
+                    auto speeds = drivetrain().GetState().Speeds;
+                    auto fieldSpeeds = frc::ChassisSpeeds::FromRobotRelativeSpeeds(
+                        speeds, pose.Rotation());
+                    auto toHub = field::hubPosition() - pose.Translation();
+                    auto dist = toHub.Norm().value();
+                    if (dist < 0.5) return units::meters_per_second_t{0};
+                    // Dot product of velocity with unit vector toward hub
+                    double ux = toHub.X().value() / dist;
+                    double uy = toHub.Y().value() / dist;
+                    double radial = fieldSpeeds.vx.value() * ux + fieldSpeeds.vy.value() * uy;
+                    return units::meters_per_second_t{radial};
+                })
               .AlongWith(horizontalShaker().spinCommand(0.7).AsProxy()));
 
         // Climber control
@@ -88,12 +102,14 @@ protected:
         _sticks[1].Button(4).OnTrue(climber().disableSoftLimitsCommand())
                              .OnFalse(climber().enableSoftLimitsAndResetCommand());
 
-        // Auto-aim: toggle button 16 to track hub with turret rotation.
-        // First press enables auto-aim; second press (or any interruption) disables it.
+        // Auto-aim: toggle button 16 to track hub with SOTM lead compensation.
+        // First press enables auto-aim with pose prediction + turret velocity FF;
+        // second press (or any interruption) disables it.
         _sticks[1].Button(16).ToggleOnTrue(
-            turret().aimAtTargetCommand(
+            turret().sotmAimCommand(
                 [this] { return drivetrain().GetState().Pose; },
-                [this] { return frc::Pose2d{field::hubPosition(), frc::Rotation2d{}}; }
+                [this] { return frc::Pose2d{field::hubPosition(), frc::Rotation2d{}}; },
+                [this] { return drivetrain().GetState().Speeds; }
             ));
 
         // Zero turret rotation position

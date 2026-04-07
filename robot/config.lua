@@ -26,7 +26,7 @@ local config = {
     otb_right_can_bus = "rio",
     intake_device_id = 1,       -- Feed roller motor
     intake_can_bus = "rio",
-    intake_voltage = -4.2,  -- Voltage for feed motor (negative = intake direction)
+    intake_voltage = 4.2,  -- Voltage for feed motor (negative = intake direction)
 
     -- Turret shooter configuration
     turret_rotation_device_id = 19,

@@ -46,7 +46,7 @@ class TunerConstants {
 
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    static constexpr units::ampere_t kSlipCurrent = 57_A;
+    static constexpr units::ampere_t kSlipCurrent = 80_A;
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `With*InitialConfigs()` API documentation.
@@ -73,9 +73,10 @@ public:
 #else
     static inline const CANBus kCANBus{kCANBusName, "./logs/example.hoot"};
 #endif
-    // Ground speed (m/s) at 12 V applied output;
+
+    // Theoretical free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
-    static constexpr units::meters_per_second_t kSpeedAt12Volts = 4.5347109574_mps;
+    static constexpr units::meters_per_second_t kSpeedAt12Volts = 5.12_mps;
 
 private:
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
@@ -102,8 +103,8 @@ private:
     //                  ≈ 1.9551 in
     static constexpr units::inch_t kWheelRadius = 1.9551_in;
 
-    static constexpr bool kInvertLeftSide = true;
-    static constexpr bool kInvertRightSide = false;
+    static constexpr bool kInvertLeftSide = false;
+    static constexpr bool kInvertRightSide = true;
 
     static constexpr int kPigeonId = 20;
 
@@ -146,10 +147,10 @@ private:
 
 
     // Front Left
-    static constexpr int kFrontLeftDriveMotorId = 2;
-    static constexpr int kFrontLeftSteerMotorId = 6;
-    static constexpr int kFrontLeftEncoderId = 10;
-    static constexpr units::turn_t kFrontLeftEncoderOffset = -0.23681640625_tr;
+    static constexpr int kFrontLeftDriveMotorId = 3;
+    static constexpr int kFrontLeftSteerMotorId = 7;
+    static constexpr int kFrontLeftEncoderId = 11;
+    static constexpr units::turn_t kFrontLeftEncoderOffset = 0.240966796875_tr;
     static constexpr bool kFrontLeftSteerMotorInverted = false;
     static constexpr bool kFrontLeftEncoderInverted = false;
 
@@ -157,10 +158,10 @@ private:
     static constexpr units::inch_t kFrontLeftYPos = 11.125_in;
 
     // Front Right
-    static constexpr int kFrontRightDriveMotorId = 3;
-    static constexpr int kFrontRightSteerMotorId = 7;
-    static constexpr int kFrontRightEncoderId = 11;
-    static constexpr units::turn_t kFrontRightEncoderOffset = -0.010986328125_tr;
+    static constexpr int kFrontRightDriveMotorId = 2;
+    static constexpr int kFrontRightSteerMotorId = 6;
+    static constexpr int kFrontRightEncoderId = 10;
+    static constexpr units::turn_t kFrontRightEncoderOffset = -0.48583984375_tr;
     static constexpr bool kFrontRightSteerMotorInverted = false;
     static constexpr bool kFrontRightEncoderInverted = false;
 
@@ -171,7 +172,7 @@ private:
     static constexpr int kBackLeftDriveMotorId = 4;
     static constexpr int kBackLeftSteerMotorId = 8;
     static constexpr int kBackLeftEncoderId = 12;
-    static constexpr units::turn_t kBackLeftEncoderOffset = -0.39208984375_tr;
+    static constexpr units::turn_t kBackLeftEncoderOffset = 0.109619140625_tr;
     static constexpr bool kBackLeftSteerMotorInverted = false;
     static constexpr bool kBackLeftEncoderInverted = false;
 
@@ -182,7 +183,7 @@ private:
     static constexpr int kBackRightDriveMotorId = 5;
     static constexpr int kBackRightSteerMotorId = 9;
     static constexpr int kBackRightEncoderId = 13;
-    static constexpr units::turn_t kBackRightEncoderOffset = 0.12158203125_tr;
+    static constexpr units::turn_t kBackRightEncoderOffset = -0.380859375_tr;
     static constexpr bool kBackRightSteerMotorInverted = false;
     static constexpr bool kBackRightEncoderInverted = false;
 
@@ -268,10 +269,10 @@ public:
      *                                   unspecified or set to 0 Hz, this is 250 Hz on
      *                                   CAN FD, and 100 Hz on CAN 2.0.
      * \param odometryStandardDeviation  The standard deviation for odometry calculation
-     *                                   in the form [x, y, theta]áµ€, with units in meters
+     *                                   in the form [x, y, theta]ᵀ, with units in meters
      *                                   and radians
      * \param visionStandardDeviation    The standard deviation for vision calculation
-     *                                   in the form [x, y, theta]áµ€, with units in meters
+     *                                   in the form [x, y, theta]ᵀ, with units in meters
      *                                   and radians
      * \param modules                    Constants for each specific module
      */

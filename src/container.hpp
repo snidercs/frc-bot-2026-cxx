@@ -10,9 +10,7 @@
 #include <optional>
 #include "drivetrain.hpp"
 #include "intake.hpp"
-#include "climber.hpp"
 #include "turret.hpp"
-#include "horizontalshaker.hpp"
 #include "vision.hpp"
 #include "telemetry.hpp"
 
@@ -27,9 +25,7 @@ public:
 
     auto& drivetrain() noexcept { return *_drivetrain; }
     auto& intake() noexcept { return *_intake; }
-    auto& climber() noexcept { return *_climber; }
     auto& turret() noexcept { return *_turret; }
-    auto& horizontalShaker() noexcept { return *_horizontalShaker; }
     auto& vision() noexcept { return *_vision; }
     frc2::CommandPtr GetAutonomousCommand();
 
@@ -62,9 +58,7 @@ private:
     void configureBindingsInternal();
     std::unique_ptr<indy::CommandSwerveDrivetrain> _drivetrain;
     std::unique_ptr<indy::Intake> _intake;
-    std::unique_ptr<indy::Climber> _climber;
     std::unique_ptr<indy::Turret> _turret;
-    std::unique_ptr<indy::HorizontalShaker> _horizontalShaker;
     std::unique_ptr<vision::Processor> _vision;
     std::optional<frc::SendableChooser<frc2::Command *>> _autoBuilder;
 };

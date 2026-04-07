@@ -61,7 +61,7 @@ protected:
         _sticks[1].Button(config::integer("intake_eject_index")).WhileTrue (
             intake().ejectCommand());
         
-        // Shooter Control — brake the drivetrain and run the shaker in parallel while shooting.
+        // Shooter Control — brake the drivetrain while shooting.
         // Braking locks the swerve wheels in an X-pattern to resist any forces that would
         // disturb the robot's heading and throw off turret aim.
         _sticks[1].Button(config::integer("turret_shoot_button_index")).WhileTrue (
@@ -72,21 +72,11 @@ protected:
 #if BOT_BRAKE_ON_SHOOT
               .AlongWith(drivetrain().ApplyRequest([this]() -> auto&& { return brake; }).AsProxy())
 #endif
-              .AlongWith(horizontalShaker().spinCommand(0.7).AsProxy()));
-
-        // Climber control
-        _sticks[0].Button(config::integer("climber_climb_button_index")).WhileTrue (
-            climber().climbCommand());
-        _sticks[0].Button(config::integer("climber_lower_button_index")).WhileTrue (
-            climber().lowerCommand());
+              );
 
         // Drive jitter (intake agitator) - front/back on button 1, left/right on button 2
         _sticks[0].Button(5).OnTrue(jitterCommand(false));
         _sticks[0].Button(6).OnTrue(jitterCommand(true));
-
-        // Disable climber soft limits while held; re-enable and zero position on release
-        _sticks[1].Button(4).OnTrue(climber().disableSoftLimitsCommand())
-                             .OnFalse(climber().enableSoftLimitsAndResetCommand());
 
         // Auto-aim: toggle button 16 to track hub with turret rotation.
         // First press enables auto-aim; second press (or any interruption) disables it.
@@ -189,10 +179,6 @@ public:
         joystick.RightBumper().WhileTrue (intake().intakeCommand());
         joystick.RightTrigger().WhileTrue (intake().ejectCommand());
         
-        // Climber controls
-        joystick.Button(config::integer("climber_climb_button_index")).WhileTrue (climber().climbCommand());
-        joystick.Button(config::integer("climber_lower_button_index")).WhileTrue (climber().lowerCommand());
-
         // clang-format on
     }
 
@@ -212,9 +198,7 @@ Container::Container()
         TunerConstants::BackRight);
 
     _intake = std::make_unique<indy::Intake>();
-    _climber = std::make_unique<indy::Climber>();
     _turret = std::make_unique<indy::Turret>();
-    _horizontalShaker = std::make_unique<indy::HorizontalShaker>();
 
 #if BOT_VISION
     if (frc::RobotBase::IsSimulation()) {
@@ -290,7 +274,6 @@ Container::~Container()
 {
     _vision.reset();
     _turret.reset();
-    _climber.reset();
     _intake.reset();
     _drivetrain.reset();
 }

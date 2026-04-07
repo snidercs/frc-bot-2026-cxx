@@ -18,16 +18,15 @@ local config = {
 
     intake_trigger_index = 18,  -- The button index to engage the intake.
     intake_eject_index = 19,    -- The button index to eject (stick 1).
-    intake_top_device_id = 14,
-    intake_top_can_bus = "rio",
-    intake_bottom_device_id = 15,
-    intake_bottom_can_bus = "rio",
-    intake_voltage = -4.2,  -- Voltage for intake motor (negative = intake direction)
 
-    climber_device_id = 1,
-    climber_can_bus = "rio",
-    climber_climb_button_index = 16,  -- Button to climb (move down)
-    climber_lower_button_index = 1,  -- Button to lower (move up)
+    -- Over-the-bumper intake motors (CAN IDs tentative — verify on robot)
+    otb_left_device_id = 17,    -- Pitch left motor
+    otb_left_can_bus = "rio",
+    otb_right_device_id = 18,   -- Pitch right motor
+    otb_right_can_bus = "rio",
+    intake_device_id = 1,       -- Feed roller motor
+    intake_can_bus = "rio",
+    intake_voltage = -4.2,  -- Voltage for feed motor (negative = intake direction)
 
     -- Turret shooter configuration
     turret_rotation_device_id = 19,
@@ -54,12 +53,6 @@ local config = {
     rotate_input_exponent = 1.25,
 
     intake_stutter_length = 9.25,  -- (seconds) How long to stutter the intake in static-shot auto's
-
-    shaker_device_id = 35,
-    shaker_can_bus = "rio",
-
-    horizontal_shaker_device_id = 45,
-    horizontal_shaker_can_bus = "rio"
 }
 
 return config

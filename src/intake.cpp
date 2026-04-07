@@ -9,15 +9,19 @@ using namespace ctre::phoenix6;
 namespace indy {
 
 Intake::Intake()
-    : kIntakeVoltage {config::number("intake_voltage") * 1.0_V}
+    : kFeedVoltage{config::number("intake_voltage") * 1.0_V}
 {
     SetName("Intake");
     configureMotors();
+
+    // Default command: keep the intake extended (down) at all times.
+    SetDefaultCommand(Run([this] { extend(); }).WithName("IntakeDefault"));
 }
 
 void Intake::configureMotors() {
-    // Top motor configuration
-    configs::TalonFXConfiguration topConfig = configs::TalonFXConfiguration{}
+    // ── Pitch motors (OTB left / right) ────────────────────────────────
+    // Duty-cycle controlled for simple extend/retract intake movement.
+    configs::TalonFXConfiguration pitchConfig = configs::TalonFXConfiguration{}
         .WithCurrentLimits(
             configs::CurrentLimitsConfigs{}
                 .WithSupplyCurrentLimit(40_A)
@@ -30,97 +34,134 @@ void Intake::configureMotors() {
                 .WithPeakForwardVoltage(12_V)
                 .WithPeakReverseVoltage(-12_V)
         )
-        .WithSlot0(
-            configs::Slot0Configs{}
-                .WithKP(0.1)
-                .WithKI(0.0)
-                .WithKD(0.0)
-                .WithKV(0.12)
+        .WithMotorOutput(
+            configs::MotorOutputConfigs{}
+                .WithInverted(signals::InvertedValue::CounterClockwise_Positive)
+                .WithNeutralMode(signals::NeutralModeValue::Brake)
+        );
+
+    // Right pitch motor mirrors left but inverted
+    configs::TalonFXConfiguration pitchRightConfig = configs::TalonFXConfiguration{pitchConfig}
+        .WithMotorOutput(
+            configs::MotorOutputConfigs{}
+                .WithInverted(signals::InvertedValue::Clockwise_Positive)
+                .WithNeutralMode(signals::NeutralModeValue::Brake)
+        );
+
+    _otbLeft.GetConfigurator().Apply(pitchConfig);
+    _otbRight.GetConfigurator().Apply(pitchRightConfig);
+
+    // ── Feed motor ─────────────────────────────────────────────────────
+    configs::TalonFXConfiguration feedConfig = configs::TalonFXConfiguration{}
+        .WithCurrentLimits(
+            configs::CurrentLimitsConfigs{}
+                .WithSupplyCurrentLimit(40_A)
+                .WithSupplyCurrentLimitEnable(true)
+                .WithStatorCurrentLimit(80_A)
+                .WithStatorCurrentLimitEnable(true)
+        )
+        .WithVoltage(
+            configs::VoltageConfigs{}
+                .WithPeakForwardVoltage(12_V)
+                .WithPeakReverseVoltage(-12_V)
         )
         .WithMotorOutput(
             configs::MotorOutputConfigs{}
                 .WithInverted(signals::InvertedValue::CounterClockwise_Positive)
                 .WithNeutralMode(signals::NeutralModeValue::Coast)
         );
-    
-    // Bottom motor configuration (inverted)
-    configs::TalonFXConfiguration bottomConfig = configs::TalonFXConfiguration{}
-        .WithCurrentLimits(
-            configs::CurrentLimitsConfigs{}
-                .WithSupplyCurrentLimit(40_A)
-                .WithSupplyCurrentLimitEnable(true)
-                .WithStatorCurrentLimit(80_A)
-                .WithStatorCurrentLimitEnable(true)
-        )
-        .WithVoltage(
-            configs::VoltageConfigs{}
-                .WithPeakForwardVoltage(12_V)
-                .WithPeakReverseVoltage(-12_V)
-        )
-        .WithSlot0(
-            configs::Slot0Configs{}
-                .WithKP(0.1)
-                .WithKI(0.0)
-                .WithKD(0.0)
-                .WithKV(0.12)
-        )
-        .WithMotorOutput(
-            configs::MotorOutputConfigs{}
-                .WithInverted(signals::InvertedValue::Clockwise_Positive)
-                .WithNeutralMode(signals::NeutralModeValue::Coast)
-        );
-    
-    // Apply configs
-    m_topMotor.GetConfigurator().Apply(topConfig);
-    m_bottomMotor.GetConfigurator().Apply(bottomConfig);
-    
-    // Configure status signal update frequencies to prevent CAN stale errors
-    // Set to 50 Hz for telemetry signals (velocity, current)
+
+    _feedMotor.GetConfigurator().Apply(feedConfig);
+
+    // ── Status signal update frequencies ───────────────────────────────
     BaseStatusSignal::SetUpdateFrequencyForAll(
         50_Hz,
-        m_topMotor.GetVelocity(),
-        m_topMotor.GetSupplyCurrent(),
-        m_bottomMotor.GetVelocity(),
-        m_bottomMotor.GetSupplyCurrent()
+        _otbLeft.GetPosition(),
+        _otbLeft.GetVelocity(),
+        _otbLeft.GetSupplyCurrent(),
+        _otbRight.GetPosition(),
+        _otbRight.GetVelocity(),
+        _otbRight.GetSupplyCurrent(),
+        _feedMotor.GetVelocity(),
+        _feedMotor.GetSupplyCurrent()
     );
-    
-    // Optimize CAN bus utilization after setting update frequencies
-    // This reduces the default update rates for unused signals
-    m_topMotor.OptimizeBusUtilization();
-    m_bottomMotor.OptimizeBusUtilization();
-    
-    // Optional: Make bottom motor follow top motor
-    // m_bottomMotor.SetControl(controls::Follower{14, true}); // Follow ID 14, opposite direction
+
+    _otbLeft.OptimizeBusUtilization();
+    _otbRight.OptimizeBusUtilization();
+    _feedMotor.OptimizeBusUtilization();
 }
 
 void Intake::Periodic() {
 #if BOT_TRACE_SUBSYSTEMS
-    // Telemetry for debugging and monitoring
-    frc::SmartDashboard::PutNumber("Intake/Top Velocity (rps)", m_topMotor.GetVelocity().GetValue().value());
-    frc::SmartDashboard::PutNumber("Intake/Bottom Velocity (rps)", m_bottomMotor.GetVelocity().GetValue().value());
-    frc::SmartDashboard::PutNumber("Intake/Top Current (A)", m_topMotor.GetSupplyCurrent().GetValue().value());
-    frc::SmartDashboard::PutNumber("Intake/Bottom Current (A)", m_bottomMotor.GetSupplyCurrent().GetValue().value());
+    frc::SmartDashboard::PutNumber("Intake/PitchL Pos (tr)",
+        _otbLeft.GetPosition().GetValue().value());
+    frc::SmartDashboard::PutNumber("Intake/PitchR Pos (tr)",
+        _otbRight.GetPosition().GetValue().value());
+    frc::SmartDashboard::PutNumber("Intake/PitchL Current (A)",
+        _otbLeft.GetSupplyCurrent().GetValue().value());
+    frc::SmartDashboard::PutNumber("Intake/PitchR Current (A)",
+        _otbRight.GetSupplyCurrent().GetValue().value());
+    frc::SmartDashboard::PutNumber("Intake/Feed Velocity (rps)",
+        _feedMotor.GetVelocity().GetValue().value());
+    frc::SmartDashboard::PutNumber("Intake/Feed Current (A)",
+        _feedMotor.GetSupplyCurrent().GetValue().value());
 #endif
 }
 
-void Intake::setVoltage(units::volt_t voltage) {
-    m_topMotor.SetControl(m_voltageRequest.WithOutput(voltage));
-    m_bottomMotor.SetControl(m_voltageRequest.WithOutput(voltage));
+// ── Pitch control ──────────────────────────────────────────────────────
+
+void Intake::extend() {
+    _otbLeft.SetControl(_dutyCycleRequest.WithOutput(-kExtendDutyCycle));
+    _otbRight.SetControl(_dutyCycleRequest.WithOutput(kExtendDutyCycle));
 }
 
-void Intake::setVelocity(units::turns_per_second_t velocity) {
-    m_topMotor.SetControl(m_velocityRequest.WithVelocity(velocity));
-    m_bottomMotor.SetControl(m_velocityRequest.WithVelocity(velocity));
+void Intake::retract() {
+    _otbLeft.SetControl(_dutyCycleRequest.WithOutput(kRetractDutyCycle));
+    _otbRight.SetControl(_dutyCycleRequest.WithOutput(-kRetractDutyCycle));
 }
+
+void Intake::stopPitch() {
+    _otbLeft.SetControl(_dutyCycleRequest.WithOutput(0.0));
+    _otbRight.SetControl(_dutyCycleRequest.WithOutput(0.0));
+}
+
+// ── Feed (roller) control ──────────────────────────────────────────────
+
+void Intake::feed() {
+    _feedMotor.SetControl(_voltageRequest.WithOutput(kFeedVoltage));
+}
+
+void Intake::eject() {
+    _feedMotor.SetControl(_voltageRequest.WithOutput(kEjectVoltage));
+}
+
+void Intake::stopFeed() {
+    _feedMotor.SetControl(_voltageRequest.WithOutput(0_V));
+}
+
+// ── Convenience ────────────────────────────────────────────────────────
 
 void Intake::stop() {
-    m_topMotor.SetControl(m_voltageRequest.WithOutput(0_V));
-    m_bottomMotor.SetControl(m_voltageRequest.WithOutput(0_V));
+    stopPitch();
+    stopFeed();
 }
 
-// Command factories
+// ── Command factories ──────────────────────────────────────────────────
+
+frc2::CommandPtr Intake::intakeCommand() {
+    return Run([this] { feed(); })
+        .WithName("Intake")
+        .FinallyDo([this] { stopFeed(); });
+}
+
+frc2::CommandPtr Intake::ejectCommand() {
+    return Run([this] { eject(); })
+        .WithName("Eject")
+        .FinallyDo([this] { stopFeed(); });
+}
+
 frc2::CommandPtr Intake::startCommand() {
-    return RunOnce([this] { setVoltage(kIntakeVoltage); })
+    return RunOnce([this] { feed(); })
         .WithName("IntakeStart");
 }
 
@@ -129,24 +170,16 @@ frc2::CommandPtr Intake::stopCommand() {
         .WithName("IntakeStop");
 }
 
-frc2::CommandPtr Intake::intakeCommand() {
-    return Run([this] { setVoltage(kIntakeVoltage); })
-        .WithName("Intake")
-        .FinallyDo([this] { stop(); });
+frc2::CommandPtr Intake::retractCommand() {
+    return Run([this] { retract(); })
+        .WithName("IntakeRetract")
+        .FinallyDo([this] { extend(); });
 }
 
-frc2::CommandPtr Intake::ejectCommand() {
-    return Run([this] { setVoltage(kEjectVoltage); })
-        .WithName("Eject")
-        .FinallyDo([this] { stop(); });
-}
-
-frc2::CommandPtr Intake::stutterCommand (units::time::second_t duration) {
-    // Run the intake in 0.25s on / 0.25s off cycles for 6 seconds then stop.
-    // Uses a captured start time to determine elapsed duration and self-terminate.
+frc2::CommandPtr Intake::stutterCommand(units::time::second_t duration) {
     auto startTime = std::make_shared<units::second_t>(0_s);
     if (duration <= 0_s)
-        duration = units::time::second_t (config::number ("intake_stutter_length"));
+        duration = units::time::second_t(config::number("intake_stutter_length"));
 
     return RunOnce([startTime] {
         *startTime = frc::Timer::GetFPGATimestamp();
@@ -154,9 +187,9 @@ frc2::CommandPtr Intake::stutterCommand (units::time::second_t duration) {
     .AndThen(Run([this, startTime] {
         double t = frc::Timer::GetFPGATimestamp().value();
         if (std::fmod(t, 0.5) < 0.25)
-            setVoltage(kIntakeVoltage);
+            feed();
         else
-            stop();
+            stopFeed();
     })
     .Until([startTime, duration] {
         return (frc::Timer::GetFPGATimestamp() - *startTime) >= duration;
@@ -165,4 +198,4 @@ frc2::CommandPtr Intake::stutterCommand (units::time::second_t duration) {
     .WithName("IntakeStutter");
 }
 
-}
+} // namespace indy

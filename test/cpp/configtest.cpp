@@ -31,38 +31,32 @@ TEST(ConfigTest, GetBooleanValue) {
 
 // Test device ID retrieval
 TEST(ConfigTest, GetDeviceIds) {
-    auto intakeTopId = config::integer("intake_top_device_id");
-    EXPECT_EQ(intakeTopId, 14);
+    auto otbLeftId = config::integer("otb_left_device_id");
+    EXPECT_EQ(otbLeftId, 17);
     
-    auto intakeBottomId = config::integer("intake_bottom_device_id");
-    EXPECT_EQ(intakeBottomId, 15);
+    auto otbRightId = config::integer("otb_right_device_id");
+    EXPECT_EQ(otbRightId, 18);
     
-    auto climberId = config::integer("climber_device_id");
-    EXPECT_EQ(climberId, 1);
+    auto intakeId = config::integer("intake_device_id");
+    EXPECT_EQ(intakeId, 1);
 }
 
 // Test CAN bus strings
 TEST(ConfigTest, GetCanBusStrings) {
-    auto intakeTopBus = config::str("intake_top_can_bus");
-    EXPECT_EQ(intakeTopBus, "rio");
+    auto otbLeftBus = config::str("otb_left_can_bus");
+    EXPECT_EQ(otbLeftBus, "rio");
     
-    auto intakeBottomBus = config::str("intake_bottom_can_bus");
-    EXPECT_EQ(intakeBottomBus, "rio");
+    auto otbRightBus = config::str("otb_right_can_bus");
+    EXPECT_EQ(otbRightBus, "rio");
     
-    auto climberBus = config::str("climber_can_bus");
-    EXPECT_EQ(climberBus, "rio");
+    auto intakeBus = config::str("intake_can_bus");
+    EXPECT_EQ(intakeBus, "rio");
 }
 
 // Test button index retrieval
 TEST(ConfigTest, GetButtonIndices) {
     auto headingButton = config::integer("heading_button_index");
     EXPECT_EQ(headingButton, 8);
-    
-    auto climbButton = config::integer("climber_climb_button_index");
-    EXPECT_EQ(climbButton, 16);
-    
-    auto lowerButton = config::integer("climber_lower_button_index");
-    EXPECT_EQ(lowerButton, 1);
     
     auto turretAimButton = config::integer("turret_aim_button_index");
     EXPECT_EQ(turretAimButton, 7);

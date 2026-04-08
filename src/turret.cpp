@@ -2,13 +2,18 @@
 #include "vision.hpp"
 #include <frc2/command/Commands.h>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/Timer.h>
 #include <numbers>
 
 using namespace ctre::phoenix6;
 
 namespace indy {
 
-Turret::Turret() {
+Turret::Turret()
+    : kUptakeStallAmps{config::number("turret_uptake_stall_amps") * 1.0_A},
+      kUptakeReverseTime{config::number("turret_uptake_reverse_time") * 1.0_s},
+      kUptakeReverseVoltage{config::number("turret_uptake_reverse_voltage") * 1.0_V}
+{
     SetName("Turret");
     configureMotors();
     frc::SmartDashboard::SetDefaultNumber("Turret/Distance Scale", _distanceScale);
@@ -127,7 +132,8 @@ void Turret::configureMotors() {
         _shooterMotor.GetVelocity(),
         _shooterMotor.GetSupplyCurrent(),
         _uptakeMotor.GetVelocity(),
-        _uptakeMotor.GetSupplyCurrent()
+        _uptakeMotor.GetSupplyCurrent(),
+        _uptakeMotor.GetStatorCurrent()
     );
     
     // Optimize CAN bus utilization
@@ -143,6 +149,7 @@ void Turret::Periodic() {
     _cachedRotationVelocity = _rotationMotor.GetVelocity().GetValue();
     _cachedMotorVoltage = _rotationMotor.GetMotorVoltage().GetValue();
     _cachedMotorCurrent = _rotationMotor.GetSupplyCurrent().GetValue();
+    _cachedUptakeStatorCurrent = _uptakeMotor.GetStatorCurrent().GetValue();
 
     // Always-on: key shooter values for tuning
     frc::SmartDashboard::PutNumber("Turret/Shooter Velocity (tps)", _cachedShooterVelocity.value());
@@ -221,6 +228,27 @@ void Turret::setShooterVelocity(units::turns_per_second_t velocity) {
     _shooterMotor.SetControl(_shooterVelocityRequest.WithVelocity(velocity));
 }
 
+void Turret::runUptake() {
+    if (_uptakeStallReversing) {
+        if ((frc::Timer::GetFPGATimestamp() - _uptakeReverseStartTime) >= kUptakeReverseTime) {
+            // Reverse window expired — resume normal velocity
+            _uptakeStallReversing = false;
+            _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
+        } else {
+            // Still within reverse window — keep reversing
+            _uptakeMotor.SetControl(_voltageRequest.WithOutput(kUptakeReverseVoltage));
+        }
+    } else if (_cachedUptakeStatorCurrent > kUptakeStallAmps) {
+        // Stall detected — begin reverse
+        _uptakeStallReversing = true;
+        _uptakeReverseStartTime = frc::Timer::GetFPGATimestamp();
+        _uptakeMotor.SetControl(_voltageRequest.WithOutput(kUptakeReverseVoltage));
+    } else {
+        // Normal operation
+        _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
+    }
+}
+
 void Turret::stopRotation() {
     _rotationMotor.SetControl(_voltageRequest.WithOutput(0_V));
 }
@@ -230,6 +258,7 @@ void Turret::stopShooter() {
 }
 
 void Turret::stopUptake() {
+    _uptakeStallReversing = false;
     _uptakeMotor.SetControl(_voltageRequest.WithOutput(0_V));
 }
 
@@ -393,17 +422,13 @@ frc2::CommandPtr Turret::shooterOnCommand(std::function<units::meter_t()> distan
     // intentionally so that these commands do NOT interrupt aimAtTargetCommand.
     auto warm = frc2::cmd::Sequence(
         frc2::cmd::RunOnce([this, targetVelocity] { setShooterVelocity(targetVelocity()); }),
-        frc2::cmd::RunOnce([this] {
-            _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
-        })
+        frc2::cmd::RunOnce([this] { runUptake(); })
     );
 
     auto cold = frc2::cmd::Sequence(
         frc2::cmd::RunOnce([this, targetVelocity] { setShooterVelocity(targetVelocity()); }),
         frc2::cmd::WaitUntil([this] { return isShooterReady(); }),
-        frc2::cmd::RunOnce([this] {
-            _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
-        })
+        frc2::cmd::RunOnce([this] { runUptake(); })
     );
 
     return frc2::cmd::Either(
@@ -423,7 +448,7 @@ frc2::CommandPtr Turret::shootAtDistanceCommand(std::function<units::meter_t()> 
         // Once ready: continuously track distance and run uptake
         frc2::cmd::Run([this, distanceFn] {
             setShooterVelocity(velocityFromDistance(distanceFn()));
-            _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
+            runUptake();
         })
     )
     .FinallyDo([this] {

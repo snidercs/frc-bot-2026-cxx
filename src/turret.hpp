@@ -8,6 +8,7 @@
 #include <units/length.h>
 #include <units/voltage.h>
 #include <units/current.h>
+#include <units/time.h>
 #include "ctre/phoenix6/TalonFX.hpp"
 #include "config.hpp"
 
@@ -131,6 +132,11 @@ private:
     bool _isHoldingPosition = false;
     units::turn_t _holdPosition = 0_tr;
 
+    // Uptake stall-reversal state
+    bool _uptakeStallReversing = false;
+    units::second_t _uptakeReverseStartTime = 0_s;
+    units::ampere_t _cachedUptakeStatorCurrent = 0_A;
+
     // Live-tunable scale factor applied to distance before shooter speed lookup.
     // Adjust via Elastic slider - we'll use this to figure out what scale we need for the competition balls vs. our balls
     double _distanceScale = 1.0;
@@ -146,8 +152,14 @@ private:
     // Gear ratio from motor to turret (motor rotations per turret rotation)
     static constexpr double kRotationGearRatio = 100.0;
 
+    // Uptake stall-reversal tuning (loaded from config.lua)
+    const units::ampere_t kUptakeStallAmps;
+    const units::second_t kUptakeReverseTime;
+    const units::volt_t   kUptakeReverseVoltage;
+
     void configureMotors();
     void setTargetPosition(units::turn_t position);
+    void runUptake();
     units::turn_t computeAimPosition(const frc::Pose2d& robotPose, 
                                      const frc::Pose2d& targetPose) const;
 

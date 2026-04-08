@@ -18,6 +18,8 @@ local config = {
 
     intake_trigger_index = 18,  -- The button index to engage the intake.
     intake_eject_index = 19,    -- The button index to eject (stick 1).
+    intake_retract_index = 16,  -- The button index to retract the intake (stick 0).
+    intake_softlimit_index = 4, -- The button index to disable intake soft limits while held (stick 1).
 
     -- Over-the-bumper intake motors (CAN IDs tentative — verify on robot)
     otb_left_device_id = 17,    -- Pitch left motor

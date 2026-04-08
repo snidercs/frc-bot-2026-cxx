@@ -11,7 +11,7 @@ namespace indy {
  *
  *  Three motors:
  *    - OTBLeft / OTBRight — synchronised pitch pair that rotates the intake
- *      between stowed (up) and deployed (down) positions.
+ *      between up and down positions.
  *    - Intake (feed) — spins the rollers to ingest game pieces.
  *
  *  The intake is held extended (down) by default and only retracts when
@@ -44,18 +44,22 @@ public:
     void stop();
 
     // ── Command factories ──────────────────────────────────────────────
-    /** Spin feed while held; stop feed on release. Intake stays extended. */
+    /** Spin feed while held. */
     frc2::CommandPtr intakeCommand();
-    /** Spin feed in reverse while held; stop on release. */
+    /** Spin feed in reverse while held. */
     frc2::CommandPtr ejectCommand();
-    /** One-shot: start the feed rollers (no pitch movement). */
+    /** Start the feed rollers, continues to run until stopped.*/
     frc2::CommandPtr startCommand();
-    /** One-shot: stop all motors. */
+    /** Stop all motors. */
     frc2::CommandPtr stopCommand();
     /** Retract intake while held; re-extends on release. */
     frc2::CommandPtr retractCommand();
     /** Stutter the feed on/off for a duration, then stop. */
     frc2::CommandPtr stutterCommand(units::time::second_t duration = 0_s);
+    /** Disable soft limits on both pitch motors. */
+    frc2::CommandPtr disableSoftLimitsCommand();
+    /** Re-zero encoders and re-enable soft limits on both pitch motors. */
+    frc2::CommandPtr enableSoftLimitsAndResetCommand();
 
 private:
     void configureMotors();
@@ -77,12 +81,18 @@ private:
 
     // ── Constants ──────────────────────────────────────────────────────
     const units::volt_t kFeedVoltage;
-    static constexpr units::volt_t kEjectVoltage = 2_V;
+    static constexpr units::volt_t kEjectVoltage = -4_V;
 
     /** Duty cycle to extend/lower the intake (OTBLeft gets negative, OTBRight gets positive). */
     static constexpr double kExtendDutyCycle = 0.05;
     /** Duty cycle to retract/raise the intake (OTBLeft gets positive, OTBRight gets negative). */
     static constexpr double kRetractDutyCycle = 0.15;
+
+    // ── Soft limits (motor rotations, starting from 0 = up/stowed) ─────
+    static constexpr units::turn_t kLeftForwardLimit  =  0.0_tr;        // home (up)
+    static constexpr units::turn_t kLeftReverseLimit  = -2.305078_tr;   // fully extended (down)
+    static constexpr units::turn_t kRightForwardLimit =  2.170801_tr;   // fully extended (down)
+    static constexpr units::turn_t kRightReverseLimit =  0.0_tr;        // home (up)
 };
 
 } // namespace indy

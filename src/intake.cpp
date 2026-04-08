@@ -38,18 +38,36 @@ void Intake::configureMotors() {
             configs::MotorOutputConfigs{}
                 .WithInverted(signals::InvertedValue::Clockwise_Positive)
                 .WithNeutralMode(signals::NeutralModeValue::Brake)
+        )
+        .WithSoftwareLimitSwitch(
+            configs::SoftwareLimitSwitchConfigs{}
+                .WithForwardSoftLimitEnable(true)
+                .WithForwardSoftLimitThreshold(kLeftForwardLimit)
+                .WithReverseSoftLimitEnable(true)
+                .WithReverseSoftLimitThreshold(kLeftReverseLimit)
         );
 
-    // Right pitch motor mirrors left but inverted
+    // Right pitch motor — same base config but different inversion and soft limits
     configs::TalonFXConfiguration pitchRightConfig = configs::TalonFXConfiguration{pitchConfig}
         .WithMotorOutput(
             configs::MotorOutputConfigs{}
                 .WithInverted(signals::InvertedValue::Clockwise_Positive)
                 .WithNeutralMode(signals::NeutralModeValue::Brake)
+        )
+        .WithSoftwareLimitSwitch(
+            configs::SoftwareLimitSwitchConfigs{}
+                .WithForwardSoftLimitEnable(true)
+                .WithForwardSoftLimitThreshold(kRightForwardLimit)
+                .WithReverseSoftLimitEnable(true)
+                .WithReverseSoftLimitThreshold(kRightReverseLimit)
         );
 
     _otbLeft.GetConfigurator().Apply(pitchConfig);
     _otbRight.GetConfigurator().Apply(pitchRightConfig);
+
+    // Zero both encoders — intake starts in the up (home) position
+    _otbLeft.SetPosition(0.0_tr);
+    _otbRight.SetPosition(0.0_tr);
 
     // ── Feed motor ─────────────────────────────────────────────────────
     configs::TalonFXConfiguration feedConfig = configs::TalonFXConfiguration{}
@@ -196,6 +214,38 @@ frc2::CommandPtr Intake::stutterCommand(units::time::second_t duration) {
     }))
     .FinallyDo([this] { stop(); })
     .WithName("IntakeStutter");
+}
+
+frc2::CommandPtr Intake::disableSoftLimitsCommand() {
+    return RunOnce([this] {
+        auto disabled = configs::SoftwareLimitSwitchConfigs{}
+            .WithForwardSoftLimitEnable(false)
+            .WithReverseSoftLimitEnable(false);
+        _otbLeft.GetConfigurator().Apply(disabled);
+        _otbRight.GetConfigurator().Apply(disabled);
+    }).WithName("DisableIntakeSoftLimits");
+}
+
+frc2::CommandPtr Intake::enableSoftLimitsAndResetCommand() {
+    return RunOnce([this] {
+        _otbLeft.SetPosition(0.0_tr);
+        _otbRight.SetPosition(0.0_tr);
+
+        _otbLeft.GetConfigurator().Apply(
+            configs::SoftwareLimitSwitchConfigs{}
+                .WithForwardSoftLimitEnable(true)
+                .WithForwardSoftLimitThreshold(kLeftForwardLimit)
+                .WithReverseSoftLimitEnable(true)
+                .WithReverseSoftLimitThreshold(kLeftReverseLimit)
+        );
+        _otbRight.GetConfigurator().Apply(
+            configs::SoftwareLimitSwitchConfigs{}
+                .WithForwardSoftLimitEnable(true)
+                .WithForwardSoftLimitThreshold(kRightForwardLimit)
+                .WithReverseSoftLimitEnable(true)
+                .WithReverseSoftLimitThreshold(kRightReverseLimit)
+        );
+    }).WithName("EnableIntakeSoftLimitsAndReset");
 }
 
 } // namespace indy

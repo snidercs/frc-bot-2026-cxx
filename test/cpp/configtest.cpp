@@ -17,7 +17,7 @@ TEST(ConfigTest, GetIntegerValue) {
 
 TEST(ConfigTest, GetNumberValue) {
     auto intakeVoltage = config::number("intake_voltage");
-    EXPECT_DOUBLE_EQ(intakeVoltage, -4.2);
+    EXPECT_DOUBLE_EQ(intakeVoltage, 4.2);
 }
 
 TEST(ConfigTest, GetBooleanValue) {

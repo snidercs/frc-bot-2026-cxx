@@ -92,7 +92,7 @@ void Turret::configureMotors() {
             configs::CurrentLimitsConfigs{}
                 .WithSupplyCurrentLimit(30_A)
                 .WithSupplyCurrentLimitEnable(true)
-                .WithStatorCurrentLimit(60_A)
+                .WithStatorCurrentLimit(80_A)
                 .WithStatorCurrentLimitEnable(true)
         )
         .WithVoltage(

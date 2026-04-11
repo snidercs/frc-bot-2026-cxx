@@ -56,6 +56,14 @@ public:
     frc2::CommandPtr retractCommand();
     /** Stutter the feed on/off for a duration, then stop. */
     frc2::CommandPtr stutterCommand(units::time::second_t duration = 0_s);
+    /** Continuously oscillate the intake up/down to agitate game pieces.
+     *
+     *  Alternates between extending and retracting the pitch motors on a
+     *  configurable cycle.  Intended to run alongside the shooter so that
+     *  game pieces are jiggled into the uptake while scoring.
+     */
+    frc2::CommandPtr agitateCommand();
+
     /** Disable soft limits on both pitch motors. */
     frc2::CommandPtr disableSoftLimitsCommand();
     /** Re-zero encoders and re-enable soft limits on both pitch motors. */
@@ -87,6 +95,11 @@ private:
     static constexpr double kExtendDutyCycle = 0.05;
     /** Duty cycle to retract/raise the intake (OTBLeft gets positive, OTBRight gets negative). */
     static constexpr double kRetractDutyCycle = 0.15;
+
+    /** Duration of each extend phase during agitation (seconds). */
+    static constexpr units::second_t kAgitateExtendTime = 0.20_s;
+    /** Duration of each retract phase during agitation (seconds). */
+    static constexpr units::second_t kAgitateRetractTime = 0.20_s;
 
     // ── Soft limits (motor rotations, starting from 0 = up/stowed) ─────
     static constexpr units::turn_t kLeftForwardLimit  =  0.0_tr;        // home (up)

@@ -216,6 +216,24 @@ frc2::CommandPtr Intake::stutterCommand(units::time::second_t duration) {
     .WithName("IntakeStutter");
 }
 
+frc2::CommandPtr Intake::agitateCommand() {
+    // Continuously alternate between retracting and extending the intake
+    // pitch motors to jiggle game pieces toward the uptake while shooting.
+    // Retract comes first because the intake is already extended (down) at
+    // the start of a shot — extending first would be a no-op.
+    return Run([this] {
+        // Use FPGA timestamp to produce a repeating cycle.
+        double period = (kAgitateRetractTime + kAgitateExtendTime).value();
+        double phase  = std::fmod(frc::Timer::GetFPGATimestamp().value(), period);
+        if (phase < kAgitateRetractTime.value())
+            retract();
+        else
+            extend();
+    })
+    .FinallyDo([this] { extend(); })
+    .WithName("IntakeAgitate");
+}
+
 frc2::CommandPtr Intake::disableSoftLimitsCommand() {
     return RunOnce([this] {
         auto disabled = configs::SoftwareLimitSwitchConfigs{}

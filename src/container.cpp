@@ -71,11 +71,13 @@ protected:
         // Shooter Control — brake the drivetrain while shooting.
         // Braking locks the swerve wheels in an X-pattern to resist any forces that would
         // disturb the robot's heading and throw off turret aim.
+        // The intake agitates (oscillates up/down) while shooting to help seat game pieces.
         _sticks[1].Button(config::integer("turret_shoot_button_index")).WhileTrue (
             turret().shootAtDistanceCommand([this] {
                 return drivetrain().GetState().Pose.Translation()
                            .Distance(field::hubPosition());
             })
+              .AlongWith(intake().agitateCommand())
 #if BOT_BRAKE_ON_SHOOT
               .AlongWith(drivetrain().ApplyRequest([this]() -> auto&& { return brake; }).AsProxy())
 #endif
@@ -243,6 +245,7 @@ Container::Container()
             nc::registerCommand("intakeStart", intake().startCommand());
             nc::registerCommand("intakeStutter", intake().stutterCommand());
             nc::registerCommand("intakeStop",  intake().stopCommand());
+            nc::registerCommand("intakeAgitate", intake().agitateCommand());
             nc::registerCommand("driveJitter", jitterCommand());
 
             _autoBuilder = AutoBuilder::buildAutoChooser (config::str ("auto_default_name"));

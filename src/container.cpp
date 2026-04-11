@@ -83,9 +83,18 @@ protected:
 #endif
               );
 
+        // Climber control — default is always retracting; hold button to extend
+        _sticks[1].Button(config::integer("climber_extend_button_index")).WhileTrue (
+            climber().extendCommand());
+
         // Drive jitter (intake agitator) - front/back on button 1, left/right on button 2
         _sticks[0].Button(5).OnTrue(jitterCommand(false));
         _sticks[0].Button(6).OnTrue(jitterCommand(true));
+
+        // Disable climber soft limits while held; re-enable and zero position on release
+        _sticks[1].Button(config::integer("climber_softlimit_index"))
+            .OnTrue(climber().disableSoftLimitsCommand())
+            .OnFalse(climber().enableSoftLimitsAndResetCommand());
 
         // Auto-aim: toggle button 16 to track hub with turret rotation.
         // First press enables auto-aim; second press (or any interruption) disables it.
@@ -187,7 +196,10 @@ public:
         // Intake controls (use RightBumper/RightTrigger to avoid conflict with A/B buttons)
         joystick.RightBumper().WhileTrue (intake().intakeCommand());
         joystick.RightTrigger().WhileTrue (intake().ejectCommand());
-        
+
+        // Climber control — default is always retracting; hold button to extend
+        joystick.Button(config::integer("climber_extend_button_index")).WhileTrue (climber().extendCommand());
+
         // clang-format on
     }
 
@@ -207,6 +219,7 @@ Container::Container()
         TunerConstants::BackRight);
 
     _intake = std::make_unique<indy::Intake>();
+    _climber = std::make_unique<indy::Climber>();
     _turret = std::make_unique<indy::Turret>();
 
 #if BOT_VISION
@@ -284,6 +297,7 @@ Container::~Container()
 {
     _vision.reset();
     _turret.reset();
+    _climber.reset();
     _intake.reset();
     _drivetrain.reset();
 }

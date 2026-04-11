@@ -30,6 +30,12 @@ local config = {
     intake_can_bus = "rio",
     intake_voltage = 4.2,  -- Voltage for feed motor (negative = intake direction)
 
+    -- Climber motor configuration
+    climber_device_id = 22,
+    climber_can_bus = "rio",
+    climber_extend_button_index = 5,  -- Hold to extend climber (stick 1, default is retract)
+    climber_softlimit_index = 8,      -- Disable climber soft limits while held (stick 1)
+
     -- Turret shooter configuration
     turret_rotation_device_id = 19,
     turret_rotation_can_bus = "rio",

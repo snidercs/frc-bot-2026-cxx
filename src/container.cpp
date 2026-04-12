@@ -77,7 +77,7 @@ protected:
                 return drivetrain().GetState().Pose.Translation()
                            .Distance(field::hubPosition());
             })
-              .AlongWith(intake().agitateCommand())
+              //.AlongWith(intake().agitateCommand())
 #if BOT_BRAKE_ON_SHOOT
               .AlongWith(drivetrain().ApplyRequest([this]() -> auto&& { return brake; }).AsProxy())
 #endif

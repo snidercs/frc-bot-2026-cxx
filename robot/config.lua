@@ -44,8 +44,8 @@ local config = {
     
     turret_uptake_device_id = 21,
     turret_uptake_can_bus = "rio",
-    turret_uptake_stall_amps = 71.0,      -- Stator current threshold to detect a jam (A) — tune on robot
-    turret_uptake_reverse_time = 0.5,    -- How long to run in reverse after a jam (s)
+    turret_uptake_stall_amps = 90.0,      -- Stator current threshold to detect a jam (A) — tune on robot
+    turret_uptake_reverse_time = 0.6,    -- How long to run in reverse after a jam (s)
     turret_uptake_reverse_voltage = -8.0, -- Voltage to apply during reverse (V, negative = reverse)
     
     -- Vision test configuration

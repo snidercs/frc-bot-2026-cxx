@@ -165,8 +165,7 @@ void Robot::RobotPeriodic()
         for (const auto& measurement : vision.measurements()) {
             drive.AddVisionMeasurement (
                 measurement.pose,
-                measurement.timestamp,
-                measurement.stdDevs);
+                measurement.timestamp);
         }
     }
 #endif

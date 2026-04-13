@@ -197,10 +197,13 @@ private:
 
 Container::Container()
 {
-    // Construct drivetrain with 250 Hz odometry update frequency to prevent CAN stale errors
+    // Construct drivetrain with 250 Hz odometry update frequency to prevent CAN stale errors.
+    // Vision stdDevs are fixed at {0.5, 0.5, 9999} — set once here rather than per-measurement.
     _drivetrain = std::make_unique<indy::CommandSwerveDrivetrain> (
         TunerConstants::DrivetrainConstants,
         250_Hz,
+        std::array<double, 3> { 0.1, 0.1, 0.1 },
+        std::array<double, 3> { 0.5, 0.5, 9999.0 },
         TunerConstants::FrontLeft,
         TunerConstants::FrontRight,
         TunerConstants::BackLeft,

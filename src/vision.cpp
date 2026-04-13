@@ -6,6 +6,9 @@
 #include "mathutil.hpp"
 #include "vision.hpp"
 
+#define BOT_VISION_VELOCITY_GATE 0
+#define BOT_VISION_RESIDUAL_GATE 1
+
 namespace indy::vision {
 
 // Out-of-line definition of the default parameters.
@@ -122,7 +125,7 @@ void Processor::processResults (const std::string& cameraName,
             continue;
         }
 
-#if 1
+#if BOT_VISION_RESIDUAL_GATE
         // Odometry residual gate — the most important match-safety check.
         // If vision disagrees with current odometry by more than kMaxResidual,
         // the solve is probably bad. Don't let it corrupt the estimator.
@@ -140,6 +143,7 @@ void Processor::processResults (const std::string& cameraName,
         }
 #endif
 
+#if BOT_VISION_VELOCITY_GATE
         // Velocity gate — reject solves that imply physically impossible robot motion.
         // Compares this pose against the last *committed* accepted pose for this camera.
         // State is updated only when a candidate actually wins (below), not here, so
@@ -156,6 +160,7 @@ void Processor::processResults (const std::string& cameraName,
                 }
             }
         }
+#endif
 
         _candidates.push_back (Candidate {
             Measurement {

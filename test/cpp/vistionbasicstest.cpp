@@ -110,25 +110,32 @@ TEST(VisionTest, MockVisionIO) {
 
 // Test vision constants
 TEST(VisionTest, CameraNames) {
-    EXPECT_EQ(indy::vision::kCameraNames.size(), 2);
-    EXPECT_STREQ(indy::vision::kCameraNames[0], "FL");
-    EXPECT_STREQ(indy::vision::kCameraNames[1], "BL");
+    EXPECT_EQ(indy::vision::kCameraNames.size(), 3);
+    EXPECT_STREQ(indy::vision::kCameraNames[0], "Turret");
+    EXPECT_STREQ(indy::vision::kCameraNames[1], "Left");
+    EXPECT_STREQ(indy::vision::kCameraNames[2], "Right");
 }
 
 TEST(VisionTest, CameraTransforms) {
-    EXPECT_EQ(indy::vision::kRobotToCamera.size(), 2);
+    EXPECT_EQ(indy::vision::kRobotToCamera.size(), 3);
 
-    // FL camera: forward, left, up
-    const auto& flTransform = indy::vision::kRobotToCamera[0];
-    EXPECT_GT(flTransform.X().value(), 0.0);  // Forward
-    EXPECT_GT(flTransform.Y().value(), 0.0);  // Left
-    EXPECT_GT(flTransform.Z().value(), 0.0);  // Up
+    // Turret camera: rear-left corner, backward, left, up
+    const auto& turretTransform = indy::vision::kRobotToCamera[0];
+    EXPECT_LT(turretTransform.X().value(), 0.0);  // Backward
+    EXPECT_GT(turretTransform.Y().value(), 0.0);  // Left
+    EXPECT_GT(turretTransform.Z().value(), 0.0);  // Up
 
-    // BL camera: backward, left, up
-    const auto& blTransform = indy::vision::kRobotToCamera[1];
-    EXPECT_LT(blTransform.X().value(), 0.0);  // Backward
-    EXPECT_GT(blTransform.Y().value(), 0.0);  // Left
-    EXPECT_GT(blTransform.Z().value(), 0.0);  // Up
+    // Left camera: forward, left, up
+    const auto& leftTransform = indy::vision::kRobotToCamera[1];
+    EXPECT_GT(leftTransform.X().value(), 0.0);  // Forward
+    EXPECT_GT(leftTransform.Y().value(), 0.0);  // Left
+    EXPECT_GT(leftTransform.Z().value(), 0.0);  // Up
+
+    // Right camera: forward, left, up
+    const auto& rightTransform = indy::vision::kRobotToCamera[2];
+    EXPECT_GT(rightTransform.X().value(), 0.0);  // Forward
+    EXPECT_GT(rightTransform.Y().value(), 0.0);  // Left
+    EXPECT_GT(rightTransform.Z().value(), 0.0);  // Up
 }
 
 TEST(VisionTest, TurretPivot) {

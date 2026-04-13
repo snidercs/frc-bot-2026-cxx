@@ -283,25 +283,28 @@ protected:
     shared between real hardware and simulation.
 */
 struct Camera {
-    enum Index : int { FL,
-                       BL,
-                       FR,
-                       BR };
+    enum Index : int { Turret,
+                       Left,
+                       Right };
 };
 
 /** Camera names (must match PhotonVision configuration) */
-constexpr const std::array<const char*, 2> kCameraNames = { "FL", "BL" };
+constexpr const std::array<const char*, 3> kCameraNames = { "Turret", "Left", "Right" };
 
 /** Camera mounting positions relative to robot center. */
-constexpr const std::array<frc::Transform3d, 2> kRobotToCamera = {
-    // Front-Left: forward-left corner, facing straight forward
+constexpr const std::array<frc::Transform3d, 3> kRobotToCamera = {
+    // Turret: rear-left corner, facing straight backward, pitched up 10°
+    frc::Transform3d {
+        frc::Translation3d { -13.74_in, 2.24_in, 11.35_in },
+        frc::Rotation3d { 0_deg, -22_deg, 180_deg } },
+    // Left
     frc::Transform3d {
         frc::Translation3d { 13.74_in, 11.375_in, 15.75_in },
         frc::Rotation3d { 0_deg, 0_deg, 0_deg } },
-    // Back-Left: rear-left corner, facing straight backward, pitched up 10°
+    // Right
     frc::Transform3d {
-        frc::Translation3d { -13.74_in, 2.24_in, 11.35_in },
-        frc::Rotation3d { 0_deg, -22_deg, 180_deg } }
+        frc::Translation3d { 13.74_in, 11.375_in, 15.75_in },
+        frc::Rotation3d { 0_deg, 0_deg, 0_deg } }
 };
 
 /** Turret pivot point location in robot frame (meters from robot center). */

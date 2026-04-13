@@ -49,9 +49,9 @@ private:
     };
 
     frc::AprilTagFieldLayout _fieldLayout;
-    std::array<std::unique_ptr<CameraUnit>, 2> _cameras;
+    std::array<std::unique_ptr<CameraUnit>, vision::kCameraNames.size()> _cameras;
 
-    std::array<std::vector<photon::PhotonPipelineResult>, 2> _rawResults;
+    std::array<std::vector<photon::PhotonPipelineResult>, vision::kCameraNames.size()> _rawResults;
 };
 
 }

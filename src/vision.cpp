@@ -122,6 +122,7 @@ void Processor::processResults (const std::string& cameraName,
             continue;
         }
 
+#if 1
         // Odometry residual gate — the most important match-safety check.
         // If vision disagrees with current odometry by more than kMaxResidual,
         // the solve is probably bad. Don't let it corrupt the estimator.
@@ -137,6 +138,7 @@ void Processor::processResults (const std::string& cameraName,
 #endif
             continue;
         }
+#endif
 
         // Velocity gate — reject solves that imply physically impossible robot motion.
         // Compares this pose against the last *committed* accepted pose for this camera.

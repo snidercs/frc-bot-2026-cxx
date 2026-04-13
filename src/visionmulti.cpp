@@ -7,7 +7,7 @@ namespace indy {
 VisionMulti::VisionMulti()
     : _fieldLayout (field::layout())
 {
-    for (std::size_t i = 0; i < 1; ++i ) { // TODO: multicams: vision::kCameraNames.size(); ++i) {
+    for (std::size_t i = 0; i < vision::kCameraNames.size(); ++i) {
         _cameras[i] = std::make_unique<CameraUnit> (
             vision::kCameraNames[i],
             vision::kRobotToCamera[i],

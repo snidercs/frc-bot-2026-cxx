@@ -9,6 +9,9 @@ using namespace ctre::phoenix6;
 
 namespace indy {
 
+constexpr units::turn_t kMinPos = -0.25_tr;
+constexpr units::turn_t kMaxPos =  0.50_tr;
+
 Turret::Turret()
     : kUptakeStallAmps{config::number("turret_uptake_stall_amps") * 1.0_A},
       kUptakeReverseTime{config::number("turret_uptake_reverse_time") * 1.0_s},
@@ -53,9 +56,9 @@ void Turret::configureMotors() {
         .WithSoftwareLimitSwitch(
             ::configs::SoftwareLimitSwitchConfigs{}
                 .WithForwardSoftLimitEnable(true)
-                .WithForwardSoftLimitThreshold(0.25_tr)
+                .WithForwardSoftLimitThreshold(kMaxPos)
                 .WithReverseSoftLimitEnable(true)
-                .WithReverseSoftLimitThreshold(-0.05542_tr)
+                .WithReverseSoftLimitThreshold(kMinPos)
         );
     
     // Shooter motor configuration (velocity control for flywheel)
@@ -287,8 +290,6 @@ void Turret::setTargetAngle(units::degree_t angle) {
 void Turret::setTargetPosition(units::turn_t position) {
     _targetAngle = units::degree_t{position};
     // Clamp to soft limit window before commanding
-    constexpr units::turn_t kMinPos = -0.05542_tr;
-    constexpr units::turn_t kMaxPos =  0.25_tr;
     position = units::math::max(kMinPos, units::math::min(kMaxPos, position));
     _rotationMotor.SetControl(_positionRequest.WithPosition(position));
 }
@@ -324,21 +325,14 @@ units::turn_t Turret::computeAimPosition(const frc::Pose2d& robotPose,
     // atan2 gives angle from robot forward (+X).
     // Range: [-0.5_tr, +0.5_tr]  (i.e. -180° to +180°)
     // Motor calibration:
-    //   0_tr    = back  (-X, atan2 = ±0.5_tr)
-    //  +0.25_tr = left  (+Y, atan2 = +0.25_tr)
-    //  -0.05_tr = right (-Y, atan2 = -0.25_tr, clamped)
+    //   0_tr     = back  (-X, atan2 = ±0.5_tr)
+    //  +0.25_tr  = left  (+Y, atan2 = +0.25_tr)  [kMinPos..0 forward-left quadrant]
+    //  -0.25_tr  = right (-Y, atan2 = -0.25_tr)  [now reachable with kMinPos = -0.25_tr]
     //
-    // Mapping: motorPos = 0.5_tr - |atan2_turns| ... no.
-    // Direct: atan2_turns(back) = ±0.5, we want 0.
-    //         atan2_turns(left) = +0.25, we want +0.25.
-    // So: motorPos = atan2_turns - 0.5  (then wrap and clamp)
-    //   back:  0.5 - 0.5 =  0    ✓
-    //   left: 0.25 - 0.5 = -0.25 ✗  (want +0.25)
-    //
-    // Try: motorPos = 0.5 - atan2_turns
-    //   back (atan2=+0.5):  0.5 - 0.5  =  0    ✓
-    //   left (atan2=+0.25): 0.5 - 0.25 = +0.25 ✓
-    //   right(atan2=-0.25): 0.5 - (-0.25) = 0.75 → wraps to -0.25 (outside limit, clamped) ✓
+    // Mapping: motorPos = 0.5 - atan2_turns
+    //   back  (atan2=+0.5):  0.5 - 0.5   =  0     ✓
+    //   left  (atan2=+0.25): 0.5 - 0.25  = +0.25  ✓
+    //   right (atan2=-0.25): 0.5 - (-0.25) = 0.75 → wraps to -0.25 ✓  (now within kMinPos)
     double atan2Turns = std::atan2(pivotToTarget.Y().value(), pivotToTarget.X().value())
                         / (2.0 * std::numbers::pi);
     units::turn_t motorPos{0.5 - atan2Turns};

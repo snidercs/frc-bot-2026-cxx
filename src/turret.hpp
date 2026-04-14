@@ -143,7 +143,7 @@ private:
 
     // Constants
     static constexpr units::turns_per_second_t kShooterVelocity = 54_tps;
-    static constexpr units::turns_per_second_t kFallbackShooterVelocity = 52_tps;
+    static constexpr units::turns_per_second_t kFallbackShooterVelocity = 53_tps;
     static constexpr units::turns_per_second_t kShooterTolerance = 5_tps;
     static constexpr units::turns_per_second_t kUptakeVelocity = 100_tps;
     static constexpr units::degree_t kAngleTolerance = 2_deg;

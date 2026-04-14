@@ -61,7 +61,7 @@ local config = {
 
     climber_device_id = 42,
     climber_can_bus = "rio",
-    climber_climb_button_index = 16,  -- Button to climb (move down)
+    climber_climb_button_index = 17,  -- Button to climb (move down)
     climber_lower_button_index = 1,   -- Button to lower (move up)
 }
 

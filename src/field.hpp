@@ -28,7 +28,7 @@ inline constexpr units::meter_t margin() { return 0.75_m; }
 inline frc::AprilTagFieldLayout layout()
 {
     // Load 2026 field layout
-    return frc::AprilTagFieldLayout::LoadField (frc::AprilTagField::k2026RebuiltAndyMark);
+    return frc::AprilTagFieldLayout::LoadField (frc::AprilTagField::k2026RebuiltWelded);
 }
 
 /** Returns the hub (goal) position for the current alliance.

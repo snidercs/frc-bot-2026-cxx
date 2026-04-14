@@ -24,8 +24,12 @@ VisionSim::CameraUnit::CameraUnit(std::string_view name,
 
     visionSim.AddCamera(cameraSim.get(), robotToCamera);
 
-    // Fall back to single-tag solve when only one tag is visible
-    estimator.SetMultiTagFallbackStrategy(photon::PoseStrategy::LOWEST_AMBIGUITY);
+    // Fall back to single-tag solve when only one tag is visible.
+    // CLOSEST_TO_REFERENCE_POSE uses the current odometry pose (set via
+    // SetReferencePose() each cycle in processResults()) to pick the
+    // geometrically closer of the two PNP mirror solutions, eliminating
+    // the 180° flip ambiguity that LOWEST_AMBIGUITY cannot resolve.
+    estimator.SetMultiTagFallbackStrategy(photon::PoseStrategy::CLOSEST_TO_REFERENCE_POSE);
 }
 
 // ─── VisionSim ──────────────────────────────────────────────────────────────

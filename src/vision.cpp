@@ -7,7 +7,7 @@
 #include "vision.hpp"
 
 #define BOT_VISION_VELOCITY_GATE 0
-#define BOT_VISION_RESIDUAL_GATE 1
+#define BOT_VISION_RESIDUAL_GATE 0
 
 namespace indy::vision {
 
@@ -78,6 +78,11 @@ void Processor::processResults (const std::string& cameraName,
                                const frc::Pose2d& currentPose)
 {
     _candidates.clear();
+
+    // Seed the estimator's reference pose from current odometry once per cycle.
+    // Required for the CLOSEST_TO_REFERENCE_POSE single-tag fallback to resolve
+    // the 180° PNP mirror ambiguity. Must be set before any Update() call.
+    estimator.SetReferencePose (frc::Pose3d { currentPose });
 
     for (auto& result : results) {
         if (! result.HasTargets()) {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "frc/geometry/Pose2d.h"
+#include "units/length.h"
 #include <frc/apriltag/AprilTagFieldLayout.h>
 #include <frc/geometry/Translation2d.h>
 #include <frc/DriverStation.h>
@@ -19,6 +21,10 @@ inline constexpr units::meter_t length() { return 16.535_m; }
 inline constexpr units::meter_t width() { return 8.069_m; }
 /** Out of bounds margin */
 inline constexpr units::meter_t margin() { return 0.75_m; }
+/** Distance from the back wall to the point at which to aim toward the work area. */
+
+inline constexpr units::inch_t workAreaDelta() { return 181.56_in + 25_in; }
+inline constexpr units::inch_t halfWidth() { return 158.32_in; }
 
 /** AprilTag field layout for the current season.
      
@@ -43,8 +49,22 @@ inline frc::Translation2d hubPosition()
 {
     const auto alliance = frc::DriverStation::GetAlliance();
     return (alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kBlue)
-               ? frc::Translation2d { 182.11_in, 158.84_in }
-               : frc::Translation2d { 469.11_in, 158.84_in };
+               ? frc::Translation2d { 182.11_in, 158.32_in }
+               : frc::Translation2d { 469.11_in, 158.32_in };
+}
+
+inline frc::Translation2d workAreaPosition()
+{
+    const auto alliance = frc::DriverStation::GetAlliance();
+    return (alliance.has_value() && alliance.value() == frc::DriverStation::Alliance::kBlue)
+               ? frc::Translation2d { 182.11_in, 158.32_in }
+               : frc::Translation2d { 469.11_in, 158.32_in };
+}
+
+inline frc::Translation2d aimPosition (const frc::Pose2d& robotPose) {
+    const auto& translation = robotPose.Translation();
+    (void) translation;
+    return {};
 }
 
 } // namespace indy::field

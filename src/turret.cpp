@@ -10,7 +10,7 @@ using namespace ctre::phoenix6;
 namespace indy {
 
 constexpr units::turn_t kMinPos = -0.25_tr;
-constexpr units::turn_t kMaxPos =  0.50_tr;
+constexpr units::turn_t kMaxPos =  0.25_tr;
 
 Turret::Turret()
     : kUptakeStallAmps{config::number("turret_uptake_stall_amps") * 1.0_A},

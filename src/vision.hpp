@@ -297,14 +297,25 @@ constexpr const std::array<frc::Transform3d, 3> kRobotToCamera = {
     frc::Transform3d {
         frc::Translation3d { -13.74_in, 2.24_in, 11.35_in },
         frc::Rotation3d { 0_deg, -22_deg, 180_deg } },
-    // Left
+    // Left: 1.5 inches from left edge of robot. 2.453 inches from back of robot. 7.625 inches from the ground.
+    // NOTE: Not yet installed — mirrored from Right camera as a placeholder. Values may change.
+    // Robot frame: +X = forward, +Y = left, origin = robot center. Frame is 27.5 x 27.5 in (half = 13.75_in).
+    // X: back edge (-13.75_in) + 2.453_in inset = -11.297_in
+    // Y: left edge (+13.75_in) - 1.5_in inset   = +12.25_in
+    // Z: 7.625_in above ground
+    // Yaw +90_deg = facing left (+Y). Pitch +20_deg = tilted upward.
     frc::Transform3d {
-        frc::Translation3d { 13.74_in, 11.375_in, 15.75_in },
-        frc::Rotation3d { 0_deg, 0_deg, 0_deg } },
-    // Right
+        frc::Translation3d { -11.297_in, 12.25_in, 7.625_in },
+        frc::Rotation3d { 0_deg, 20_deg, 90_deg } },
+    // Right: 1.5 inches from right edge of robot. 2.453 inches from back of robot. 7.625 inches from the ground.
+    // Robot frame: +X = forward, +Y = left, origin = robot center. Frame is 27.5 x 27.5 in (half = 13.75_in).
+    // X: back edge (-13.75_in) + 2.453_in inset = -11.297_in
+    // Y: right edge (-13.75_in) + 1.5_in inset  = -12.25_in
+    // Z: 7.625_in above ground
+    // Yaw -90_deg = facing right (-Y). Pitch +20_deg = tilted upward.
     frc::Transform3d {
-        frc::Translation3d { 13.74_in, 11.375_in, 15.75_in },
-        frc::Rotation3d { 0_deg, 0_deg, 0_deg } }
+        frc::Translation3d { -11.297_in, -12.25_in, 7.625_in },
+        frc::Rotation3d { 0_deg, 20_deg, -90_deg } }
 };
 
 /** Turret pivot point location in robot frame (meters from robot center). */

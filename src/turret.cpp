@@ -85,7 +85,7 @@ void Turret::configureMotors() {
         )
         .WithMotorOutput(
             configs::MotorOutputConfigs{}
-                .WithInverted(signals::InvertedValue::CounterClockwise_Positive)
+                .WithInverted(signals::InvertedValue::Clockwise_Positive)
                 .WithNeutralMode(signals::NeutralModeValue::Coast)
         );
     

@@ -125,16 +125,16 @@ TEST(VisionTest, CameraTransforms) {
     EXPECT_GT(turretTransform.Y().value(), 0.0);  // Left
     EXPECT_GT(turretTransform.Z().value(), 0.0);  // Up
 
-    // Left camera: forward, left, up
+    // Left camera: rear, left side, up
     const auto& leftTransform = indy::vision::kRobotToCamera[1];
-    EXPECT_GT(leftTransform.X().value(), 0.0);  // Forward
+    EXPECT_LT(leftTransform.X().value(), 0.0);  // Rear
     EXPECT_GT(leftTransform.Y().value(), 0.0);  // Left
     EXPECT_GT(leftTransform.Z().value(), 0.0);  // Up
 
-    // Right camera: forward, left, up
+    // Right camera: rear, right side, up
     const auto& rightTransform = indy::vision::kRobotToCamera[2];
-    EXPECT_GT(rightTransform.X().value(), 0.0);  // Forward
-    EXPECT_GT(rightTransform.Y().value(), 0.0);  // Left
+    EXPECT_LT(rightTransform.X().value(), 0.0);  // Rear
+    EXPECT_LT(rightTransform.Y().value(), 0.0);  // Right
     EXPECT_GT(rightTransform.Z().value(), 0.0);  // Up
 }
 

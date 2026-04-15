@@ -9,8 +9,8 @@ using namespace ctre::phoenix6;
 
 namespace indy {
 
-constexpr units::turn_t kMinPos = -0.25_tr;
-constexpr units::turn_t kMaxPos =  0.25_tr;
+constexpr units::turn_t kMinPos =  0.0_tr;
+constexpr units::turn_t kMaxPos =  0.50_tr;
 
 Turret::Turret()
     : kUptakeStallAmps{config::number("turret_uptake_stall_amps") * 1.0_A},
@@ -389,8 +389,8 @@ frc2::CommandPtr Turret::stopCommand() {
 units::turns_per_second_t Turret::velocityFromDistance(units::meter_t distance) const {
     constexpr units::meter_t kNearDist  = 1.75_m;
     constexpr units::meter_t kFarDist   = 5.5_m;
-    constexpr double         kNearSpeed = 46.0;
-    constexpr double         kFarSpeed  = 65.2;
+    constexpr double         kNearSpeed = 40.0;
+    constexpr double         kFarSpeed  = 64.0;
 
     if (! _autoAimEnabled)
         return kFallbackShooterVelocity;

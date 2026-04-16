@@ -53,7 +53,6 @@ public:
     */
     frc2::CommandPtr shootAtDistanceCommand(std::function<units::meter_t()> distanceFn);
 
-    frc2::CommandPtr spinUpCommand();
     frc2::CommandPtr stopCommand();
     frc2::CommandPtr calibrateRotationZero();
 

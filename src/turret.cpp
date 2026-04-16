@@ -405,11 +405,6 @@ frc2::CommandPtr Turret::manualRotateCommand(std::function<double()> speedSuppli
     // NOTE: No FinallyDo needed - updateRotationControl handles hold automatically
 }
 
-frc2::CommandPtr Turret::spinUpCommand() {
-    return Run([this] { setShooterVelocity(kShooterVelocity); })
-        .WithName("SpinUp");
-}
-
 frc2::CommandPtr Turret::stopCommand() {
     return RunOnce([this] { stop(); })
         .WithName("StopTurret");

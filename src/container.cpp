@@ -99,10 +99,15 @@ protected:
 
         // Auto-aim: toggle button 16 to track hub with turret rotation.
         // First press enables auto-aim; second press (or any interruption) disables it.
+        // Uses field::aimPosition() which automatically switches between aiming at the hub
+        // (normal zone) and a side lob target (lob zone, when past the hub).
         _sticks[1].Button(16).ToggleOnTrue(
             turret().aimAtTargetCommand(
                 [this] { return drivetrain().GetState().Pose; },
-                [this] { return frc::Pose2d{field::hubPosition(), frc::Rotation2d{}}; }
+                [this] {
+                    auto pose = drivetrain().GetState().Pose;
+                    return frc::Pose2d{field::aimPosition(pose), frc::Rotation2d{}};
+                }
             ));
 
         // Zero turret rotation position
@@ -262,7 +267,10 @@ Container::Container()
             nc::registerCommand("shooterOff",  turret().shooterOffCommand());
             nc::registerCommand("turretAim", turret().aimAtTargetCommand(
                 [this] { return drivetrain().GetState().Pose; },
-                [this] { return frc::Pose2d{field::hubPosition(), frc::Rotation2d{}}; }
+                [this] {
+                    auto pose = drivetrain().GetState().Pose;
+                    return frc::Pose2d{field::aimPosition(pose), frc::Rotation2d{}};
+                }
             ));
             
             nc::registerCommand("turretStop",  turret().stopCommand());

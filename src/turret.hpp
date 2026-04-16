@@ -110,10 +110,12 @@ private:
 
     // Control requests (reusable)
     ctre::phoenix6::controls::PositionVoltage _positionRequest{0_tr};
+    ctre::phoenix6::controls::DynamicMotionMagicVoltage _mmPositionRequest{0_tr, 0_tps, 0_tr_per_s_sq};
     ctre::phoenix6::controls::VelocityVoltage _rotationVelocityRequest{0_tps};
     ctre::phoenix6::controls::VelocityVoltage _shooterVelocityRequest{0_tps};
     ctre::phoenix6::controls::VelocityVoltage _uptakeVelocityRequest{0_tps};
     ctre::phoenix6::controls::VoltageOut _voltageRequest{0_V};
+    ctre::phoenix6::controls::VoltageOut _uptakeVoltageRequest{0_V};
     ctre::phoenix6::controls::DutyCycleOut _dutyCycleRequest{0.0};
 
     // State

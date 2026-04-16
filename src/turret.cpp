@@ -12,6 +12,15 @@ namespace indy {
 constexpr units::turn_t kMinPos =  0.0_tr;
 constexpr units::turn_t kMaxPos =  0.50_tr;
 
+// Motion Magic cruise velocity for rotation.
+// Halved automatically when a large wrap-around move is detected.
+constexpr units::turns_per_second_t kRotationCruiseVelocity     = 1.5_tps;
+constexpr units::turns_per_second_squared_t kRotationAcceleration = 3.0_tr_per_s_sq;
+
+// Moves larger than this threshold (in turns) are considered wrap-arounds
+// and will use half the normal cruise velocity.
+constexpr units::turn_t kLargeMoveThreshold = 0.2_tr;
+
 Turret::Turret()
     : kUptakeStallAmps{config::number("turret_uptake_stall_amps") * 1.0_A},
       kUptakeReverseTime{config::number("turret_uptake_reverse_time") * 1.0_s},
@@ -43,6 +52,7 @@ void Turret::configureMotors() {
                 .WithKI(0.0)
                 .WithKD(0.2)
                 .WithKV(0.12)
+                .WithKA(0.01)     // Required for Motion Magic torque/acceleration feedforward
         )
         .WithMotorOutput(
             configs::MotorOutputConfigs{}
@@ -52,6 +62,11 @@ void Turret::configureMotors() {
         ).WithFeedback(
             ::configs::FeedbackConfigs{}
                 .WithSensorToMechanismRatio(10.0)
+        )
+        .WithMotionMagic(
+            configs::MotionMagicConfigs{}
+                .WithMotionMagicCruiseVelocity(kRotationCruiseVelocity)
+                .WithMotionMagicAcceleration(kRotationAcceleration)
         )
         .WithSoftwareLimitSwitch(
             ::configs::SoftwareLimitSwitchConfigs{}
@@ -239,13 +254,13 @@ void Turret::runUptake() {
             _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
         } else {
             // Still within reverse window — keep reversing
-            _uptakeMotor.SetControl(_voltageRequest.WithOutput(kUptakeReverseVoltage));
+            _uptakeMotor.SetControl(_uptakeVoltageRequest.WithOutput(kUptakeReverseVoltage));
         }
     } else if (_cachedUptakeStatorCurrent > kUptakeStallAmps) {
         // Stall detected — begin reverse
         _uptakeStallReversing = true;
         _uptakeReverseStartTime = frc::Timer::GetFPGATimestamp();
-        _uptakeMotor.SetControl(_voltageRequest.WithOutput(kUptakeReverseVoltage));
+        _uptakeMotor.SetControl(_uptakeVoltageRequest.WithOutput(kUptakeReverseVoltage));
     } else {
         // Normal operation
         _uptakeMotor.SetControl(_uptakeVelocityRequest.WithVelocity(kUptakeVelocity));
@@ -262,7 +277,7 @@ void Turret::stopShooter() {
 
 void Turret::stopUptake() {
     _uptakeStallReversing = false;
-    _uptakeMotor.SetControl(_voltageRequest.WithOutput(0_V));
+    _uptakeMotor.SetControl(_uptakeVoltageRequest.WithOutput(0_V));
 }
 
 void Turret::stop() {
@@ -291,7 +306,21 @@ void Turret::setTargetPosition(units::turn_t position) {
     _targetAngle = units::degree_t{position};
     // Clamp to soft limit window before commanding
     position = units::math::max(kMinPos, units::math::min(kMaxPos, position));
-    _rotationMotor.SetControl(_positionRequest.WithPosition(position));
+
+    // Detect large wrap-around moves and use half the cruise velocity to protect
+    // the mechanism from high-speed cross-range sweeps.
+    auto currentPos = _rotationMotor.GetPosition().GetValue();
+    auto delta = units::math::abs(position - currentPos);
+    auto cruiseVelocity = (delta > kLargeMoveThreshold)
+        ? kRotationCruiseVelocity * 0.5
+        : kRotationCruiseVelocity;
+
+    _rotationMotor.SetControl(
+        _mmPositionRequest
+            .WithPosition(position)
+            .WithVelocity(cruiseVelocity)
+            .WithAcceleration(kRotationAcceleration)
+    );
 }
 
 units::degree_t Turret::getCurrentAngle() const {

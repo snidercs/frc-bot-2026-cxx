@@ -476,6 +476,19 @@ frc2::CommandPtr Turret::shootAtDistanceCommand(std::function<units::meter_t()> 
     .WithName("ShootAtDistance");
 }
 
+frc2::CommandPtr Turret::manualUnjamCommand() {
+    return frc2::cmd::StartEnd(
+        [this] {
+            // Override any auto-stall state and drive the uptake backwards immediately.
+            _uptakeStallReversing = false;
+            _uptakeMotor.SetControl(_uptakeVoltageRequest.WithOutput(kUptakeReverseVoltage));
+        },
+        [this] {
+            stopUptake();
+        }
+    ).WithName("ManualUnjam");
+}
+
 frc2::CommandPtr Turret::shooterOffCommand() {
     return frc2::cmd::RunOnce([this] {
         stopUptake();

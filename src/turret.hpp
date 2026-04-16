@@ -47,6 +47,15 @@ public:
     frc2::CommandPtr shooterOnCommand(std::function<units::meter_t()> distanceFn = nullptr);
     frc2::CommandPtr shooterOffCommand();
 
+    /** Manually reverse the uptake motor to clear a jam.
+     
+        Runs the uptake in reverse at @c kUptakeReverseVoltage for as long as the
+        command is active (i.e. while the operator holds the button).  Stops the
+        uptake and clears the stall-reversal flag on end so normal operation can
+        resume immediately.
+    */
+    frc2::CommandPtr manualUnjamCommand();
+
     /** Teleop shoot command — continuously adjusts shooter speed as distance changes.
      
         @param distanceFn Supplier returning current distance to target (metres).

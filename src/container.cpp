@@ -108,6 +108,12 @@ protected:
         // Zero turret rotation position
         _sticks[1].Button(3).OnTrue(turret().calibrateRotationZero());
 
+        // Manual uptake unjam — hold to reverse the uptake motor (emergency backup for auto-unjam).
+        // Wrapped as a proxy so it does not interrupt the shooter/aim commands.
+        const auto unjamStick = config::integer("turret_unjam_stick_index");
+        _sticks[unjamStick].Button(config::integer("turret_unjam_button_index")).WhileTrue(
+            turret().manualUnjamCommand().AsProxy());
+
         // Manual turret rotation
         const auto rotStick = config::integer("turret_rotation_axis_stick");
         const auto rotIdx = config::integer("turret_rotation_axis_index");

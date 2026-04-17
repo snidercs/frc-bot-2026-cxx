@@ -9,7 +9,7 @@ using namespace ctre::phoenix6;
 
 namespace indy {
 
-constexpr units::turn_t kMinPos =  -0.50_tr;
+constexpr units::turn_t kMinPos = -0.73_tr; // Dead zone / cable wrap point; ~310° travel to kMaxPos
 constexpr units::turn_t kMaxPos =  0.25_tr;
 
 // Motion Magic cruise velocity for rotation.
@@ -366,9 +366,10 @@ units::turn_t Turret::computeAimPosition(const frc::Pose2d& robotPose,
                         / (2.0 * std::numbers::pi);
     units::turn_t motorPos{0.5 - atan2Turns};
 
-    // Wrap into (-0.5, +0.5]
-    while (motorPos >  0.5_tr) motorPos -= 1.0_tr;
-    while (motorPos < -0.5_tr) motorPos += 1.0_tr;
+    // Wrap into [kMinPos, kMinPos + 1.0_tr) so the full soft-limit range is reachable.
+    // Using a fixed (-0.5, +0.5] window would silently clip the negative travel beyond -0.5_tr.
+    while (motorPos > kMinPos + 1.0_tr) motorPos -= 1.0_tr;
+    while (motorPos < kMinPos)          motorPos += 1.0_tr;
 #if BOT_TRACE_SUBSYSTEMS
     // Telemetry
     frc::SmartDashboard::PutNumber("Turret/AimAngle Raw (turns)", atan2Turns);

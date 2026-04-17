@@ -9,8 +9,8 @@ using namespace ctre::phoenix6;
 
 namespace indy {
 
-constexpr units::turn_t kMinPos =  0.0_tr;
-constexpr units::turn_t kMaxPos =  0.50_tr;
+constexpr units::turn_t kMinPos =  -0.50_tr;
+constexpr units::turn_t kMaxPos =  0.25_tr;
 
 // Motion Magic cruise velocity for rotation.
 // Halved automatically when a large wrap-around move is detected.

@@ -31,10 +31,8 @@ inline constexpr units::meter_t margin() { return 0.75_m; }
 inline constexpr units::inch_t kLobAimWallOffset = 181.56_in + 25_in;
 /** Y coordinate of the field centre line (parallel to the alliance walls). */
 inline constexpr units::inch_t halfWidth() { return 158.32_in; }
-// Tunable: additional X offset from kLobAimWallOffset toward the hub.
-static constexpr units::meter_t kLobXOffset = 2.0_m;
 // Tunable: lateral distance from the field centre to the side landing target.
-static constexpr units::meter_t kLobYOffset = 3.0_m;
+static constexpr units::meter_t kLobYOffset = 2.4_m;
 
 /** Loads the AprilTag field layout for the current season.
  
@@ -77,8 +75,6 @@ inline frc::Translation2d hubPosition()
     centre line — robot above centre aims left, below centre aims right.
 
     ### Tunable offsets (inside `aimPosition`)
-    - `kLobXOffset` — additional X distance beyond `kLobAimWallOffset`,
-      adjusts how far from the own alliance wall the landing target is.
     - `kLobYOffset` — lateral distance from the field centre line to the
       left/right landing target.
 
@@ -92,7 +88,7 @@ inline frc::Translation2d aimPosition(const frc::Pose2d& robotPose) {
     const bool isBlue = alliance.has_value() &&
                         alliance.value() == frc::DriverStation::Alliance::kBlue;
 
-    const auto hub        = hubPosition();
+    const auto hub    = hubPosition();
     const auto robotX     = robotPose.X();
     const auto robotY     = robotPose.Y();
     const auto fieldCentreY = units::meter_t { halfWidth() };
@@ -111,8 +107,8 @@ inline frc::Translation2d aimPosition(const frc::Pose2d& robotPose) {
     // X: kLobAimWallOffset is measured from the own alliance back wall.
     //    Blue wall is at X=0, red wall is at X=length().
     units::meter_t targetX = isBlue
-        ? units::meter_t { kLobAimWallOffset } + kLobXOffset
-        : length() - units::meter_t { kLobAimWallOffset } - kLobXOffset;
+        ? units::meter_t { 80_in }
+        : length() - units::meter_t { 80_in };
 
     // Y: aim left (+Y) when the robot is in the upper half of the field,
     //    right (-Y) when in the lower half.

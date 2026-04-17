@@ -297,16 +297,13 @@ constexpr const std::array<frc::Transform3d, 3> kRobotToCamera = {
     frc::Transform3d {
         frc::Translation3d { -13.74_in, 2.24_in, 11.35_in },
         frc::Rotation3d { 0_deg, -22_deg, 180_deg } },
-    // Left: 1.5 inches from left edge of robot. 2.453 inches from back of robot. 7.625 inches from the ground.
-    // NOTE: Not yet installed — mirrored from Right camera as a placeholder. Values may change.
-    // Robot frame: +X = forward, +Y = left, origin = robot center. Frame is 27.5 x 27.5 in (half = 13.75_in).
-    // X: back edge (-13.75_in) + 2.453_in inset = -11.297_in
-    // Y: left edge (+13.75_in) - 1.5_in inset   = +12.25_in
-    // Z: 7.625_in above ground
-    // Yaw +90_deg = facing left (+Y). Pitch +20_deg = tilted upward.
+    // Left: 3_in inset from back frame edge → X = -13.75_in + 3_in = -10.75_in.
+    // 13.74_in from robot centerline (+Y, left side). 7.25_in above ground.
+    // Facing exactly left (yaw +90°). Pitched 8° upward (lens toward ceiling).
+    // 4° roll clockwise when viewed from the lens (right-hand: -4° around X).
     frc::Transform3d {
-        frc::Translation3d { -11.297_in, 12.25_in, 7.625_in },
-        frc::Rotation3d { 0_deg, 20_deg, 90_deg } },
+        frc::Translation3d { -10.75_in, 13.74_in, 7.25_in },
+        frc::Rotation3d { -4_deg, 8_deg, 90_deg } },
     // Right: 1.5 inches from right edge of robot. 2.453 inches from back of robot. 7.625 inches from the ground.
     // Robot frame: +X = forward, +Y = left, origin = robot center. Frame is 27.5 x 27.5 in (half = 13.75_in).
     // X: back edge (-13.75_in) + 2.453_in inset = -11.297_in

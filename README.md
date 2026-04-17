@@ -47,8 +47,8 @@ Set `gamepad = false` in `robot/config.lua` to use this mode (it is the default)
 
 | Stick | Axis | Function | Shaping |
 |-------|------|----------|---------|
-| Stick 0 | Y (axis 1) | Drive forward / backward | deadband 0.05, exponent 2.5 |
-| Stick 0 | X (axis 0) | Drive strafe left / right | deadband 0.05, exponent 2.5 |
+| Stick 0 | Y (axis 1) | Drive forward / backward | deadband 0.05, exponent 3.0 |
+| Stick 0 | X (axis 0) | Drive strafe left / right | deadband 0.05, exponent 3.0 |
 | Stick 1 | X (axis 0) | Rotate (yaw) | deadband 0.05, exponent 1.25 |
 | Stick 0 | axis 3 | Manual turret rotation | gain 0.1 |
 
@@ -56,21 +56,24 @@ Set `gamepad = false` in `robot/config.lua` to use this mode (it is the default)
 
 | Button | Trigger | Action | Subsystem |
 |--------|---------|--------|-----------|
-| 1 | While held | Lower climber | Climber |
+| 1 | While held | Lower climber (move up) | Climber |
+| 4 | On press | Reset robot pose to field corner | Drivetrain |
 | 5 | On press | Jitter front/back (intake agitator) | Drivetrain |
 | 6 | On press | Jitter left/right (intake agitator) | Drivetrain |
 | 8 | On press | Reset field-centric heading | Drivetrain |
-| 16 | While held | Raise climber | Climber |
+| 16 | While held | Retract intake | Intake |
+| 17 | While held | Raise climber (move down) | Climber |
 | 18 | While held | Run intake | Intake |
+| 19 | While held | Manual uptake unjam (reverse uptake) | Turret |
 
 ### Buttons — Stick 1 (Right Hand)
 
 | Button | Trigger | Action | Subsystem |
 |--------|---------|--------|-----------|
 | 3 | On press | Zero turret rotation (calibrate) | Turret |
-| 4 | While held | Disable climber soft limits (release to re-enable & zero) | Climber |
-| 7 | — | Auto-aim (reserved) | Turret |
-| 18 | While held | Shoot | Turret |
+| 4 | Hold / release | Disable intake & climber soft limits; re-enable & zero on release | Intake, Climber |
+| 16 | Toggle | Toggle auto-aim (tracks hub via robot pose) | Turret |
+| 18 | While held | Shoot at distance (velocity tracks range) | Turret |
 | 19 | While held | Eject intake | Intake |
 
 ### Default Commands

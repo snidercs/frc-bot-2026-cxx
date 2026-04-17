@@ -41,10 +41,12 @@ local config = {
     turret_shooter_can_bus = "rio",
     turret_aim_button_index = 7,     -- Button to toggle auto-aim
     turret_shoot_button_index = 18,   -- Button to shoot
+    turret_unjam_stick_index = 0,
+    turret_unjam_button_index = 19,  -- Button to manually reverse uptake (emergency unjam)
     
     turret_uptake_device_id = 21,
     turret_uptake_can_bus = "rio",
-    turret_uptake_stall_amps = 90.0,      -- Stator current threshold to detect a jam (A) — tune on robot
+    turret_uptake_stall_amps = 100.0,      -- Stator current threshold to detect a jam (A) — tune on robot
     turret_uptake_reverse_time = 0.6,    -- How long to run in reverse after a jam (s)
     turret_uptake_reverse_voltage = -8.0, -- Voltage to apply during reverse (V, negative = reverse)
     

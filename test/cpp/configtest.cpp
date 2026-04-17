@@ -42,15 +42,19 @@ TEST(ConfigTest, GetDeviceIds) {
 }
 
 // Test CAN bus strings
+// In simulation, config::str() remaps "rio" → "sim" for *_can_bus keys,
+// so the expected value depends on the runtime environment.
 TEST(ConfigTest, GetCanBusStrings) {
+    const std::string expected = frc::RobotBase::IsSimulation() ? "sim" : "rio";
+
     auto otbLeftBus = config::str("otb_left_can_bus");
-    EXPECT_EQ(otbLeftBus, "rio");
+    EXPECT_EQ(otbLeftBus, expected);
     
     auto otbRightBus = config::str("otb_right_can_bus");
-    EXPECT_EQ(otbRightBus, "rio");
+    EXPECT_EQ(otbRightBus, expected);
     
     auto intakeBus = config::str("intake_can_bus");
-    EXPECT_EQ(intakeBus, "rio");
+    EXPECT_EQ(intakeBus, expected);
 }
 
 // Test button index retrieval

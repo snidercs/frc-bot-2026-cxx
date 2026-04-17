@@ -211,6 +211,7 @@ private:
 
 Container::Container()
 {
+    std::cerr << "[bot] Container::Container() begin" << std::endl;
     // Construct drivetrain with 250 Hz odometry update frequency to prevent CAN stale errors.
     // Vision stdDevs are fixed at {0.5, 0.5, 9999} — set once here rather than per-measurement.
     _drivetrain = std::make_unique<indy::CommandSwerveDrivetrain> (
@@ -223,13 +224,18 @@ Container::Container()
         TunerConstants::BackLeft,
         TunerConstants::BackRight);
 
+    std::cerr << "[bot] Drivetrain constructed, building subsystems..." << std::endl;
     _intake = std::make_unique<indy::Intake>();
+    std::cerr << "[bot] Intake constructed" << std::endl;
     _climber = std::make_unique<indy::Climber>();
+    std::cerr << "[bot] Climber constructed" << std::endl;
     _turret = std::make_unique<indy::Turret>();
+    std::cerr << "[bot] Turret constructed" << std::endl;
 
 #if BOT_VISION
     if (frc::RobotBase::IsSimulation()) {
         _vision = std::make_unique<VisionSim>();
+        std::cerr << "[bot] VisionSim constructed" << std::endl;
     } else {
         _vision = std::make_unique<VisionMulti>();
     }
@@ -239,7 +245,9 @@ Container::Container()
     // Configure PathPlanner AutoBuilder for autonomous
     bool pathPlannerConfigured = true;
     try {
+        std::cerr << "[bot] ConfigurePathPlanner begin..." << std::endl;
         drivetrain().ConfigurePathPlanner();
+        std::cerr << "[bot] ConfigurePathPlanner done." << std::endl;
         std::cout << "Successfully configured PathPlanner AutoBuilder" << std::endl;
     } catch (const std::exception& e) {
         pathPlannerConfigured = false;
@@ -249,7 +257,12 @@ Container::Container()
     if (pathPlannerConfigured) {
         try {
             using nc = pathplanner::NamedCommands;
+            std::cerr << "[bot] Registering NamedCommands..." << std::endl;
             nc::registerCommand("shooterOn", turret().shooterOnCommand([this] {
+                return drivetrain().GetState().Pose.Translation()
+                           .Distance(field::hubPosition());
+            }));
+            nc::registerCommand("shootAtDistance", turret().shootAtDistanceCommand([this] {
                 return drivetrain().GetState().Pose.Translation()
                            .Distance(field::hubPosition());
             }));
@@ -265,8 +278,10 @@ Container::Container()
             nc::registerCommand("intakeStop",  intake().stopCommand());
             nc::registerCommand("intakeAgitate", intake().agitateCommand());
             nc::registerCommand("driveJitter", jitterCommand());
+            std::cerr << "[bot] NamedCommands registered. Building auto chooser..." << std::endl;
 
             _autoBuilder = AutoBuilder::buildAutoChooser (config::str ("auto_default_name"));
+            std::cerr << "[bot] Auto chooser built." << std::endl;
             frc::SmartDashboard::PutData ("AutoChooser", &_autoBuilder.value());
         } catch (const std::exception& e) {
             pathPlannerConfigured = false;

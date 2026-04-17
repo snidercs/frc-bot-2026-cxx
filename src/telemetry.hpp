@@ -4,6 +4,9 @@
 #include <frc/smartdashboard/Field2d.h>
 #include <frc/smartdashboard/Mechanism2d.h>
 #include <frc/smartdashboard/MechanismLigament2d.h>
+#include <networktables/StructTopic.h>
+#include <frc/geometry/Pose2d.h>
+#include <frc/geometry/Pose3d.h>
 #include <telemetrykit/TelemetryKit.h>
 
 #include "drivetrain.hpp"
@@ -14,6 +17,11 @@ class Telemetry {
 private:
     units::meters_per_second_t MaxSpeed;
     frc::Field2d m_field{};
+
+    // Struct publishers for AdvantageScope 2D/3D visualization and log replay
+    nt::StructPublisher<frc::Pose2d> m_posePublisher;
+    nt::StructPublisher<frc::Pose3d> m_pose3dPublisher;
+
     std::array<frc::Mechanism2d, 4> m_moduleMechanisms{
         frc::Mechanism2d{1, 1},
         frc::Mechanism2d{1, 1},

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string_view>
 
+#include <frc/RobotBase.h>
 #include "scripting.hpp"
 
 // Enable to luanch a native Lua version of the robot code.
@@ -88,7 +89,20 @@ inline static bool boolean (std::string_view key, bool fallback = false)
 inline static std::string str (std::string_view key)
 {
     auto val = config::get (key);
-    return val.is<std::string>() ? val.as<std::string>() : std::string();
+    auto result = val.is<std::string>() ? val.as<std::string>() : std::string();
+
+    // In simulation, redirect all CAN bus references to "sim" so that
+    // non-drivetrain motors (turret, intake, climber) are backed by the
+    // CTRE sim CAN bus instead of the non-existent "rio" bus.
+    if (frc::RobotBase::IsSimulation()
+        && key.size() >= 7
+        && key.substr(key.size() - 7) == "can_bus"
+        && result == "rio")
+    {
+        return "sim";
+    }
+
+    return result;
 }
 
 /** Displays all configuration settings from the Lua config table.

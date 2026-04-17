@@ -1,12 +1,17 @@
 #include "telemetry.hpp"
 #include "ctre/phoenix6/SignalLogger.hpp"
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <networktables/NetworkTableInstance.h>
 
 #define BOT_SIGNAL_LOGGER 0
 
 using namespace ctre::phoenix6;
 
-indy::Telemetry::Telemetry(units::meters_per_second_t maxSpeed) : MaxSpeed{maxSpeed}
+indy::Telemetry::Telemetry(units::meters_per_second_t maxSpeed) : MaxSpeed{maxSpeed},
+    m_posePublisher{nt::NetworkTableInstance::GetDefault()
+        .GetStructTopic<frc::Pose2d>("SmartDashboard/RobotPose").Publish()},
+    m_pose3dPublisher{nt::NetworkTableInstance::GetDefault()
+        .GetStructTopic<frc::Pose3d>("SmartDashboard/RobotPose3d").Publish()}
 {
 #if BOT_SIGNAL_LOGGER
     SignalLogger::Start();
@@ -60,6 +65,10 @@ void indy::Telemetry::Telemeterize(indy::CommandSwerveDrivetrain::SwerveDriveSta
 
     /* Telemeterize the pose to a Field2d */
     m_field.SetRobotPose(state.Pose);
+
+    /* Publish as a WPILib struct for AdvantageScope 2D/3D views and log replay */
+    m_posePublisher.Set(state.Pose);
+    m_pose3dPublisher.Set(frc::Pose3d{state.Pose});
 
     /* Telemeterize each module state to a Mechanism2d */
     for (size_t i = 0; i < m_moduleSpeeds.size(); ++i) {

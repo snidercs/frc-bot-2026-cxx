@@ -61,7 +61,7 @@ protected:
         _sticks[1].Button(config::integer("intake_eject_index")).WhileTrue (
             intake().ejectCommand());
         _sticks[0].Button(config::integer("intake_retract_index")).WhileTrue (
-            intake().retractCommand());
+            intake().retractCommand().AsProxy());
 
         // Disable intake soft limits while held; re-enable and zero position on release
         _sticks[0].Button(config::integer("intake_softlimit_index"))

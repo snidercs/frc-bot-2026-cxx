@@ -113,6 +113,22 @@ protected:
         // Zero turret rotation position
         _sticks[1].Button(3).OnTrue(turret().calibrateRotationZero());
 
+        // Jog-wheel adjustments
+        // Stick 0 wheel: nudge shooter speed up/down; press to reset
+        _sticks[0].Button(config::integer("jog_wheel_up_index")).OnTrue(
+            turret().RunOnce([this] { turret().jogSpeedUp(); }));
+        _sticks[0].Button(config::integer("jog_wheel_down_index")).OnTrue(
+            turret().RunOnce([this] { turret().jogSpeedDown(); }));
+        _sticks[0].Button(config::integer("jog_wheel_press_index")).OnTrue(
+            turret().RunOnce([this] { turret().resetSpeedOffset(); }));
+        // Stick 1 wheel: nudge turret aim offset right/left; press to reset
+        _sticks[1].Button(config::integer("jog_wheel_up_index")).OnTrue(
+            turret().RunOnce([this] { turret().jogRotationRight(); }));
+        _sticks[1].Button(config::integer("jog_wheel_down_index")).OnTrue(
+            turret().RunOnce([this] { turret().jogRotationLeft(); }));
+        _sticks[1].Button(config::integer("jog_wheel_press_index")).OnTrue(
+            turret().RunOnce([this] { turret().resetRotationOffset(); }));
+
         // Auto intake+shoot toggle — press once to start running intake and shooter
         // continuously (driver can drive around picking up and shooting without
         // holding any buttons). Press again to stop both.

@@ -44,6 +44,11 @@ local config = {
     turret_auto_intake_shoot_index = 5,   -- Stick 1 button to toggle continuous intake+shoot mode
     turret_unjam_stick_index = 0,
     turret_unjam_button_index = 19,  -- Button to manually reverse uptake (emergency unjam)
+
+    -- Jog wheel button indices (both sticks share the same physical button numbers)
+    jog_wheel_up_index   = 13,  -- Wheel scroll up
+    jog_wheel_down_index = 14,  -- Wheel scroll down
+    jog_wheel_press_index = 15, -- Wheel press (reset)
     
     turret_uptake_device_id = 21,
     turret_uptake_can_bus = "rio",

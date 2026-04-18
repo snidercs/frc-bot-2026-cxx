@@ -118,7 +118,7 @@ void Robot::RobotPeriodic()
     auto& vision (_container->vision());
 
 #if BOT_VISION
-    if (frc::RobotBase::IsReal() && (IsTeleop() || IsTest())) {
+    if (frc::RobotBase::IsReal()) {
         // Field Boundary Clamping.
         // Must run BEFORE the currentPose snapshot so the residual gate in
         // processResults() sees the corrected pose, not the drifted one.

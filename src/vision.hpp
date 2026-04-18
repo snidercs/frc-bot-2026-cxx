@@ -302,8 +302,8 @@ constexpr const std::array<frc::Transform3d, 3> kRobotToCamera = {
     // Facing exactly left (yaw +90°). Pitched 8° upward (lens toward ceiling).
     // 4° roll clockwise when viewed from the lens (right-hand: -4° around X).
     frc::Transform3d {
-        frc::Translation3d { -10.75_in, 13.74_in, 7.25_in },
-        frc::Rotation3d { -4_deg, 8_deg, 90_deg } },
+        frc::Translation3d { -10.75_in, 13.74_in, 7.00_in },
+        frc::Rotation3d { -0_deg, 0_deg, 90_deg } },
     // Right: 1.5 inches from right edge of robot. 2.453 inches from back of robot. 7.625 inches from the ground.
     // Robot frame: +X = forward, +Y = left, origin = robot center. Frame is 27.5 x 27.5 in (half = 13.75_in).
     // X: back edge (-13.75_in) + 2.453_in inset = -11.297_in

@@ -56,6 +56,8 @@ public:
     frc2::CommandPtr retractCommand();
     /** Stutter the feed on/off for a duration, then stop. */
     frc2::CommandPtr stutterCommand(units::time::second_t duration = 0_s);
+    /** Extend the intake until fully down, then finish. */
+    frc2::CommandPtr extendCommand();
     /** Continuously oscillate the intake up/down to agitate game pieces.
      *
      *  Alternates between extending and retracting the pitch motors on a
@@ -99,7 +101,7 @@ private:
     /** Duration of each extend phase during agitation (seconds). */
     static constexpr units::second_t kAgitateExtendTime = 0.20_s;
     /** Duration of each retract phase during agitation (seconds). */
-    static constexpr units::second_t kAgitateRetractTime = 0.20_s;
+    static constexpr units::second_t kAgitateRetractTime = 0.15_s;
 
     // ── Soft limits (motor rotations, starting from 0 = up/stowed) ─────
     static constexpr units::turn_t kLeftForwardLimit  =  0.0_tr;        // home (up)

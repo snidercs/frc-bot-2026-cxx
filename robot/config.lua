@@ -21,7 +21,7 @@ local config = {
     intake_retract_index = 16,  -- The button index to retract the intake (stick 0).
     intake_softlimit_index = 4, -- The button index to disable intake soft limits while held (stick 1).
 
-    -- Over-the-bumper intake motors (CAN IDs tentative — verify on robot)
+    -- Over-the-bumper intake motors
     otb_left_device_id = 17,    -- Pitch left motor
     otb_left_can_bus = "rio",
     otb_right_device_id = 18,   -- Pitch right motor

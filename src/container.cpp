@@ -64,7 +64,7 @@ protected:
             intake().retractCommand());
 
         // Disable intake soft limits while held; re-enable and zero position on release
-        _sticks[1].Button(config::integer("intake_softlimit_index"))
+        _sticks[0].Button(config::integer("intake_softlimit_index"))
             .OnTrue(intake().disableSoftLimitsCommand())
             .OnFalse(intake().enableSoftLimitsAndResetCommand());
         
@@ -288,6 +288,7 @@ Container::Container()
             
             nc::registerCommand("turretStop",  turret().stopCommand());
             nc::registerCommand("intakeStart", intake().startCommand());
+            nc::registerCommand("intakeExtend", intake().extendCommand());
             nc::registerCommand("intakeStutter", intake().stutterCommand());
             nc::registerCommand("intakeStop",  intake().stopCommand());
             nc::registerCommand("intakeAgitate", intake().agitateCommand());

@@ -5,6 +5,18 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "intakeExtend"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "turretAim"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Backup-Simple-Mid-00"
@@ -13,7 +25,7 @@
         {
           "type": "named",
           "data": {
-            "name": "shooterOn"
+            "name": "shootAtDistance"
           }
         },
         {

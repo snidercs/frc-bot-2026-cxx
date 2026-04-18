@@ -5,6 +5,24 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "intakeExtend"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "turretAim"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeStart"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Backup-Simple-Left"

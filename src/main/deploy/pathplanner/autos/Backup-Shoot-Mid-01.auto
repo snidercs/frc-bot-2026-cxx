@@ -17,25 +17,25 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "turretAim"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
                   "name": "intakeStart"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "shootAtDistance"
                 }
               },
               {
                 "type": "path",
                 "data": {
                   "pathName": "Backup-Simple-Mid-01"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "turretAim"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "shootAtDistance"
                 }
               },
               {

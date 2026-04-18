@@ -11,12 +11,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "turretAim"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Backup-Simple-Mid-00"
@@ -25,19 +19,19 @@
         {
           "type": "named",
           "data": {
-            "name": "shootAtDistance"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.5
+            "name": "shooterOn"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "intakeStutter"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.25
           }
         },
         {

@@ -11,18 +11,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "turretAim"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "intakeStart"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Backup-Simple-Left"
@@ -31,13 +19,7 @@
         {
           "type": "named",
           "data": {
-            "name": "shootAtDistance"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.5
+            "name": "shooterOn"
           }
         },
         {

@@ -113,6 +113,19 @@ protected:
         // Zero turret rotation position
         _sticks[1].Button(3).OnTrue(turret().calibrateRotationZero());
 
+        // Auto intake+shoot toggle — press once to start running intake and shooter
+        // continuously (driver can drive around picking up and shooting without
+        // holding any buttons). Press again to stop both.
+        _sticks[1].Button(config::integer("turret_auto_intake_shoot_index")).ToggleOnTrue(
+            intake().intakeCommand()
+                .AlongWith(
+                    turret().shootAtDistanceCommand([this] {
+                        return drivetrain().GetState().Pose.Translation()
+                                   .Distance(field::hubPosition());
+                    })
+                )
+            .WithName("AutoIntakeShoot"));
+
         // Manual uptake unjam — hold to reverse the uptake motor (emergency backup for auto-unjam).
         // Wrapped as a proxy so it does not interrupt the shooter/aim commands.
         const auto unjamStick = config::integer("turret_unjam_stick_index");

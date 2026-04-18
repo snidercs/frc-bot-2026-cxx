@@ -39,8 +39,9 @@ local config = {
 
     turret_shooter_device_id = 16,
     turret_shooter_can_bus = "rio",
-    turret_aim_button_index = 7,     -- Button to toggle auto-aim
-    turret_shoot_button_index = 18,   -- Button to shoot
+    turret_aim_button_index = 7,          -- Button to toggle auto-aim
+    turret_shoot_button_index = 18,        -- Button to shoot (manual, while held)
+    turret_auto_intake_shoot_index = 5,   -- Stick 1 button to toggle continuous intake+shoot mode
     turret_unjam_stick_index = 0,
     turret_unjam_button_index = 19,  -- Button to manually reverse uptake (emergency unjam)
     

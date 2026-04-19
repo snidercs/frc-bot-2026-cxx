@@ -94,9 +94,9 @@ private:
     static constexpr units::volt_t kEjectVoltage = -4_V;
 
     /** Duty cycle to extend/lower the intake (OTBLeft gets negative, OTBRight gets positive). */
-    static constexpr double kExtendDutyCycle = 0.15;
+    static constexpr double kExtendDutyCycle = 0.30;
     /** Duty cycle to retract/raise the intake (OTBLeft gets positive, OTBRight gets negative). */
-    static constexpr double kRetractDutyCycle = 0.30;
+    static constexpr double kRetractDutyCycle = 0.50;
 
     /** Duration of each extend phase during agitation (seconds). */
     static constexpr units::second_t kAgitateExtendTime = 0.20_s;

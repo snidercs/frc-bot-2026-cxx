@@ -114,6 +114,7 @@ protected:
         _sticks[1].Button(3).OnTrue(turret().calibrateRotationZero());
 
         // Jog-wheel adjustments
+#if 0
         // Stick 0 wheel: nudge shooter speed up/down; press to reset
         _sticks[0].Button(config::integer("jog_wheel_up_index")).OnTrue(
             turret().RunOnce([this] { turret().jogSpeedUp(); }));
@@ -128,6 +129,7 @@ protected:
             turret().RunOnce([this] { turret().jogRotationLeft(); }));
         _sticks[1].Button(config::integer("jog_wheel_press_index")).OnTrue(
             turret().RunOnce([this] { turret().resetRotationOffset(); }));
+#endif
 
         // Auto intake+shoot toggle — press once to start running intake and shooter
         // continuously (driver can drive around picking up and shooting without

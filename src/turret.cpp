@@ -370,6 +370,9 @@ units::turn_t Turret::computeAimPosition(const frc::Pose2d& robotPose,
     // Using a fixed (-0.5, +0.5] window would silently clip the negative travel beyond -0.5_tr.
     while (motorPos > kMinPos + 1.0_tr) motorPos -= 1.0_tr;
     while (motorPos < kMinPos)          motorPos += 1.0_tr;
+
+    // Apply jog-wheel rotation offset (positive = left, negative = right)
+    motorPos += _rotationOffset;
 #if BOT_TRACE_SUBSYSTEMS
     // Telemetry
     frc::SmartDashboard::PutNumber("Turret/AimAngle Raw (turns)", atan2Turns);
@@ -425,7 +428,7 @@ units::turns_per_second_t Turret::velocityFromDistance(units::meter_t distance) 
 
     double t = (distance - kNearDist) / (kFarDist - kNearDist);
     t = std::clamp(t, 0.0, 1.0);
-    return units::turns_per_second_t{kNearSpeed + t * (kFarSpeed - kNearSpeed)};
+    return units::turns_per_second_t{kNearSpeed + t * (kFarSpeed - kNearSpeed)} + _shooterSpeedOffset;
 }
 
 frc2::CommandPtr Turret::shooterOnCommand(std::function<units::meter_t()> distanceFn) {

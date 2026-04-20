@@ -61,10 +61,10 @@ protected:
         _sticks[1].Button(config::integer("intake_eject_index")).WhileTrue (
             intake().ejectCommand());
         _sticks[0].Button(config::integer("intake_retract_index")).WhileTrue (
-            intake().retractCommand());
+            intake().retractCommand().AsProxy());
 
         // Disable intake soft limits while held; re-enable and zero position on release
-        _sticks[1].Button(config::integer("intake_softlimit_index"))
+        _sticks[0].Button(config::integer("intake_softlimit_index"))
             .OnTrue(intake().disableSoftLimitsCommand())
             .OnFalse(intake().enableSoftLimitsAndResetCommand());
         
@@ -112,6 +112,37 @@ protected:
 
         // Zero turret rotation position
         _sticks[1].Button(3).OnTrue(turret().calibrateRotationZero());
+
+        // Jog-wheel adjustments
+#if 0
+        // Stick 0 wheel: nudge shooter speed up/down; press to reset
+        _sticks[0].Button(config::integer("jog_wheel_up_index")).OnTrue(
+            turret().RunOnce([this] { turret().jogSpeedUp(); }));
+        _sticks[0].Button(config::integer("jog_wheel_down_index")).OnTrue(
+            turret().RunOnce([this] { turret().jogSpeedDown(); }));
+        _sticks[0].Button(config::integer("jog_wheel_press_index")).OnTrue(
+            turret().RunOnce([this] { turret().resetSpeedOffset(); }));
+        // Stick 1 wheel: nudge turret aim offset right/left; press to reset
+        _sticks[1].Button(config::integer("jog_wheel_up_index")).OnTrue(
+            turret().RunOnce([this] { turret().jogRotationRight(); }));
+        _sticks[1].Button(config::integer("jog_wheel_down_index")).OnTrue(
+            turret().RunOnce([this] { turret().jogRotationLeft(); }));
+        _sticks[1].Button(config::integer("jog_wheel_press_index")).OnTrue(
+            turret().RunOnce([this] { turret().resetRotationOffset(); }));
+#endif
+
+        // Auto intake+shoot toggle — press once to start running intake and shooter
+        // continuously (driver can drive around picking up and shooting without
+        // holding any buttons). Press again to stop both.
+        _sticks[1].Button(config::integer("turret_auto_intake_shoot_index")).ToggleOnTrue(
+            intake().intakeCommand()
+                .AlongWith(
+                    turret().shootAtDistanceCommand([this] {
+                        return drivetrain().GetState().Pose.Translation()
+                                   .Distance(field::hubPosition());
+                    })
+                )
+            .WithName("AutoIntakeShoot"));
 
         // Manual uptake unjam — hold to reverse the uptake motor (emergency backup for auto-unjam).
         // Wrapped as a proxy so it does not interrupt the shooter/aim commands.
@@ -288,6 +319,7 @@ Container::Container()
             
             nc::registerCommand("turretStop",  turret().stopCommand());
             nc::registerCommand("intakeStart", intake().startCommand());
+            nc::registerCommand("intakeExtend", intake().extendCommand());
             nc::registerCommand("intakeStutter", intake().stutterCommand());
             nc::registerCommand("intakeStop",  intake().stopCommand());
             nc::registerCommand("intakeAgitate", intake().agitateCommand());

@@ -72,6 +72,7 @@ Set `gamepad = false` in `robot/config.lua` to use this mode (it is the default)
 |--------|---------|--------|-----------|
 | 3 | On press | Zero turret rotation (calibrate) | Turret |
 | 4 | Hold / release | Disable intake & climber soft limits; re-enable & zero on release | Intake, Climber |
+| 5 | Toggle | Toggle continuous intake + shoot mode (drive around and score hands-free) | Intake, Turret |
 | 16 | Toggle | Toggle auto-aim (tracks hub via robot pose) | Turret |
 | 18 | While held | Shoot at distance (velocity tracks range) | Turret |
 | 19 | While held | Eject intake | Intake |

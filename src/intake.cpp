@@ -194,6 +194,19 @@ frc2::CommandPtr Intake::retractCommand() {
         .FinallyDo([this] { extend(); });
 }
 
+frc2::CommandPtr Intake::extendCommand() {
+    // Drive the intake down until the right pitch motor reaches (or passes)
+    // its soft-limit, meaning the intake is fully extended.
+    // A 2-second timeout prevents this from blocking an entire auto routine
+    // if the motor is slow or the encoder reads unexpectedly.
+    return Run([this] { extend(); })
+        .Until([this] {
+            return _otbRight.GetPosition().GetValue() >= kRightForwardLimit * 0.80;
+        })
+        .WithTimeout(2_s)
+        .WithName("IntakeExtend");
+}
+
 frc2::CommandPtr Intake::stutterCommand(units::time::second_t duration) {
     auto startTime = std::make_shared<units::second_t>(0_s);
     if (duration <= 0_s)

@@ -9,6 +9,12 @@
           "data": {
             "commands": [
               {
+                "type": "named",
+                "data": {
+                  "name": "intakeExtend"
+                }
+              },
+              {
                 "type": "path",
                 "data": {
                   "pathName": "Backup-Simple-Mid-01"
@@ -21,15 +27,15 @@
                 }
               },
               {
-                "type": "wait",
-                "data": {
-                  "waitTime": 0.5
-                }
-              },
-              {
                 "type": "named",
                 "data": {
                   "name": "intakeStutter"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 0.25
                 }
               },
               {

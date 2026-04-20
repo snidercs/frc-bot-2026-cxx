@@ -100,6 +100,21 @@ public:
     /** Returns true if the shooter flywheel is within @c kShooterTolerance of @c kShooterVelocity. */
     bool isShooterReady() const;
 
+    // Jog-wheel adjustments
+    /** Nudge shooter speed offset up by one step. */
+    void jogSpeedUp()    { _shooterSpeedOffset += kSpeedStep; }
+    /** Nudge shooter speed offset down by one step. */
+    void jogSpeedDown()  { _shooterSpeedOffset -= kSpeedStep; }
+    /** Reset shooter speed offset to zero. */
+    void resetSpeedOffset() { _shooterSpeedOffset = 0_tps; }
+
+    /** Nudge turret rotation offset to the right by one step. */
+    void jogRotationRight() { _rotationOffset -= kRotationStep; }
+    /** Nudge turret rotation offset to the left by one step. */
+    void jogRotationLeft()  { _rotationOffset += kRotationStep; }
+    /** Reset rotation offset to zero. */
+    void resetRotationOffset() { _rotationOffset = 0_tr; }
+
 private:
     // Rotation motor (positions turret)
     ctre::phoenix6::hardware::TalonFX _rotationMotor{
@@ -151,6 +166,10 @@ private:
     // Adjust via Elastic slider - we'll use this to figure out what scale we need for the competition balls vs. our balls
     double _distanceScale = 1.0;
 
+    // Jog-wheel adjustments (zeroed on boot; changed at runtime by operator)
+    units::turns_per_second_t _shooterSpeedOffset = 0_tps;
+    units::turn_t             _rotationOffset     = 0_tr;
+
     // Constants
     static constexpr units::turns_per_second_t kShooterVelocity = 54_tps;
     static constexpr units::turns_per_second_t kFallbackShooterVelocity = 53_tps;
@@ -158,6 +177,10 @@ private:
     static constexpr units::turns_per_second_t kUptakeVelocity = 100_tps;
     static constexpr units::degree_t kAngleTolerance = 2_deg;
     static constexpr units::turns_per_second_t kManualRotationSpeed = 0.3_tps;
+
+    // Jog-wheel step sizes (one click per button press)
+    static constexpr units::turns_per_second_t kSpeedStep    = 0.5_tps;   // shooter speed per click
+    static constexpr units::turn_t             kRotationStep = 0.01_tr;   // ~3.6° per click
     
     // Gear ratio from motor to turret (motor rotations per turret rotation)
     static constexpr double kRotationGearRatio = 100.0;

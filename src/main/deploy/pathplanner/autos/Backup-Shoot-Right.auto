@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "intakeExtend"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Backup-Simple-Right"
@@ -14,12 +20,6 @@
           "type": "named",
           "data": {
             "name": "shooterOn"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.5
           }
         },
         {
